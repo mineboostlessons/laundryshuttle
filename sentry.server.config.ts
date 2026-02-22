@@ -1,0 +1,18 @@
+import * as Sentry from "@sentry/nextjs";
+
+Sentry.init({
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  enabled: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
+
+  // Performance monitoring — lower sample rate in production
+  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
+
+  // Environment tagging
+  environment: process.env.NODE_ENV || "development",
+
+  // Filter noisy server errors
+  ignoreErrors: [
+    "NEXT_NOT_FOUND",
+    "NEXT_REDIRECT",
+  ],
+});

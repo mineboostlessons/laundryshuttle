@@ -1,0 +1,29 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/cron/invoices",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/webhooks",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/winback",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/domains",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/demo-reset",
+      "schedule": "0 */4 * * *"
+    },
+    {
+      "path": "/api/cron/benchmarks",
+      "schedule": "0 2 * * *"
+    }
+  ]
+}
