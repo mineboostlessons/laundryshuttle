@@ -111,6 +111,6 @@ export async function getDeliveryLogs(endpointId: string) {
   });
 }
 
-export function getAvailableEvents() {
+export async function getAvailableEvents() {
   return [...WEBHOOK_EVENTS];
 }

@@ -22,7 +22,7 @@ interface EarningsData {
     amount: number;
     orderNumber: string;
     customerName: string;
-    createdAt: string;
+    createdAt: string | Date;
   }>;
 }
 

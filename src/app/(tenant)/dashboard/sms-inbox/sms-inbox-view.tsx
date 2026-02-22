@@ -18,7 +18,7 @@ interface Message {
   id: string;
   senderType: string;
   message: string;
-  createdAt: string;
+  createdAt: string | Date;
   orderNumber: string;
 }
 
@@ -31,7 +31,7 @@ interface Conversation {
     email: string;
   };
   messages: Message[];
-  lastMessageAt: string;
+  lastMessageAt: string | Date;
   unreadCount: number;
 }
 

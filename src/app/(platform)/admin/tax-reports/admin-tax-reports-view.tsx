@@ -31,7 +31,7 @@ interface TaxReport {
   businessName: string;
   ein: string | null;
   status: string;
-  generatedAt: string | null;
+  generatedAt: string | Date | null;
 }
 
 export function AdminTaxReportsView({

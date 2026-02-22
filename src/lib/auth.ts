@@ -1,12 +1,11 @@
 import NextAuth, { type NextAuthConfig } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import Google from "next-auth/providers/google";
-import Facebook from "next-auth/providers/facebook";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import prisma from "./prisma";
 import type { UserRole } from "@/types";
+import { authConfig } from "./auth.config";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -14,24 +13,13 @@ const loginSchema = z.object({
   tenantSlug: z.string().optional(),
 });
 
-export const authConfig = {
+// Full auth config with Prisma adapter + Credentials provider
+// Not edge-compatible — used in API routes and server actions only
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma) as NextAuthConfig["adapter"],
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
   providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      allowDangerousEmailAccountLinking: true,
-    }),
-    Facebook({
-      clientId: process.env.FACEBOOK_CLIENT_ID!,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
-      allowDangerousEmailAccountLinking: true,
-    }),
+    ...authConfig.providers,
     Credentials({
       name: "credentials",
       credentials: {
@@ -115,60 +103,6 @@ export const authConfig = {
       },
     }),
   ],
-  callbacks: {
-    async signIn({ user, account }) {
-      // For OAuth providers, find or create user
-      if (account?.provider === "google" || account?.provider === "facebook") {
-        if (!user.email) return false;
-
-        const existingUser = await prisma.user.findFirst({
-          where: { email: user.email },
-        });
-
-        if (existingUser) {
-          // Update auth provider info
-          await prisma.user.update({
-            where: { id: existingUser.id },
-            data: {
-              authProvider: account.provider,
-              authProviderId: account.providerAccountId,
-              lastLoginAt: new Date(),
-              emailVerified: new Date(),
-            },
-          });
-        }
-        // If no existing user, NextAuth adapter will create one
-        // They'll default to customer role until assigned
-      }
-      return true;
-    },
-
-    async jwt({ token, user, trigger, session }) {
-      if (user) {
-        token.id = user.id!;
-        token.role = user.role;
-        token.tenantId = user.tenantId;
-        token.tenantSlug = user.tenantSlug ?? null;
-      }
-
-      // Handle session updates (e.g., role change)
-      if (trigger === "update" && session) {
-        if (session.role) token.role = session.role;
-        if (session.tenantId !== undefined) token.tenantId = session.tenantId;
-        if (session.tenantSlug !== undefined) token.tenantSlug = session.tenantSlug;
-      }
-
-      return token;
-    },
-
-    async session({ session, token }) {
-      session.user.id = token.id as string;
-      session.user.role = token.role as UserRole;
-      session.user.tenantId = token.tenantId as string | null;
-      session.user.tenantSlug = token.tenantSlug as string | null;
-      return session;
-    },
-  },
   events: {
     async createUser({ user }) {
       // When a new user is created via OAuth, set default role
@@ -180,6 +114,4 @@ export const authConfig = {
       }
     },
   },
-} satisfies NextAuthConfig;
-
-export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
+});

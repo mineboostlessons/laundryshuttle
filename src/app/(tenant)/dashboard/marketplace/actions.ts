@@ -73,7 +73,7 @@ export async function installApp(data: z.infer<typeof installSchema>) {
     data: {
       tenantId: tenant.id,
       appId: validated.appId,
-      config: validated.config ?? {},
+      config: (validated.config ?? {}) as Record<string, string>,
       installedById: session.user.id,
       status: "active",
     },
@@ -92,7 +92,7 @@ export async function uninstallApp(appId: string) {
   });
 }
 
-export async function updateAppConfig(appId: string, config: Record<string, unknown>) {
+export async function updateAppConfig(appId: string, config: Record<string, string>) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
 

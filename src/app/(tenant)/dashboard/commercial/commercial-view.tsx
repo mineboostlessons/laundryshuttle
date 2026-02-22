@@ -45,7 +45,7 @@ interface CommercialAccount {
   creditLimit: number | null;
   currentBalance: number;
   isActive: boolean;
-  createdAt: string;
+  createdAt: string | Date;
   _count: { orders: number; invoices: number };
 }
 

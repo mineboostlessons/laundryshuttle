@@ -6,19 +6,26 @@ import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
 const globalForSes = globalThis as unknown as { ses: SESClient | undefined };
 
-export const ses =
-  globalForSes.ses ??
-  new SESClient({
+function getSesClient(): SESClient {
+  if (globalForSes.ses) return globalForSes.ses;
+  const client = new SESClient({
     region: process.env.AWS_SES_REGION ?? "us-east-1",
     credentials: {
       accessKeyId: process.env.AWS_SES_ACCESS_KEY_ID!,
       secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY!,
     },
   });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForSes.ses = ses;
+  if (process.env.NODE_ENV !== "production") {
+    globalForSes.ses = client;
+  }
+  return client;
 }
+
+export const ses = new Proxy({} as SESClient, {
+  get(_target, prop) {
+    return (getSesClient() as Record<string | symbol, unknown>)[prop];
+  },
+});
 
 const DEFAULT_FROM = process.env.AWS_SES_FROM_EMAIL ?? "noreply@laundryshuttle.com";
 

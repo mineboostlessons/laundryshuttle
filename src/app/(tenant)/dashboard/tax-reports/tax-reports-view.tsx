@@ -39,7 +39,7 @@ interface TaxReport {
   monthlyBreakdown: { month: number; gross: number; transactions: number; refunds: number }[] | null;
   businessName: string;
   status: string;
-  generatedAt: string | null;
+  generatedAt: string | Date | null;
 }
 
 const monthNames = [

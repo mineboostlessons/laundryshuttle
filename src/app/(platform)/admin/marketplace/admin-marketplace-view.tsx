@@ -37,7 +37,7 @@ interface MarketplaceApp {
   provider: string;
   isActive: boolean;
   isFeatured: boolean;
-  createdAt: string;
+  createdAt: string | Date;
   _count: { installations: number };
 }
 

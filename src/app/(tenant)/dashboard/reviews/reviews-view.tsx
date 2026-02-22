@@ -20,7 +20,7 @@ interface ReviewData {
   isPublic: boolean;
   routedToGoogle: boolean;
   managerAlerted: boolean;
-  createdAt: string;
+  createdAt: string | Date;
   user: { firstName: string | null; lastName: string | null; email: string };
   order: { orderNumber: string; id: string };
 }

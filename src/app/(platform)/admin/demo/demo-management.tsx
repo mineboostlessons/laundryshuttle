@@ -29,7 +29,7 @@ interface DemoTenant {
   demoResetInterval: number | null;
   userCount: number;
   orderCount: number;
-  createdAt: string;
+  createdAt: string | Date;
 }
 
 interface DemoManagementProps {

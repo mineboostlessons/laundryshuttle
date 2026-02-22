@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
-import { rateLimit, rateLimitHeaders, AUTH_RATE_LIMIT, API_RATE_LIMIT } from "@/lib/rate-limit";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
+
+// Lightweight auth wrapper — edge-compatible (no Prisma, no bcrypt)
+const { auth } = NextAuth(authConfig);
 
 // Routes that require authentication
 const PROTECTED_PATTERNS = [
@@ -17,9 +20,6 @@ const PROTECTED_PATTERNS = [
 
 // Public routes that don't need auth
 const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/onboarding"];
-
-// Paths to skip entirely (static assets, service worker, etc.)
-const SKIP_PATHS = ["/api/", "/_next/", "/favicon.ico", "/sw.js", "/manifest", "/offline", "/icons/"];
 
 // Role-to-route access mapping
 const ROLE_ROUTE_MAP: Record<string, string[]> = {
@@ -45,6 +45,41 @@ function hasRouteAccess(role: string, pathname: string): boolean {
   return allowedPaths.some((path) => pathname.includes(path));
 }
 
+function getDefaultRedirect(role: string): string {
+  switch (role) {
+    case "platform_admin":
+      return "/admin";
+    case "owner":
+      return "/dashboard";
+    case "manager":
+      return "/manager";
+    case "attendant":
+      return "/attendant";
+    case "driver":
+      return "/driver";
+    case "customer":
+      return "/customer";
+    default:
+      return "/";
+  }
+}
+
+// In-memory rate limiting (lightweight, no external deps)
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(key: string, limit: number, windowMs: number): boolean {
+  const now = Date.now();
+  const entry = rateLimitStore.get(key);
+
+  if (!entry || entry.resetAt < now) {
+    rateLimitStore.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+
+  entry.count++;
+  return entry.count <= limit;
+}
+
 export default auth((request) => {
   const url = request.nextUrl;
   const hostname = request.headers.get("host") || "";
@@ -65,23 +100,15 @@ export default auth((request) => {
     return NextResponse.next();
   }
 
-  // Rate limit auth endpoints
+  // Rate limit auth and API endpoints
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
   if (pathname.startsWith("/api/auth")) {
-    const result = rateLimit(`auth:${ip}`, AUTH_RATE_LIMIT);
-    if (!result.success) {
-      return NextResponse.json(
-        { error: "Too many requests" },
-        { status: 429, headers: rateLimitHeaders(result) }
-      );
+    if (!checkRateLimit(`auth:${ip}`, 10, 60_000)) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
   } else if (pathname.startsWith("/api/") && !pathname.startsWith("/api/webhooks") && !pathname.startsWith("/api/health")) {
-    const result = rateLimit(`api:${ip}`, API_RATE_LIMIT);
-    if (!result.success) {
-      return NextResponse.json(
-        { error: "Too many requests" },
-        { status: 429, headers: rateLimitHeaders(result) }
-      );
+    if (!checkRateLimit(`api:${ip}`, 60, 60_000)) {
+      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
   }
 
@@ -128,15 +155,12 @@ export default auth((request) => {
   if (isProtectedRoute(pathname) && session?.user) {
     const role = session.user.role;
 
-    // Prevent non-platform-admins from accessing /admin routes
-    // Prevent platform-admins from accessing tenant routes
     if (!hasRouteAccess(role, pathname)) {
       const redirectUrl = getDefaultRedirect(role);
       return NextResponse.redirect(new URL(redirectUrl, request.url));
     }
 
-    // Tenant-session mismatch check: if user is a tenant user
-    // accessing a different tenant's subdomain, redirect to login
+    // Tenant-session mismatch check
     const tenantSlug = headers.get("x-tenant-slug");
     if (
       tenantSlug &&
@@ -153,25 +177,6 @@ export default auth((request) => {
 
   return NextResponse.next({ request: { headers } });
 });
-
-function getDefaultRedirect(role: string): string {
-  switch (role) {
-    case "platform_admin":
-      return "/admin";
-    case "owner":
-      return "/dashboard";
-    case "manager":
-      return "/manager";
-    case "attendant":
-      return "/attendant";
-    case "driver":
-      return "/driver";
-    case "customer":
-      return "/customer";
-    default:
-      return "/";
-  }
-}
 
 export const config = {
   matcher: [

@@ -11,15 +11,20 @@ const globalForTelnyx = globalThis as unknown as {
   telnyx: TelnyxClient | undefined;
 };
 
-export const telnyx: TelnyxClient =
-  globalForTelnyx.telnyx ?? (Telnyx as unknown as (key: string) => TelnyxClient)(process.env.TELNYX_API_KEY!);
-
-if (process.env.NODE_ENV !== "production") {
-  globalForTelnyx.telnyx = telnyx;
+function getTelnyxClient(): TelnyxClient {
+  if (globalForTelnyx.telnyx) return globalForTelnyx.telnyx;
+  const client = new (Telnyx as unknown as new (key: string) => TelnyxClient)(process.env.TELNYX_API_KEY!);
+  if (process.env.NODE_ENV !== "production") {
+    globalForTelnyx.telnyx = client;
+  }
+  return client;
 }
 
-const MESSAGING_PROFILE_ID = process.env.TELNYX_MESSAGING_PROFILE_ID!;
-const FROM_NUMBER = process.env.TELNYX_PHONE_NUMBER!;
+export const telnyx = new Proxy({} as TelnyxClient, {
+  get(_target, prop) {
+    return getTelnyxClient()[prop];
+  },
+});
 
 // =============================================================================
 // Send SMS

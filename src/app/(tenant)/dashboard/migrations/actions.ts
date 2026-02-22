@@ -13,11 +13,10 @@ import {
   getMigrationLogs,
   getMigrationLog,
   generateCsvTemplate,
-  IMPORT_FIELD_DEFINITIONS,
-  type ImportOperationType,
   type ColumnMapping,
   type MigrationResult,
 } from "@/lib/migration";
+import { IMPORT_FIELD_DEFINITIONS, type ImportOperationType } from "@/lib/migration-constants";
 import prisma from "@/lib/prisma";
 
 export type MigrationActionState = {
@@ -48,7 +47,7 @@ export async function previewCsv(csvText: string): Promise<{
 }> {
   await requireRole(UserRole.OWNER, UserRole.MANAGER);
 
-  const { headers, rows } = parseCsvToRows(csvText);
+  const { headers, rows } = await parseCsvToRows(csvText);
   return {
     headers,
     sampleRows: rows.slice(0, 5),
@@ -66,7 +65,7 @@ export async function executeImport(
   const session = await requireRole(UserRole.OWNER, UserRole.MANAGER);
   const tenant = await requireTenant();
 
-  const { rows } = parseCsvToRows(csvText);
+  const { rows } = await parseCsvToRows(csvText);
 
   if (rows.length === 0) {
     return { success: false, error: "CSV file contains no data rows" };
@@ -106,7 +105,7 @@ export async function executeImport(
 // Get template CSV for a given import type
 export async function downloadTemplate(operationType: ImportOperationType): Promise<string> {
   await requireRole(UserRole.OWNER, UserRole.MANAGER);
-  return generateCsvTemplate(operationType);
+  return await generateCsvTemplate(operationType);
 }
 
 // Get field definitions for a given import type

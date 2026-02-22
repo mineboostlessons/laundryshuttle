@@ -45,9 +45,9 @@ interface Invoice {
   taxAmount: number;
   totalAmount: number;
   status: string;
-  dueDate: string;
-  paidAt: string | null;
-  createdAt: string;
+  dueDate: string | Date;
+  paidAt: string | Date | null;
+  createdAt: string | Date;
   commercialAccount: {
     companyName: string;
     contactEmail: string;

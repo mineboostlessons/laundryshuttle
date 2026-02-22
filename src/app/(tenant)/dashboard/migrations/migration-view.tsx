@@ -8,7 +8,8 @@ import {
   getFieldDefinitions,
   type MigrationActionState,
 } from "./actions";
-import type { ImportOperationType, ColumnMapping } from "@/lib/migration";
+import type { ColumnMapping } from "@/lib/migration";
+import type { ImportOperationType } from "@/lib/migration-constants";
 
 interface MigrationLog {
   id: string;

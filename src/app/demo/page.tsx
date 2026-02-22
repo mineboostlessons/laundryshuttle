@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { DemoLanding } from "./demo-landing";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Live Demo — Laundry Shuttle",
   description:

@@ -39,9 +39,9 @@ interface WebhookEndpoint {
   events: string[];
   secret: string;
   isActive: boolean;
-  lastTriggeredAt: string | null;
+  lastTriggeredAt: string | Date | null;
   failureCount: number;
-  createdAt: string;
+  createdAt: string | Date;
   _count: { deliveryLogs: number };
 }
 
@@ -51,7 +51,7 @@ interface DeliveryLog {
   statusCode: number | null;
   success: boolean;
   responseBody: string | null;
-  createdAt: string;
+  createdAt: string | Date;
 }
 
 export function WebhooksView({

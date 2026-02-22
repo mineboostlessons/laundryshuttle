@@ -1,15 +1,20 @@
 import { headers } from "next/headers";
 import { cache } from "react";
 import prisma from "./prisma";
+import type { Tenant } from "@prisma/client";
 
-export interface TenantInfo {
-  id: string;
-  slug: string;
-  businessName: string;
-  isActive: boolean;
-  themePreset: string;
+// Use full Prisma Tenant type but loosen JSON fields for property access
+export type TenantInfo = Omit<
+  Tenant,
+  "themeConfig" | "socialLinks" | "seoDefaults" | "notificationSettings" | "taxRegistrations" | "trustBadges"
+> & {
   themeConfig: Record<string, string> | null;
-}
+  socialLinks: Record<string, string> | null;
+  seoDefaults: SeoDefaults | null;
+  notificationSettings: Record<string, unknown> | null;
+  taxRegistrations: unknown;
+  trustBadges: unknown;
+};
 
 /**
  * Get the current tenant from request headers.
@@ -42,22 +47,11 @@ export const getCurrentTenant = cache(async (): Promise<TenantInfo | null> => {
 export async function getTenantBySlug(slug: string): Promise<TenantInfo | null> {
   const tenant = await prisma.tenant.findUnique({
     where: { slug },
-    select: {
-      id: true,
-      slug: true,
-      businessName: true,
-      isActive: true,
-      themePreset: true,
-      themeConfig: true,
-    },
   });
 
   if (!tenant || !tenant.isActive) return null;
 
-  return {
-    ...tenant,
-    themeConfig: tenant.themeConfig as Record<string, string> | null,
-  };
+  return tenant as unknown as TenantInfo;
 }
 
 /**
@@ -66,22 +60,11 @@ export async function getTenantBySlug(slug: string): Promise<TenantInfo | null> 
 export async function getTenantByDomain(domain: string): Promise<TenantInfo | null> {
   const tenant = await prisma.tenant.findUnique({
     where: { customDomain: domain },
-    select: {
-      id: true,
-      slug: true,
-      businessName: true,
-      isActive: true,
-      themePreset: true,
-      themeConfig: true,
-    },
   });
 
   if (!tenant || !tenant.isActive) return null;
 
-  return {
-    ...tenant,
-    themeConfig: tenant.themeConfig as Record<string, string> | null,
-  };
+  return tenant as unknown as TenantInfo;
 }
 
 /**
@@ -102,13 +85,7 @@ export interface SeoDefaults {
   ogImageUrl?: string;
 }
 
-export interface TenantPublicInfo extends TenantInfo {
-  phone: string | null;
-  email: string | null;
-  socialLinks: Record<string, string> | null;
-  seoDefaults: SeoDefaults | null;
-  customCss: string | null;
-}
+export type TenantPublicInfo = TenantInfo;
 
 /**
  * Get full tenant info for public website rendering (header, footer, SEO).
@@ -119,27 +96,9 @@ export const getFullTenantInfo = cache(async (): Promise<TenantPublicInfo | null
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: basic.id },
-    select: {
-      id: true,
-      slug: true,
-      businessName: true,
-      isActive: true,
-      themePreset: true,
-      themeConfig: true,
-      phone: true,
-      email: true,
-      socialLinks: true,
-      seoDefaults: true,
-      customCss: true,
-    },
   });
 
   if (!tenant) return null;
 
-  return {
-    ...tenant,
-    themeConfig: tenant.themeConfig as Record<string, string> | null,
-    socialLinks: tenant.socialLinks as Record<string, string> | null,
-    seoDefaults: tenant.seoDefaults as SeoDefaults | null,
-  };
+  return tenant as unknown as TenantPublicInfo;
 });

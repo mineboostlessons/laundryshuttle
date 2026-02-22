@@ -43,7 +43,7 @@ export interface CustomerReferralInfo {
 // CODE GENERATION
 // =============================================================================
 
-export function generateReferralCode(prefix: string | null, userId: string): string {
+export async function generateReferralCode(prefix: string | null, userId: string): Promise<string> {
   const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
   const userPart = userId.slice(-4).toUpperCase();
   if (prefix) {
@@ -80,7 +80,7 @@ export async function getOrCreateReferralCode(
     select: { referralCodePrefix: true, referralExpiryDays: true, slug: true },
   });
 
-  const code = generateReferralCode(tenant?.referralCodePrefix ?? null, userId);
+  const code = await generateReferralCode(tenant?.referralCodePrefix ?? null, userId);
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + (tenant?.referralExpiryDays ?? 90));
 
