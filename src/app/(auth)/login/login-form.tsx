@@ -23,7 +23,8 @@ export function LoginForm({ tenantSlug }: { tenantSlug?: string }) {
   const [state, formAction, isPending] = useActionState(loginAction, initialState);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const defaultRedirect = !tenantSlug || tenantSlug === "__platform__" ? "/admin" : "/";
+  const callbackUrl = searchParams.get("callbackUrl") || defaultRedirect;
   const error = searchParams.get("error");
 
   useEffect(() => {

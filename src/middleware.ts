@@ -139,11 +139,6 @@ export default auth((request) => {
   // --- Auth checks ---
   const session = request.auth;
 
-  // Redirect authenticated platform admins from landing page to admin dashboard
-  if (pathname === "/" && session?.user?.role === "platform_admin" && headers.get("x-tenant-slug") === "__platform__") {
-    return NextResponse.redirect(new URL("/admin", request.url));
-  }
-
   // Redirect authenticated users away from auth pages
   if (isPublicRoute(pathname) && session?.user) {
     const tenantSlug = headers.get("x-tenant-slug");
