@@ -19,7 +19,7 @@ import { loginAction, oauthSignIn, type AuthState } from "../actions";
 
 const initialState: AuthState = {};
 
-export function LoginForm() {
+export function LoginForm({ tenantSlug }: { tenantSlug?: string }) {
   const [state, formAction, isPending] = useActionState(loginAction, initialState);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -47,6 +47,7 @@ export function LoginForm() {
         )}
 
         <form action={formAction} className="space-y-4">
+          {tenantSlug && <input type="hidden" name="tenantSlug" value={tenantSlug} />}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input

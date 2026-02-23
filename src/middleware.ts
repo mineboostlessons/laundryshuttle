@@ -119,8 +119,9 @@ export default auth((request) => {
 
   // --- Tenant resolution ---
   const headers = new Headers(request.headers);
+  const vercelUrl = process.env.VERCEL_URL || "";
 
-  if (hostname.includes("localhost")) {
+  if (hostname.includes("localhost") || hostname === vercelUrl || hostname.endsWith(".vercel.app")) {
     const tenantSlug = url.searchParams.get("tenant") || "demo";
     headers.set("x-tenant-slug", tenantSlug);
   } else if (hostname === `admin.${platformDomain}` || hostname === platformDomain) {
