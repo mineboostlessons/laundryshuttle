@@ -11,12 +11,12 @@ import { updateTenantTheme, updateTenantLogo } from "./actions";
 import { Check, Loader2 } from "lucide-react";
 
 const PRESET_INFO: Record<ThemePreset, { label: string; description: string }> = {
-  modern: { label: "Modern", description: "Clean sans-serif, subtle shadows, tech-forward" },
-  classic: { label: "Classic", description: "Serif headings, warm tones, traditional elegance" },
-  bold: { label: "Bold", description: "Dramatic shadows, statement typography, premium feel" },
-  minimal: { label: "Minimal", description: "Flat design, thin type, barely-there borders" },
-  warm: { label: "Warm", description: "Rounded, friendly, soft shadows, cozy neighborhood" },
-  ocean: { label: "Ocean", description: "Cool-toned, crisp typography, fresh and clean" },
+  clean_luxe: { label: "Clean Luxe", description: "Premium navy & gold, sophisticated serif headings" },
+  fresh_wave: { label: "Fresh Wave", description: "Modern blue & mint, approachable sans-serif" },
+  eco_zen: { label: "Eco Zen", description: "Natural forest & sage, calm organic feel" },
+  neon_express: { label: "Neon Express", description: "Dark mode violet & cyan, energetic & bold" },
+  soft_cloud: { label: "Soft Cloud", description: "Lavender & yellow, rounded friendly shapes" },
+  metro_editorial: { label: "Metro Editorial", description: "Black & red, bold editorial typography" },
 };
 
 interface ThemeSettingsViewProps {
@@ -49,14 +49,20 @@ function ThemePreviewCard({ preset }: { preset: ThemePreset }) {
             fontFamily: vars["font-heading"],
             fontWeight: Number(vars["heading-weight"]),
             letterSpacing: vars["heading-tracking"],
-            color: `hsl(${vars.foreground})`,
+            color: preset === "neon_express" || vars["hero-gradient"].includes("hsl(210 46%")
+              ? `hsl(${vars["primary-foreground"]})`
+              : `hsl(${vars.foreground})`,
           }}
         >
           Your Business
         </div>
         <div
           className="mt-1 text-[10px]"
-          style={{ color: `hsl(${vars["muted-foreground"]})` }}
+          style={{
+            color: preset === "neon_express" || vars["hero-gradient"].includes("hsl(210 46%")
+              ? "rgba(255,255,255,0.7)"
+              : `hsl(${vars["muted-foreground"]})`,
+          }}
         >
           Laundry pickup & delivery
         </div>
@@ -92,7 +98,7 @@ function ThemePreviewCard({ preset }: { preset: ThemePreset }) {
         >
           <div
             className="h-1 w-5 rounded-full"
-            style={{ background: `hsl(${vars.primary})` }}
+            style={{ background: `hsl(${vars.accent})` }}
           />
           <div
             className="mt-1 h-1 w-8 rounded-full"

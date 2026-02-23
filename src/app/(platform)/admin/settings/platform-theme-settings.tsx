@@ -10,12 +10,12 @@ import { updatePlatformTheme } from "./actions";
 import { Check, Loader2 } from "lucide-react";
 
 const PRESET_INFO: Record<ThemePreset, { label: string; description: string }> = {
-  modern: { label: "Modern", description: "Clean blue tones" },
-  classic: { label: "Classic", description: "Emerald green feel" },
-  bold: { label: "Bold", description: "Purple & violet premium" },
-  minimal: { label: "Minimal", description: "Slate & neutral" },
-  warm: { label: "Warm", description: "Orange & amber cozy" },
-  ocean: { label: "Ocean", description: "Teal & cyan fresh" },
+  clean_luxe: { label: "Clean Luxe", description: "Navy & gold premium" },
+  fresh_wave: { label: "Fresh Wave", description: "Blue & mint modern" },
+  eco_zen: { label: "Eco Zen", description: "Forest & sage natural" },
+  neon_express: { label: "Neon Express", description: "Violet & cyan dark" },
+  soft_cloud: { label: "Soft Cloud", description: "Lavender & yellow friendly" },
+  metro_editorial: { label: "Metro Editorial", description: "Black & red editorial" },
 };
 
 export function PlatformThemeSettings({
@@ -77,11 +77,11 @@ export function PlatformThemeSettings({
                   />
                   <div
                     className="h-8 w-8 rounded-full border"
-                    style={{ backgroundColor: `hsl(${colors.secondary})` }}
+                    style={{ backgroundColor: `hsl(${colors.accent})` }}
                   />
                   <div
                     className="h-8 w-8 rounded-full border"
-                    style={{ backgroundColor: `hsl(${colors.accent})` }}
+                    style={{ backgroundColor: `hsl(${colors.background})` }}
                   />
                   <div
                     className="h-8 w-8 rounded-full border"

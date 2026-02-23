@@ -2,6 +2,10 @@ import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { requireTenant } from "@/lib/tenant";
 import { MobileNavToggle } from "./mobile-nav-toggle";
+import { NavDropdown } from "./nav-dropdown";
+
+const SERVICE_SLUGS = ["wash-and-fold", "pickup-and-delivery", "dry-cleaning"];
+const SECONDARY_SLUGS = ["faq", "service-areas", "contact"];
 
 export async function TenantHeader() {
   const tenant = await requireTenant();
@@ -11,6 +15,13 @@ export async function TenantHeader() {
     select: { title: true, slug: true },
     orderBy: { sortOrder: "asc" },
   });
+
+  // Split pages into services, main nav, and secondary
+  const servicePages = pages.filter((p) => SERVICE_SLUGS.includes(p.slug));
+  const mainPages = pages.filter(
+    (p) => !SERVICE_SLUGS.includes(p.slug) && !SECONDARY_SLUGS.includes(p.slug)
+  );
+  const secondaryPages = pages.filter((p) => SECONDARY_SLUGS.includes(p.slug));
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -27,7 +38,24 @@ export async function TenantHeader() {
           >
             Home
           </Link>
-          {pages.map((page) => (
+
+          {/* Services dropdown if multiple service pages exist */}
+          {servicePages.length > 1 ? (
+            <NavDropdown label="Services" items={servicePages} />
+          ) : (
+            servicePages.map((page) => (
+              <Link
+                key={page.slug}
+                href={`/p/${page.slug}`}
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {page.title}
+              </Link>
+            ))
+          )}
+
+          {/* Main pages (Pricing, About, etc.) */}
+          {mainPages.map((page) => (
             <Link
               key={page.slug}
               href={`/p/${page.slug}`}
@@ -36,6 +64,22 @@ export async function TenantHeader() {
               {page.title}
             </Link>
           ))}
+
+          {/* Secondary dropdown if multiple exist */}
+          {secondaryPages.length > 1 ? (
+            <NavDropdown label="More" items={secondaryPages} />
+          ) : (
+            secondaryPages.map((page) => (
+              <Link
+                key={page.slug}
+                href={`/p/${page.slug}`}
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {page.title}
+              </Link>
+            ))
+          )}
+
           <Link
             href="/order"
             className="bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"

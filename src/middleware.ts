@@ -19,7 +19,7 @@ const PROTECTED_PATTERNS = [
 ];
 
 // Public routes that don't need auth
-const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/onboarding"];
+const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/onboarding", "/staff/login"];
 
 // Role-to-route access mapping
 const ROLE_ROUTE_MAP: Record<string, string[]> = {
@@ -122,8 +122,8 @@ export default auth((request) => {
   const vercelUrl = process.env.VERCEL_URL || "";
 
   if (hostname.includes("localhost") || hostname === vercelUrl || hostname.endsWith(".vercel.app")) {
-    const tenantSlug = url.searchParams.get("tenant") || "demo";
-    headers.set("x-tenant-slug", tenantSlug);
+    const tenantSlug = url.searchParams.get("tenant");
+    headers.set("x-tenant-slug", tenantSlug || "__platform__");
   } else if (hostname === `admin.${platformDomain}` || hostname === platformDomain) {
     headers.set("x-tenant-slug", "__platform__");
   } else if (hostname.endsWith(`.${platformDomain}`)) {

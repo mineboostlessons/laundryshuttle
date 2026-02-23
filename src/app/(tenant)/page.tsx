@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 import { getCurrentTenant, getFullTenantInfo } from "@/lib/tenant";
 import type { PageBlock } from "@/types/blocks";
@@ -8,6 +9,7 @@ import { BlockRenderer } from "@/components/blocks";
 import { TenantHeader } from "@/components/tenant/tenant-header";
 import { TenantFooter } from "@/components/tenant/tenant-footer";
 import { LocalBusinessJsonLd } from "@/components/seo/json-ld";
+import { MarketingLandingPage } from "@/components/marketing/landing-page";
 import { formatCurrency } from "@/lib/utils";
 import {
   Truck,
@@ -66,6 +68,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function TenantHomePage() {
+  const headersList = await headers();
+  const tenantSlug = headersList.get("x-tenant-slug");
+
+  // Platform context — render marketing landing page
+  if (!tenantSlug || tenantSlug === "__platform__") {
+    return <MarketingLandingPage />;
+  }
+
   const tenant = await getCurrentTenant();
   if (!tenant) notFound();
 

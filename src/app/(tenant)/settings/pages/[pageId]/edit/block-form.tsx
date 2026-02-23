@@ -25,6 +25,10 @@ const ICON_OPTIONS: { value: FeatureIcon; label: string }[] = [
   { value: "shield", label: "Shield" },
   { value: "phone", label: "Phone" },
   { value: "dollar", label: "Dollar" },
+  { value: "map", label: "Map" },
+  { value: "calendar", label: "Calendar" },
+  { value: "leaf", label: "Leaf" },
+  { value: "heart", label: "Heart" },
 ];
 
 export function BlockForm({ block, onChange }: BlockFormProps) {
@@ -306,6 +310,442 @@ export function BlockForm({ block, onChange }: BlockFormProps) {
             }}
           >
             Add Question
+          </Button>
+        </div>
+      );
+
+    case "pricing":
+      return (
+        <div className="space-y-4">
+          <Field label="Heading">
+            <Input
+              value={block.heading}
+              onChange={(e) => onChange({ ...block, heading: e.target.value })}
+            />
+          </Field>
+          <Field label="Subheading (optional)">
+            <Input
+              value={block.subheading || ""}
+              onChange={(e) => onChange({ ...block, subheading: e.target.value })}
+            />
+          </Field>
+          {block.tiers.map((tier, i) => (
+            <div key={i} className="rounded-md border p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Tier {i + 1}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive"
+                  onClick={() => {
+                    const tiers = block.tiers.filter((_, ti) => ti !== i);
+                    onChange({ ...block, tiers });
+                  }}
+                >
+                  Remove
+                </Button>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div>
+                  <Label className="text-xs">Name</Label>
+                  <Input
+                    value={tier.name}
+                    onChange={(e) => {
+                      const tiers = [...block.tiers];
+                      tiers[i] = { ...tier, name: e.target.value };
+                      onChange({ ...block, tiers });
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Price</Label>
+                  <Input
+                    value={tier.price}
+                    onChange={(e) => {
+                      const tiers = [...block.tiers];
+                      tiers[i] = { ...tier, price: e.target.value };
+                      onChange({ ...block, tiers });
+                    }}
+                    placeholder="$1.99"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Unit</Label>
+                  <Input
+                    value={tier.unit}
+                    onChange={(e) => {
+                      const tiers = [...block.tiers];
+                      tiers[i] = { ...tier, unit: e.target.value };
+                      onChange({ ...block, tiers });
+                    }}
+                    placeholder="/lb"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Description</Label>
+                  <Input
+                    value={tier.description}
+                    onChange={(e) => {
+                      const tiers = [...block.tiers];
+                      tiers[i] = { ...tier, description: e.target.value };
+                      onChange({ ...block, tiers });
+                    }}
+                  />
+                </div>
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={tier.featured ?? false}
+                  onChange={(e) => {
+                    const tiers = [...block.tiers];
+                    tiers[i] = { ...tier, featured: e.target.checked };
+                    onChange({ ...block, tiers });
+                  }}
+                  className="h-4 w-4 rounded border-input"
+                />
+                Featured / Most Popular
+              </label>
+            </div>
+          ))}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const tiers = [
+                ...block.tiers,
+                { name: "", price: "", unit: "", description: "" },
+              ];
+              onChange({ ...block, tiers });
+            }}
+          >
+            Add Tier
+          </Button>
+        </div>
+      );
+
+    case "how_it_works":
+      return (
+        <div className="space-y-4">
+          <Field label="Heading">
+            <Input
+              value={block.heading}
+              onChange={(e) => onChange({ ...block, heading: e.target.value })}
+            />
+          </Field>
+          {block.steps.map((step, i) => (
+            <div key={i} className="rounded-md border p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Step {i + 1}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive"
+                  onClick={() => {
+                    const steps = block.steps.filter((_, si) => si !== i);
+                    onChange({ ...block, steps });
+                  }}
+                >
+                  Remove
+                </Button>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div>
+                  <Label className="text-xs">Icon</Label>
+                  <Select
+                    value={step.icon}
+                    onValueChange={(v) => {
+                      const steps = [...block.steps];
+                      steps[i] = { ...step, icon: v as FeatureIcon };
+                      onChange({ ...block, steps });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ICON_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Title</Label>
+                  <Input
+                    value={step.title}
+                    onChange={(e) => {
+                      const steps = [...block.steps];
+                      steps[i] = { ...step, title: e.target.value };
+                      onChange({ ...block, steps });
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Description</Label>
+                  <Input
+                    value={step.description}
+                    onChange={(e) => {
+                      const steps = [...block.steps];
+                      steps[i] = { ...step, description: e.target.value };
+                      onChange({ ...block, steps });
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const steps = [
+                ...block.steps,
+                { title: "", description: "", icon: "sparkles" as FeatureIcon },
+              ];
+              onChange({ ...block, steps });
+            }}
+          >
+            Add Step
+          </Button>
+        </div>
+      );
+
+    case "testimonials":
+      return (
+        <div className="space-y-4">
+          <Field label="Heading">
+            <Input
+              value={block.heading}
+              onChange={(e) => onChange({ ...block, heading: e.target.value })}
+            />
+          </Field>
+          {block.testimonials.map((item, i) => (
+            <div key={i} className="rounded-md border p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Testimonial {i + 1}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive"
+                  onClick={() => {
+                    const testimonials = block.testimonials.filter((_, ti) => ti !== i);
+                    onChange({ ...block, testimonials });
+                  }}
+                >
+                  Remove
+                </Button>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div>
+                  <Label className="text-xs">Name</Label>
+                  <Input
+                    value={item.name}
+                    onChange={(e) => {
+                      const testimonials = [...block.testimonials];
+                      testimonials[i] = { ...item, name: e.target.value };
+                      onChange({ ...block, testimonials });
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Rating (1-5)</Label>
+                  <Select
+                    value={String(item.rating)}
+                    onValueChange={(v) => {
+                      const testimonials = [...block.testimonials];
+                      testimonials[i] = { ...item, rating: Number(v) };
+                      onChange({ ...block, testimonials });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <SelectItem key={n} value={String(n)}>
+                          {n} Star{n > 1 ? "s" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Field label="Testimonial Text">
+                <Textarea
+                  value={item.text}
+                  onChange={(e) => {
+                    const testimonials = [...block.testimonials];
+                    testimonials[i] = { ...item, text: e.target.value };
+                    onChange({ ...block, testimonials });
+                  }}
+                  rows={3}
+                />
+              </Field>
+            </div>
+          ))}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const testimonials = [
+                ...block.testimonials,
+                { name: "", text: "", rating: 5 },
+              ];
+              onChange({ ...block, testimonials });
+            }}
+          >
+            Add Testimonial
+          </Button>
+        </div>
+      );
+
+    case "contact":
+      return (
+        <div className="space-y-3">
+          <Field label="Heading">
+            <Input
+              value={block.heading}
+              onChange={(e) => onChange({ ...block, heading: e.target.value })}
+            />
+          </Field>
+          <Field label="Subheading (optional)">
+            <Input
+              value={block.subheading || ""}
+              onChange={(e) => onChange({ ...block, subheading: e.target.value })}
+            />
+          </Field>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={block.showPhone}
+              onChange={(e) => onChange({ ...block, showPhone: e.target.checked })}
+              className="h-4 w-4 rounded border-input"
+            />
+            Show phone number
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={block.showEmail}
+              onChange={(e) => onChange({ ...block, showEmail: e.target.checked })}
+              className="h-4 w-4 rounded border-input"
+            />
+            Show email address
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={block.showForm}
+              onChange={(e) => onChange({ ...block, showForm: e.target.checked })}
+              className="h-4 w-4 rounded border-input"
+            />
+            Show contact form
+          </label>
+        </div>
+      );
+
+    case "service_areas":
+      return (
+        <div className="space-y-3">
+          <Field label="Heading">
+            <Input
+              value={block.heading}
+              onChange={(e) => onChange({ ...block, heading: e.target.value })}
+            />
+          </Field>
+          <Field label="Subheading (optional)">
+            <Input
+              value={block.subheading || ""}
+              onChange={(e) => onChange({ ...block, subheading: e.target.value })}
+            />
+          </Field>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={block.showZipChecker}
+              onChange={(e) => onChange({ ...block, showZipChecker: e.target.checked })}
+              className="h-4 w-4 rounded border-input"
+            />
+            Show ZIP code checker
+          </label>
+        </div>
+      );
+
+    case "gallery":
+      return (
+        <div className="space-y-4">
+          <Field label="Heading">
+            <Input
+              value={block.heading}
+              onChange={(e) => onChange({ ...block, heading: e.target.value })}
+            />
+          </Field>
+          {block.images.map((img, i) => (
+            <div key={i} className="rounded-md border p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Image {i + 1}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive"
+                  onClick={() => {
+                    const images = block.images.filter((_, ii) => ii !== i);
+                    onChange({ ...block, images });
+                  }}
+                >
+                  Remove
+                </Button>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div>
+                  <Label className="text-xs">Image URL</Label>
+                  <Input
+                    value={img.url}
+                    onChange={(e) => {
+                      const images = [...block.images];
+                      images[i] = { ...img, url: e.target.value };
+                      onChange({ ...block, images });
+                    }}
+                    placeholder="https://..."
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Alt Text</Label>
+                  <Input
+                    value={img.alt}
+                    onChange={(e) => {
+                      const images = [...block.images];
+                      images[i] = { ...img, alt: e.target.value };
+                      onChange({ ...block, images });
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Caption (optional)</Label>
+                  <Input
+                    value={img.caption || ""}
+                    onChange={(e) => {
+                      const images = [...block.images];
+                      images[i] = { ...img, caption: e.target.value };
+                      onChange({ ...block, images });
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const images = [...block.images, { url: "", alt: "" }];
+              onChange({ ...block, images });
+            }}
+          >
+            Add Image
           </Button>
         </div>
       );

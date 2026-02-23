@@ -110,6 +110,15 @@ export function BlockEditor({ page }: BlockEditorProps) {
             {message && (
               <span className="text-sm text-muted-foreground">{message}</span>
             )}
+            <a
+              href={page.slug === "home" ? "/" : `/p/${page.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button variant="outline" size="sm">
+                Preview
+              </Button>
+            </a>
             <Link href="/settings/pages">
               <Button variant="outline" size="sm">
                 Back
@@ -305,5 +314,19 @@ function getBlockPreview(block: PageBlock): string {
       return block.heading || "CTA";
     case "faq":
       return `${block.items.length} questions`;
+    case "pricing":
+      return `${block.tiers.length} tiers`;
+    case "how_it_works":
+      return `${block.steps.length} steps`;
+    case "testimonials":
+      return `${block.testimonials.length} testimonials`;
+    case "contact":
+      return block.heading || "Contact";
+    case "service_areas":
+      return block.heading || "Service Areas";
+    case "gallery":
+      return `${block.images.length} images`;
+    default:
+      return "";
   }
 }

@@ -41,6 +41,7 @@ import {
   Globe,
   Palette,
   MapPin,
+  Layout,
 } from "lucide-react";
 import type { UserRole } from "@/types";
 
@@ -66,6 +67,12 @@ const NAV_ITEMS: NavItem[] = [
     icon: Package,
     roles: ["owner"],
     tourId: "nav-orders",
+  },
+  {
+    href: "/settings/pages",
+    label: "Website",
+    icon: Layout,
+    roles: ["owner"],
   },
   {
     href: "/dashboard/promo-codes",

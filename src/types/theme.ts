@@ -2,7 +2,10 @@
 // Theme System — Type Definitions
 // =============================================================================
 
-export type ThemePreset = "modern" | "classic" | "bold" | "minimal" | "warm" | "ocean";
+export type ThemePreset = "clean_luxe" | "fresh_wave" | "eco_zen" | "neon_express" | "soft_cloud" | "metro_editorial";
+
+/** Old theme names for migration fallback */
+export type LegacyThemePreset = "modern" | "classic" | "bold" | "minimal" | "warm" | "ocean";
 
 /** All CSS variable keys used by the theme system */
 export interface ThemeVariables {

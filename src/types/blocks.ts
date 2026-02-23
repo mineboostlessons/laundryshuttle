@@ -52,13 +52,78 @@ export interface FaqBlock {
   }>;
 }
 
+export interface PricingBlock {
+  type: "pricing";
+  heading: string;
+  subheading?: string;
+  tiers: Array<{
+    name: string;
+    price: string;
+    unit: string;
+    description: string;
+    featured?: boolean;
+  }>;
+}
+
+export interface HowItWorksBlock {
+  type: "how_it_works";
+  heading: string;
+  steps: Array<{
+    title: string;
+    description: string;
+    icon: FeatureIcon;
+  }>;
+}
+
+export interface TestimonialsBlock {
+  type: "testimonials";
+  heading: string;
+  testimonials: Array<{
+    name: string;
+    text: string;
+    rating: number;
+  }>;
+}
+
+export interface ContactBlock {
+  type: "contact";
+  heading: string;
+  subheading?: string;
+  showPhone: boolean;
+  showEmail: boolean;
+  showForm: boolean;
+}
+
+export interface ServiceAreasBlock {
+  type: "service_areas";
+  heading: string;
+  subheading?: string;
+  showZipChecker: boolean;
+}
+
+export interface GalleryBlock {
+  type: "gallery";
+  heading: string;
+  images: Array<{
+    url: string;
+    alt: string;
+    caption?: string;
+  }>;
+}
+
 export type PageBlock =
   | HeroBlock
   | TextBlock
   | ServicesBlock
   | FeaturesBlock
   | CtaBlock
-  | FaqBlock;
+  | FaqBlock
+  | PricingBlock
+  | HowItWorksBlock
+  | TestimonialsBlock
+  | ContactBlock
+  | ServiceAreasBlock
+  | GalleryBlock;
 
 export type BlockType = PageBlock["type"];
 
@@ -68,7 +133,11 @@ export type FeatureIcon =
   | "sparkles"
   | "shield"
   | "phone"
-  | "dollar";
+  | "dollar"
+  | "map"
+  | "calendar"
+  | "leaf"
+  | "heart";
 
 export const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
   hero: "Hero Banner",
@@ -77,6 +146,12 @@ export const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
   features: "Features",
   cta: "Call to Action",
   faq: "FAQ",
+  pricing: "Pricing Table",
+  how_it_works: "How It Works",
+  testimonials: "Testimonials",
+  contact: "Contact",
+  service_areas: "Service Areas",
+  gallery: "Image Gallery",
 };
 
 export function createDefaultBlock(type: BlockType): PageBlock {
@@ -146,6 +221,55 @@ export function createDefaultBlock(type: BlockType): PageBlock {
             answer: "Standard turnaround is 24-48 hours from pickup.",
           },
         ],
+      };
+    case "pricing":
+      return {
+        type: "pricing",
+        heading: "Our Pricing",
+        tiers: [
+          { name: "Wash & Fold", price: "$1.99", unit: "/lb", description: "24-hour turnaround" },
+          { name: "Dry Cleaning", price: "$6.99", unit: "/item", description: "Professional pressing included" },
+        ],
+      };
+    case "how_it_works":
+      return {
+        type: "how_it_works",
+        heading: "How It Works",
+        steps: [
+          { title: "Schedule", description: "Book a pickup online.", icon: "calendar" },
+          { title: "We Pick Up", description: "Our driver arrives at your door.", icon: "truck" },
+          { title: "Clean & Deliver", description: "We clean and deliver back to you.", icon: "sparkles" },
+        ],
+      };
+    case "testimonials":
+      return {
+        type: "testimonials",
+        heading: "What Our Customers Say",
+        testimonials: [
+          { name: "Jane D.", text: "Amazing service! My clothes always come back perfectly clean.", rating: 5 },
+        ],
+      };
+    case "contact":
+      return {
+        type: "contact",
+        heading: "Contact Us",
+        subheading: "We'd love to hear from you.",
+        showPhone: true,
+        showEmail: true,
+        showForm: true,
+      };
+    case "service_areas":
+      return {
+        type: "service_areas",
+        heading: "Service Areas",
+        subheading: "Check if we deliver to your area.",
+        showZipChecker: true,
+      };
+    case "gallery":
+      return {
+        type: "gallery",
+        heading: "Gallery",
+        images: [],
       };
   }
 }
