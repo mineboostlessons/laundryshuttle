@@ -141,8 +141,14 @@ export default auth((request) => {
 
   // Redirect authenticated users away from auth pages
   if (isPublicRoute(pathname) && session?.user) {
-    const redirectUrl = getDefaultRedirect(session.user.role);
-    return NextResponse.redirect(new URL(redirectUrl, request.url));
+    const tenantSlug = headers.get("x-tenant-slug");
+    // On platform domain, only redirect platform admins (tenant users have no dashboard here)
+    if (tenantSlug === "__platform__" && session.user.role !== "platform_admin") {
+      // Let them through — they can see the login/marketing page
+    } else {
+      const redirectUrl = getDefaultRedirect(session.user.role);
+      return NextResponse.redirect(new URL(redirectUrl, request.url));
+    }
   }
 
   // Redirect unauthenticated users to login for protected routes
@@ -155,6 +161,12 @@ export default auth((request) => {
   // Check role-based access for protected routes
   if (isProtectedRoute(pathname) && session?.user) {
     const role = session.user.role;
+    const tenantSlug = headers.get("x-tenant-slug");
+
+    // Block non-admin users from accessing tenant routes on platform domain
+    if (tenantSlug === "__platform__" && role !== "platform_admin" && !pathname.includes("/admin")) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
 
     if (!hasRouteAccess(role, pathname)) {
       const redirectUrl = getDefaultRedirect(role);
@@ -162,7 +174,6 @@ export default auth((request) => {
     }
 
     // Tenant-session mismatch check
-    const tenantSlug = headers.get("x-tenant-slug");
     if (
       tenantSlug &&
       tenantSlug !== "__platform__" &&
