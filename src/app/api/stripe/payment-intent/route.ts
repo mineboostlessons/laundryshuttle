@@ -7,7 +7,6 @@ import { createPaymentIntent, createStripeCustomer } from "@/lib/stripe";
 const createPaymentIntentSchema = z.object({
   orderId: z.string(),
   paymentMethodId: z.string().optional(),
-  useWallet: z.boolean().optional(),
   promoCode: z.string().optional(),
 });
 
@@ -30,7 +29,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { orderId, useWallet, promoCode } = parsed.data;
+    const { orderId, promoCode } = parsed.data;
 
     // Fetch order with tenant info
     const order = await prisma.order.findUnique({
@@ -128,63 +127,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Apply wallet balance if requested
-    let walletDeduction = 0;
-    if (useWallet) {
-      const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { walletBalance: true },
-      });
-
-      if (user && user.walletBalance > 0) {
-        walletDeduction = Math.min(user.walletBalance, totalAmount);
-        totalAmount = totalAmount - walletDeduction;
-      }
-    }
-
-    // If fully covered by wallet, skip Stripe
-    if (totalAmount <= 0) {
-      await prisma.$transaction([
-        prisma.order.update({
-          where: { id: orderId },
-          data: {
-            paymentMethod: "wallet",
-            paidAt: new Date(),
-            status: "confirmed",
-            totalAmount: order.totalAmount - discountAmount,
-          },
-        }),
-        prisma.user.update({
-          where: { id: session.user.id },
-          data: { walletBalance: { decrement: walletDeduction } },
-        }),
-        prisma.walletTransaction.create({
-          data: {
-            userId: session.user.id,
-            tenantId: order.tenantId,
-            type: "order_payment",
-            amount: -walletDeduction,
-            balanceAfter: 0,
-            description: `Payment for order ${order.orderNumber}`,
-            orderId: order.id,
-          },
-        }),
-        prisma.orderStatusHistory.create({
-          data: {
-            orderId: order.id,
-            status: "confirmed",
-            changedByUserId: session.user.id,
-            notes: "Paid with wallet balance",
-          },
-        }),
-      ]);
-
-      return NextResponse.json({
-        success: true,
-        data: { paidWithWallet: true, orderId: order.id },
-      });
-    }
-
     // Ensure user has a Stripe customer ID
     let stripeCustomerId = await prisma.user.findUnique({
       where: { id: session.user.id },
@@ -214,7 +156,6 @@ export async function POST(req: NextRequest) {
         orderId: order.id,
         orderNumber: order.orderNumber,
         tenantId: order.tenantId,
-        walletDeduction: walletDeduction.toString(),
       },
     });
 
@@ -234,7 +175,6 @@ export async function POST(req: NextRequest) {
         clientSecret: paymentIntent.client_secret,
         paymentIntentId: paymentIntent.id,
         amount: totalAmount,
-        walletDeduction,
       },
     });
   } catch (error) {

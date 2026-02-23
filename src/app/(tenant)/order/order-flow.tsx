@@ -59,10 +59,9 @@ interface OrderFlowProps {
   services: ServiceItem[];
   timeSlots: TimeSlotData;
   tenantSlug: string;
-  walletBalance?: number;
 }
 
-export function OrderFlow({ services, timeSlots, tenantSlug, walletBalance = 0 }: OrderFlowProps) {
+export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [areaError, setAreaError] = useState<string | null>(null);
@@ -314,7 +313,6 @@ export function OrderFlow({ services, timeSlots, tenantSlug, walletBalance = 0 }
             formData={formData}
             services={services}
             orderId={orderId}
-            walletBalance={walletBalance}
             tenantSlug={tenantSlug}
           />
         )}

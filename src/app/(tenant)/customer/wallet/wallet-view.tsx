@@ -159,7 +159,6 @@ export function WalletView({ initialData }: WalletViewProps) {
                   clientSecret={clientSecret}
                   orderId=""
                   amount={topUpAmount}
-                  walletDeduction={0}
                   returnUrl={`${window.location.origin}/customer/wallet?topup=success`}
                   onSuccess={() => {
                     window.location.href = "/customer/wallet?topup=success";

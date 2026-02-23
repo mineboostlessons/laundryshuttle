@@ -1,27 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { uploadDeliveryPhoto, uploadSignature } from "@/lib/r2";
+import { uploadToR2, uploadDeliveryPhoto, uploadSignature } from "@/lib/r2";
+
+const ALLOWED_UPLOAD_TYPES: Record<string, { roles: string[]; folder: string; contentType: string; ext: string }> = {
+  delivery_photo: { roles: ["driver"], folder: "delivery-photos", contentType: "image/jpeg", ext: ".jpg" },
+  signature: { roles: ["driver"], folder: "signatures", contentType: "image/png", ext: ".png" },
+  logo: { roles: ["owner", "manager", "platform_admin"], folder: "logos", contentType: "image/png", ext: ".png" },
+  block_image: { roles: ["owner", "manager"], folder: "block-images", contentType: "image/jpeg", ext: ".jpg" },
+};
 
 /**
  * POST /api/upload
- * Upload a delivery photo or signature to R2.
+ * Upload images to R2.
  * Expects multipart/form-data with:
  *   - file: the image file
- *   - type: "delivery_photo" | "signature"
+ *   - type: "delivery_photo" | "signature" | "logo" | "block_image"
  */
 export async function POST(request: NextRequest) {
   const session = await auth();
-  if (!session?.user?.tenantId) {
+  if (!session?.user?.tenantId && session?.user?.role !== "platform_admin") {
     return NextResponse.json(
       { success: false, error: "Unauthorized" },
       { status: 401 }
-    );
-  }
-
-  if (session.user.role !== "driver") {
-    return NextResponse.json(
-      { success: false, error: "Forbidden" },
-      { status: 403 }
     );
   }
 
@@ -37,10 +37,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!type || !["delivery_photo", "signature"].includes(type)) {
+    if (!type || !ALLOWED_UPLOAD_TYPES[type]) {
       return NextResponse.json(
-        { success: false, error: "Invalid type. Must be delivery_photo or signature" },
+        { success: false, error: `Invalid type. Must be one of: ${Object.keys(ALLOWED_UPLOAD_TYPES).join(", ")}` },
         { status: 400 }
+      );
+    }
+
+    const uploadConfig = ALLOWED_UPLOAD_TYPES[type];
+    if (!uploadConfig.roles.includes(session.user.role)) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden" },
+        { status: 403 }
       );
     }
 
@@ -55,11 +63,18 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // Detect content type from file
+    const contentType = file.type || uploadConfig.contentType;
+    const ext = file.name?.match(/\.\w+$/)?.[0] || uploadConfig.ext;
+
     let url: string;
     if (type === "delivery_photo") {
-      url = await uploadDeliveryPhoto(buffer, session.user.tenantId);
+      url = await uploadDeliveryPhoto(buffer, session.user.tenantId!);
+    } else if (type === "signature") {
+      url = await uploadSignature(buffer, session.user.tenantId!);
     } else {
-      url = await uploadSignature(buffer, session.user.tenantId);
+      const tenantId = session.user.tenantId || "platform";
+      url = await uploadToR2(buffer, tenantId, uploadConfig.folder, contentType, ext);
     }
 
     return NextResponse.json({ success: true, url });

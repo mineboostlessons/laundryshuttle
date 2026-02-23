@@ -9,7 +9,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { Button } from "@/components/ui/button";
-import { Loader2, CreditCard, Wallet } from "lucide-react";
+import { Loader2, CreditCard } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 const stripePromise = loadStripe(
@@ -24,7 +24,6 @@ interface CheckoutFormProps {
   orderId: string;
   returnUrl: string;
   amount: number;
-  walletDeduction: number;
   onSuccess: () => void;
   onError: (msg: string) => void;
 }
@@ -33,7 +32,6 @@ function CheckoutForm({
   orderId,
   returnUrl,
   amount,
-  walletDeduction,
   onSuccess,
   onError,
 }: CheckoutFormProps) {
@@ -66,13 +64,6 @@ function CheckoutForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <PaymentElement />
-
-      {walletDeduction > 0 && (
-        <div className="flex items-center gap-2 rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
-          <Wallet className="h-4 w-4" />
-          {formatCurrency(walletDeduction)} applied from wallet
-        </div>
-      )}
 
       <div className="flex items-center justify-between border-t pt-4">
         <span className="text-sm text-muted-foreground">Amount to charge</span>
@@ -109,7 +100,6 @@ interface PaymentFormProps {
   clientSecret: string;
   orderId: string;
   amount: number;
-  walletDeduction: number;
   returnUrl: string;
   onSuccess: () => void;
   onError: (msg: string) => void;
@@ -119,7 +109,6 @@ export function PaymentForm({
   clientSecret,
   orderId,
   amount,
-  walletDeduction,
   returnUrl,
   onSuccess,
   onError,
@@ -141,7 +130,6 @@ export function PaymentForm({
         orderId={orderId}
         returnUrl={returnUrl}
         amount={amount}
-        walletDeduction={walletDeduction}
         onSuccess={onSuccess}
         onError={onError}
       />

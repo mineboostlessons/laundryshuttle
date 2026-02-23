@@ -39,6 +39,8 @@ import {
   BarChart3,
   ArrowRightLeft,
   Globe,
+  Palette,
+  MapPin,
 } from "lucide-react";
 import type { UserRole } from "@/types";
 
@@ -156,6 +158,18 @@ const NAV_ITEMS: NavItem[] = [
     label: "Migration Tools",
     icon: ArrowRightLeft,
     roles: ["owner", "manager"],
+  },
+  {
+    href: "/dashboard/interest",
+    label: "Service Interests",
+    icon: MapPin,
+    roles: ["owner", "manager"],
+  },
+  {
+    href: "/settings/theme",
+    label: "Theme",
+    icon: Palette,
+    roles: ["owner"],
   },
   {
     href: "/settings/domains",

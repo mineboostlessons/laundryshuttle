@@ -2,7 +2,7 @@
 // Theme System — Type Definitions
 // =============================================================================
 
-export type ThemePreset = "modern" | "classic" | "bold" | "minimal";
+export type ThemePreset = "modern" | "classic" | "bold" | "minimal" | "warm" | "ocean";
 
 /** All CSS variable keys used by the theme system */
 export interface ThemeVariables {

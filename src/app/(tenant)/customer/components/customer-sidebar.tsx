@@ -12,7 +12,7 @@ import {
   Package,
   MapPin,
   User,
-  Wallet,
+  CreditCard,
   LogOut,
   Menu,
   X,
@@ -21,7 +21,7 @@ import {
 const NAV_ITEMS = [
   { href: "/customer", label: "Dashboard", icon: LayoutDashboard },
   { href: "/customer/orders", label: "Orders", icon: Package },
-  { href: "/customer/wallet", label: "Wallet", icon: Wallet },
+  { href: "/customer/payment-methods", label: "Payment Methods", icon: CreditCard },
   { href: "/customer/addresses", label: "Addresses", icon: MapPin },
   { href: "/customer/profile", label: "Profile", icon: User },
 ];

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "./sign-out-button";
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
   { href: "/admin/referrals", label: "Referral Analytics", icon: ReferralIcon },
   { href: "/admin/system-status", label: "System Status", icon: HeartPulseIcon },
   { href: "/admin/launch-checklist", label: "Launch Checklist", icon: RocketIcon },
+  { href: "/admin/settings", label: "Settings", icon: SettingsIcon },
 ];
 
 export function AdminLayoutShell({
@@ -32,10 +34,17 @@ export function AdminLayoutShell({
       {/* Sidebar */}
       <aside className="hidden w-64 flex-col border-r bg-card md:flex">
         <div className="border-b p-4">
-          <Link href="/admin" className="text-lg font-bold">
-            Laundry Shuttle
+          <Link href="/admin" className="flex items-center gap-2">
+            <Image
+              src="/images/logo-circle.png"
+              alt="Laundry Shuttle"
+              width={32}
+              height={32}
+              className="rounded-full"
+            />
+            <span className="text-lg font-bold">Laundry Shuttle</span>
           </Link>
-          <p className="text-xs text-muted-foreground">Platform Admin</p>
+          <p className="text-xs text-muted-foreground mt-1">Platform Admin</p>
         </div>
         <nav className="flex-1 space-y-1 p-3">
           {NAV_ITEMS.map((item) => {
@@ -70,8 +79,15 @@ export function AdminLayoutShell({
       <main className="flex-1 bg-muted/30">
         {/* Mobile header */}
         <header className="flex items-center justify-between border-b bg-background p-4 md:hidden">
-          <Link href="/admin" className="font-bold">
-            Laundry Shuttle
+          <Link href="/admin" className="flex items-center gap-2">
+            <Image
+              src="/images/logo-circle.png"
+              alt="Laundry Shuttle"
+              width={24}
+              height={24}
+              className="rounded-full"
+            />
+            <span className="font-bold">Laundry Shuttle</span>
           </Link>
           <SignOutButton />
         </header>
@@ -192,6 +208,15 @@ function RocketIcon({ className }: { className?: string }) {
       <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z" />
       <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
       <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+    </svg>
+  );
+}
+
+function SettingsIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+      <circle cx="12" cy="12" r="3" />
     </svg>
   );
 }

@@ -18,7 +18,7 @@ export default async function OrderPage() {
 
   const session = await getSession();
 
-  const [services, timeSlots, walletBalance] = await Promise.all([
+  const [services, timeSlots] = await Promise.all([
     prisma.service.findMany({
       where: { tenantId: tenant.id, isActive: true },
       orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
@@ -33,14 +33,6 @@ export default async function OrderPage() {
       },
     }),
     getAvailableTimeSlots(),
-    session?.user?.id
-      ? prisma.user
-          .findUnique({
-            where: { id: session.user.id },
-            select: { walletBalance: true },
-          })
-          .then((u) => u?.walletBalance ?? 0)
-      : Promise.resolve(0),
   ]);
 
   return (
@@ -59,7 +51,6 @@ export default async function OrderPage() {
               services={services}
               timeSlots={timeSlots}
               tenantSlug={tenant.slug}
-              walletBalance={walletBalance}
             />
           </div>
         </div>

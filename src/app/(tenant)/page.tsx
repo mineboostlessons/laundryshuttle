@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   ChevronRight,
 } from "lucide-react";
+import { HomepageAddressChecker } from "./components/homepage-address-checker";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tenant = await getFullTenantInfo();
@@ -188,17 +189,21 @@ export default async function TenantHomePage() {
               laundry services. We handle the dirty work so you can enjoy your
               free time.
             </p>
-            <div className="mt-10 flex items-center justify-center gap-4">
+            <div className="mt-10">
+              <HomepageAddressChecker />
+            </div>
+            <div className="mt-4 flex items-center justify-center gap-4">
               <Link
                 href="/order"
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-base font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+                className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
               >
                 Schedule a Pickup
-                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                <ChevronRight className="h-3 w-3" aria-hidden="true" />
               </Link>
+              <span className="text-muted-foreground">|</span>
               <Link
                 href="#services"
-                className="inline-flex items-center gap-2 rounded-lg border border-input bg-background px-6 py-3 text-base font-semibold text-foreground shadow-sm transition-colors hover:bg-accent"
+                className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:underline"
               >
                 View Services
               </Link>

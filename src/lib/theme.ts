@@ -1,7 +1,7 @@
 import type { ThemePreset, ThemeVariables, ThemeConfig } from "@/types/theme";
 
 // =============================================================================
-// Theme Presets — 4 complete HSL color palettes
+// Theme Presets — 6 complete HSL color palettes
 // =============================================================================
 
 export const THEME_PRESETS: Record<ThemePreset, ThemeVariables> = {
@@ -87,6 +87,48 @@ export const THEME_PRESETS: Record<ThemePreset, ThemeVariables> = {
     border: "220 10% 91%",
     input: "220 10% 91%",
     ring: "220 14% 20%",
+  },
+
+  // Warm (orange/amber) — cozy neighborhood feel
+  warm: {
+    background: "0 0% 100%",
+    foreground: "20 30% 8%",
+    card: "0 0% 100%",
+    "card-foreground": "20 30% 8%",
+    primary: "25 95% 53%",
+    "primary-foreground": "0 0% 100%",
+    secondary: "30 30% 96%",
+    "secondary-foreground": "20 30% 15%",
+    muted: "30 20% 96%",
+    "muted-foreground": "20 10% 45%",
+    accent: "35 30% 93%",
+    "accent-foreground": "20 30% 15%",
+    destructive: "0 84.2% 60.2%",
+    "destructive-foreground": "210 40% 98%",
+    border: "30 15% 90%",
+    input: "30 15% 90%",
+    ring: "25 95% 53%",
+  },
+
+  // Ocean (teal/cyan) — clean, fresh water feel
+  ocean: {
+    background: "0 0% 100%",
+    foreground: "185 30% 8%",
+    card: "0 0% 100%",
+    "card-foreground": "185 30% 8%",
+    primary: "185 72% 40%",
+    "primary-foreground": "0 0% 100%",
+    secondary: "185 20% 96%",
+    "secondary-foreground": "185 30% 15%",
+    muted: "185 15% 96%",
+    "muted-foreground": "185 10% 45%",
+    accent: "185 20% 93%",
+    "accent-foreground": "185 30% 15%",
+    destructive: "0 84.2% 60.2%",
+    "destructive-foreground": "210 40% 98%",
+    border: "185 15% 90%",
+    input: "185 15% 90%",
+    ring: "185 72% 40%",
   },
 };
 

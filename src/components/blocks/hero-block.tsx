@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { HeroBlock } from "@/types/blocks";
+import { HomepageAddressChecker } from "@/app/(tenant)/components/homepage-address-checker";
 
 export function HeroBlockComponent({ block }: { block: HeroBlock }) {
   return (
@@ -42,7 +43,11 @@ export function HeroBlockComponent({ block }: { block: HeroBlock }) {
             {block.subheading}
           </p>
         )}
-        {block.ctaText && (
+        {block.showAddressChecker ? (
+          <div className="mt-8">
+            <HomepageAddressChecker />
+          </div>
+        ) : block.ctaText ? (
           <div className="mt-8">
             <Link
               href={block.ctaLink || "/order"}
@@ -55,7 +60,7 @@ export function HeroBlockComponent({ block }: { block: HeroBlock }) {
               {block.ctaText}
             </Link>
           </div>
-        )}
+        ) : null}
       </div>
     </section>
   );

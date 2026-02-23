@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PaymentForm } from "@/components/checkout/payment-form";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, Tag, Wallet, CheckCircle2 } from "lucide-react";
+import { Loader2, Tag } from "lucide-react";
 import type { OrderFormData } from "../order-flow";
 
 interface ServiceItem {
@@ -20,7 +20,6 @@ interface PaymentStepProps {
   formData: OrderFormData;
   services: ServiceItem[];
   orderId: string | null;
-  walletBalance: number;
   tenantSlug: string;
 }
 
@@ -28,7 +27,6 @@ export function PaymentStep({
   formData,
   services,
   orderId,
-  walletBalance,
   tenantSlug,
 }: PaymentStepProps) {
   const [promoCode, setPromoCode] = useState("");
@@ -38,13 +36,10 @@ export function PaymentStep({
     discount?: number;
     message?: string;
   } | null>(null);
-  const [useWallet, setUseWallet] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentAmount, setPaymentAmount] = useState(0);
-  const [walletDeduction, setWalletDeduction] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [paidWithWallet, setPaidWithWallet] = useState(false);
 
   // Calculate subtotal
   const subtotal = formData.services.reduce((sum, s) => {
@@ -83,7 +78,6 @@ export function PaymentStep({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderId,
-          useWallet,
           promoCode: promoResult?.valid ? promoCode.toUpperCase() : undefined,
         }),
       });
@@ -94,14 +88,8 @@ export function PaymentStep({
         return;
       }
 
-      if (data.data.paidWithWallet) {
-        setPaidWithWallet(true);
-        return;
-      }
-
       setClientSecret(data.data.clientSecret);
       setPaymentAmount(data.data.amount);
-      setWalletDeduction(data.data.walletDeduction);
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -111,23 +99,11 @@ export function PaymentStep({
 
   // Auto-init payment when orderId is ready and no clientSecret yet
   useEffect(() => {
-    if (orderId && !clientSecret && !paidWithWallet) {
+    if (orderId && !clientSecret) {
       initPayment();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
-
-  if (paidWithWallet) {
-    return (
-      <div className="text-center py-8">
-        <CheckCircle2 className="mx-auto h-12 w-12 text-green-600" />
-        <h3 className="mt-3 text-lg font-semibold">Paid with Wallet</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Your wallet balance was used to pay for this order.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div>
@@ -179,25 +155,6 @@ export function PaymentStep({
           </div>
         )}
 
-        {/* Wallet */}
-        {walletBalance > 0 && !clientSecret && (
-          <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4 hover:bg-muted/50">
-            <input
-              type="checkbox"
-              checked={useWallet}
-              onChange={(e) => setUseWallet(e.target.checked)}
-              className="h-4 w-4 rounded border-muted-foreground"
-            />
-            <Wallet className="h-5 w-5 text-primary" />
-            <div className="flex-1">
-              <p className="text-sm font-medium">Use Wallet Balance</p>
-              <p className="text-xs text-muted-foreground">
-                Available: {formatCurrency(walletBalance)}
-              </p>
-            </div>
-          </label>
-        )}
-
         {/* Initialize Payment Button (if not yet initialized) */}
         {!clientSecret && !loading && orderId && (
           <Button onClick={initPayment} className="w-full" size="lg">
@@ -226,10 +183,8 @@ export function PaymentStep({
             clientSecret={clientSecret}
             orderId={orderId!}
             amount={paymentAmount}
-            walletDeduction={walletDeduction}
             returnUrl={`${window.location.origin}/customer?payment=success`}
             onSuccess={() => {
-              // Will be handled by redirect or webhook
               window.location.href = "/customer?payment=success";
             }}
             onError={(msg) => setError(msg)}

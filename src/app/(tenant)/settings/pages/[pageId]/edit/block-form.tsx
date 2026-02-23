@@ -76,6 +76,15 @@ export function BlockForm({ block, onChange }: BlockFormProps) {
             />
             Show gradient overlay
           </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={block.showAddressChecker ?? false}
+              onChange={(e) => onChange({ ...block, showAddressChecker: e.target.checked })}
+              className="h-4 w-4 rounded border-input"
+            />
+            Show address availability checker
+          </label>
         </div>
       );
 

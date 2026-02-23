@@ -10,6 +10,7 @@ export interface HeroBlock {
   ctaLink: string;
   backgroundImage?: string;
   showGradient: boolean;
+  showAddressChecker?: boolean;
 }
 
 export interface TextBlock {

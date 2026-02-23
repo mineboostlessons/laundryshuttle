@@ -103,6 +103,7 @@ model Tenant {
   migrationLogs          MigrationLog[]
   benchmarkSnapshots     BenchmarkSnapshot[]
   referrals              Referral[]
+  serviceAreaInterests   ServiceAreaInterest[]
 
   @@map("tenants")
 }
@@ -1240,4 +1241,41 @@ model CustomDomainVerification {
   @@index([tenantId])
   @@index([status])
   @@map("custom_domain_verifications")
+}
+
+// =============================================================================
+// SERVICE AREA INTEREST (Not-Serviceable Address Tracking)
+// =============================================================================
+
+model ServiceAreaInterest {
+  id           String    @id @default(cuid())
+  tenantId     String
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  email        String
+  addressLine1 String
+  city         String
+  state        String
+  zip          String
+  lat          Float
+  lng          Float
+  notifiedAt   DateTime?
+
+  createdAt    DateTime  @default(now())
+
+  @@index([tenantId])
+  @@map("service_area_interests")
+}
+
+// =============================================================================
+// PLATFORM SETTINGS
+// =============================================================================
+
+model PlatformSettings {
+  id        String   @id @default("platform")
+  theme     String   @default("modern")
+  logoUrl   String?
+  updatedAt DateTime @updatedAt
+
+  @@map("platform_settings")
 }

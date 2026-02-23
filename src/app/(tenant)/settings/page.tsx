@@ -42,22 +42,24 @@ export default async function SettingsPage() {
             </Card>
           </Link>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Theme</CardTitle>
-              <CardDescription>
-                Your site&apos;s look and feel
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="capitalize">
-                  {tenant.themePreset}
-                </Badge>
-                <span className="text-sm text-muted-foreground">preset</span>
-              </div>
-            </CardContent>
-          </Card>
+          <Link href="/settings/theme">
+            <Card className="transition-shadow hover:shadow-md">
+              <CardHeader>
+                <CardTitle className="text-lg">Theme</CardTitle>
+                <CardDescription>
+                  Your site&apos;s look and feel
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="capitalize">
+                    {tenant.themePreset}
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">preset</span>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
 
           <Link href="/settings/payments">
             <Card className="transition-shadow hover:shadow-md">
