@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth-helpers";
 import { UserRole } from "@/types";
 import prisma from "@/lib/prisma";
 import type { ThemePreset } from "@/types/theme";
+import { resolvePresetName } from "@/lib/theme";
 
 export async function getPlatformSettings() {
   await requireRole(UserRole.PLATFORM_ADMIN);
@@ -16,12 +17,12 @@ export async function getPlatformSettings() {
   // Auto-create if doesn't exist
   if (!settings) {
     settings = await prisma.platformSettings.create({
-      data: { id: "platform", theme: "modern" },
+      data: { id: "platform", theme: "clean_luxe" },
     });
   }
 
   return {
-    theme: settings.theme as ThemePreset,
+    theme: resolvePresetName(settings.theme) as ThemePreset,
     logoUrl: settings.logoUrl,
   };
 }
@@ -29,7 +30,10 @@ export async function getPlatformSettings() {
 export async function updatePlatformTheme(preset: string) {
   await requireRole(UserRole.PLATFORM_ADMIN);
 
-  const parsed = z.enum(["modern", "classic", "bold", "minimal", "warm", "ocean"]).safeParse(preset);
+  const parsed = z.enum([
+    "clean_luxe", "fresh_wave", "eco_zen",
+    "neon_express", "soft_cloud", "metro_editorial",
+  ]).safeParse(preset);
   if (!parsed.success) {
     return { success: false, error: "Invalid theme preset" };
   }
