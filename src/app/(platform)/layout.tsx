@@ -2,7 +2,7 @@ import { requireRole } from "@/lib/auth-helpers";
 import { UserRole } from "@/types";
 import { AdminLayoutShell } from "./admin/admin-layout-shell";
 import prisma from "@/lib/prisma";
-import { resolveThemeVariables, generateThemeCss } from "@/lib/theme";
+import { resolveThemeVariables, generateThemeCss, THEME_FONTS } from "@/lib/theme";
 import type { ThemePreset } from "@/types/theme";
 
 export default async function PlatformLayout({
@@ -20,9 +20,13 @@ export default async function PlatformLayout({
   const themePreset = (settings?.theme ?? "modern") as ThemePreset;
   const themeVariables = resolveThemeVariables(themePreset);
   const themeCss = generateThemeCss(themeVariables);
+  const fontUrl = THEME_FONTS[themePreset];
 
   return (
     <>
+      {fontUrl && (
+        <link rel="stylesheet" href={fontUrl} />
+      )}
       <style dangerouslySetInnerHTML={{ __html: themeCss }} />
       <AdminLayoutShell email={session.user.email}>
         {children}

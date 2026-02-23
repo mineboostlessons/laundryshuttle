@@ -47,7 +47,7 @@ export function FeaturesBlockComponent({ block }: { block: FeaturesBlock }) {
   return (
     <section className="px-6 py-16">
       <div className="mx-auto max-w-5xl">
-        <h2 className="mb-10 text-center text-3xl font-bold text-foreground">
+        <h2 className="font-heading mb-10 text-center text-3xl text-foreground">
           {block.heading}
         </h2>
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">

@@ -23,6 +23,19 @@ export interface ThemeVariables {
   border: string;
   input: string;
   ring: string;
+  // Design tokens
+  radius: string;
+  "font-sans": string;
+  "font-heading": string;
+  "heading-weight": string;
+  "heading-tracking": string;
+  "shadow-sm": string;
+  "shadow-md": string;
+  "shadow-lg": string;
+  "card-shadow": string;
+  "hero-gradient": string;
+  "section-gap": string;
+  "button-radius": string;
 }
 
 /** Tenant-level theme overrides stored in Tenant.themeConfig JSON */
@@ -52,4 +65,16 @@ export const THEME_VARIABLE_KEYS: (keyof ThemeVariables)[] = [
   "border",
   "input",
   "ring",
+  "radius",
+  "font-sans",
+  "font-heading",
+  "heading-weight",
+  "heading-tracking",
+  "shadow-sm",
+  "shadow-md",
+  "shadow-lg",
+  "card-shadow",
+  "hero-gradient",
+  "section-gap",
+  "button-radius",
 ];

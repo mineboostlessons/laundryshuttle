@@ -1,5 +1,5 @@
 import { getCurrentTenant } from "@/lib/tenant";
-import { resolveThemeVariables, generateThemeCss } from "@/lib/theme";
+import { resolveThemeVariables, generateThemeCss, THEME_FONTS } from "@/lib/theme";
 import type { ThemePreset, ThemeConfig } from "@/types/theme";
 
 export async function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -13,9 +13,13 @@ export async function ThemeProvider({ children }: { children: React.ReactNode })
   const overrides = tenant.themeConfig as ThemeConfig | null;
   const variables = resolveThemeVariables(preset, overrides);
   const css = generateThemeCss(variables, overrides);
+  const fontUrl = THEME_FONTS[preset];
 
   return (
     <>
+      {fontUrl && (
+        <link rel="stylesheet" href={fontUrl} />
+      )}
       <style dangerouslySetInnerHTML={{ __html: css }} />
       {children}
     </>

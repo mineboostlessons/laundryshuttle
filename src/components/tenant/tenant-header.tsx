@@ -38,7 +38,8 @@ export async function TenantHeader() {
           ))}
           <Link
             href="/order"
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            className="bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            style={{ borderRadius: "var(--button-radius)" }}
           >
             Order Now
           </Link>

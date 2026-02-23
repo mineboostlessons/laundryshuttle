@@ -5,23 +5,113 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { cn } from "@/lib/utils";
-import { THEME_PRESETS } from "@/lib/theme";
+import { THEME_PRESETS, THEME_FONTS } from "@/lib/theme";
 import type { ThemePreset } from "@/types/theme";
 import { updateTenantTheme, updateTenantLogo } from "./actions";
 import { Check, Loader2 } from "lucide-react";
 
 const PRESET_INFO: Record<ThemePreset, { label: string; description: string }> = {
-  modern: { label: "Modern", description: "Clean blue tones" },
-  classic: { label: "Classic", description: "Emerald green feel" },
-  bold: { label: "Bold", description: "Purple & violet premium" },
-  minimal: { label: "Minimal", description: "Slate & neutral" },
-  warm: { label: "Warm", description: "Orange & amber cozy" },
-  ocean: { label: "Ocean", description: "Teal & cyan fresh" },
+  modern: { label: "Modern", description: "Clean sans-serif, subtle shadows, tech-forward" },
+  classic: { label: "Classic", description: "Serif headings, warm tones, traditional elegance" },
+  bold: { label: "Bold", description: "Dramatic shadows, statement typography, premium feel" },
+  minimal: { label: "Minimal", description: "Flat design, thin type, barely-there borders" },
+  warm: { label: "Warm", description: "Rounded, friendly, soft shadows, cozy neighborhood" },
+  ocean: { label: "Ocean", description: "Cool-toned, crisp typography, fresh and clean" },
 };
 
 interface ThemeSettingsViewProps {
   currentPreset: ThemePreset;
   currentLogoUrl: string | null;
+}
+
+function ThemePreviewCard({ preset }: { preset: ThemePreset }) {
+  const vars = THEME_PRESETS[preset];
+  const fontUrl = THEME_FONTS[preset];
+
+  return (
+    <div
+      className="overflow-hidden rounded border"
+      style={{
+        background: `hsl(${vars.background})`,
+        fontFamily: vars["font-sans"],
+        borderRadius: vars.radius,
+      }}
+    >
+      {fontUrl && <link rel="stylesheet" href={fontUrl} />}
+      {/* Mini hero */}
+      <div
+        className="px-3 py-4"
+        style={{ background: vars["hero-gradient"] }}
+      >
+        <div
+          className="text-sm"
+          style={{
+            fontFamily: vars["font-heading"],
+            fontWeight: Number(vars["heading-weight"]),
+            letterSpacing: vars["heading-tracking"],
+            color: `hsl(${vars.foreground})`,
+          }}
+        >
+          Your Business
+        </div>
+        <div
+          className="mt-1 text-[10px]"
+          style={{ color: `hsl(${vars["muted-foreground"]})` }}
+        >
+          Laundry pickup & delivery
+        </div>
+      </div>
+      {/* Mini card row */}
+      <div className="flex gap-1.5 px-3 pb-3 pt-1.5">
+        <div
+          className="flex-1 p-1.5"
+          style={{
+            background: `hsl(${vars.card})`,
+            border: `1px solid hsl(${vars.border})`,
+            borderRadius: vars.radius,
+            boxShadow: vars["card-shadow"],
+          }}
+        >
+          <div
+            className="h-1 w-6 rounded-full"
+            style={{ background: `hsl(${vars.primary})` }}
+          />
+          <div
+            className="mt-1 h-1 w-10 rounded-full"
+            style={{ background: `hsl(${vars.muted})` }}
+          />
+        </div>
+        <div
+          className="flex-1 p-1.5"
+          style={{
+            background: `hsl(${vars.card})`,
+            border: `1px solid hsl(${vars.border})`,
+            borderRadius: vars.radius,
+            boxShadow: vars["card-shadow"],
+          }}
+        >
+          <div
+            className="h-1 w-5 rounded-full"
+            style={{ background: `hsl(${vars.primary})` }}
+          />
+          <div
+            className="mt-1 h-1 w-8 rounded-full"
+            style={{ background: `hsl(${vars.muted})` }}
+          />
+        </div>
+      </div>
+      {/* Mini button */}
+      <div className="px-3 pb-3">
+        <div
+          className="h-5 w-full"
+          style={{
+            background: `hsl(${vars.primary})`,
+            borderRadius: vars["button-radius"],
+          }}
+        />
+      </div>
+    </div>
+  );
 }
 
 export function ThemeSettingsView({ currentPreset, currentLogoUrl }: ThemeSettingsViewProps) {
@@ -80,16 +170,15 @@ export function ThemeSettingsView({ currentPreset, currentLogoUrl }: ThemeSettin
       {/* Theme Preset Picker */}
       <Card>
         <CardHeader>
-          <CardTitle>Color Theme</CardTitle>
+          <CardTitle>Design Theme</CardTitle>
           <CardDescription>
-            Choose a color preset for your website. This applies to all pages.
+            Choose a theme for your website. Each theme includes unique fonts, shadows, shapes, and colors.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {(Object.keys(THEME_PRESETS) as ThemePreset[]).map((key) => {
               const info = PRESET_INFO[key];
-              const colors = THEME_PRESETS[key];
               const isSelected = preset === key;
 
               return (
@@ -98,43 +187,22 @@ export function ThemeSettingsView({ currentPreset, currentLogoUrl }: ThemeSettin
                   onClick={() => handlePresetChange(key)}
                   disabled={savingTheme}
                   className={cn(
-                    "relative rounded-lg border-2 p-4 text-left transition-all hover:shadow-md",
+                    "relative rounded-lg border-2 p-3 text-left transition-all hover:shadow-md",
                     isSelected
                       ? "border-primary ring-2 ring-primary/20"
                       : "border-border hover:border-primary/50"
                   )}
                 >
                   {isSelected && (
-                    <div className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary">
+                    <div className="absolute right-2 top-2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-primary">
                       <Check className="h-3 w-3 text-primary-foreground" />
                     </div>
                   )}
 
-                  {/* Color swatches */}
-                  <div className="flex gap-1.5 mb-3">
-                    <div
-                      className="h-8 w-8 rounded-full border"
-                      style={{ backgroundColor: `hsl(${colors.primary})` }}
-                      title="Primary"
-                    />
-                    <div
-                      className="h-8 w-8 rounded-full border"
-                      style={{ backgroundColor: `hsl(${colors.secondary})` }}
-                      title="Secondary"
-                    />
-                    <div
-                      className="h-8 w-8 rounded-full border"
-                      style={{ backgroundColor: `hsl(${colors.accent})` }}
-                      title="Accent"
-                    />
-                    <div
-                      className="h-8 w-8 rounded-full border"
-                      style={{ backgroundColor: `hsl(${colors.muted})` }}
-                      title="Muted"
-                    />
-                  </div>
+                  {/* Mini preview */}
+                  <ThemePreviewCard preset={key} />
 
-                  <p className="font-medium text-sm">{info.label}</p>
+                  <p className="mt-2 font-medium text-sm">{info.label}</p>
                   <p className="text-xs text-muted-foreground">{info.description}</p>
                 </button>
               );

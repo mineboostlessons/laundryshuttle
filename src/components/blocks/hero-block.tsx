@@ -13,18 +13,21 @@ export function HeroBlockComponent({ block }: { block: HeroBlock }) {
               backgroundSize: "cover",
               backgroundPosition: "center",
             }
-          : undefined
+          : { background: "var(--hero-gradient)" }
       }
     >
       {block.showGradient && (
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/90 to-primary/60" />
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(to bottom right, hsl(var(--primary) / 0.9), hsl(var(--primary) / 0.6))" }}
+        />
       )}
       {block.backgroundImage && !block.showGradient && (
         <div className="absolute inset-0 bg-black/40" />
       )}
       <div className="relative z-10 mx-auto max-w-3xl">
         <h1
-          className={`text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl ${
+          className={`font-heading text-4xl sm:text-5xl lg:text-6xl ${
             block.showGradient || block.backgroundImage
               ? "text-white"
               : "text-foreground"
@@ -51,11 +54,12 @@ export function HeroBlockComponent({ block }: { block: HeroBlock }) {
           <div className="mt-8">
             <Link
               href={block.ctaLink || "/order"}
-              className={`inline-flex items-center rounded-lg px-8 py-3 text-lg font-semibold transition-colors ${
+              className={`inline-flex items-center px-8 py-3 text-lg font-semibold transition-colors ${
                 block.showGradient || block.backgroundImage
                   ? "bg-white text-primary hover:bg-white/90"
                   : "bg-primary text-primary-foreground hover:bg-primary/90"
               }`}
+              style={{ borderRadius: "var(--button-radius)" }}
             >
               {block.ctaText}
             </Link>

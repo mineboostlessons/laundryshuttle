@@ -178,9 +178,12 @@ export default async function TenantHomePage() {
       <TenantHeader />
       <main id="main-content" className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-24 sm:py-32">
+        <section
+          className="relative overflow-hidden px-6 py-24 sm:py-32"
+          style={{ background: "var(--hero-gradient)" }}
+        >
           <div className="mx-auto max-w-4xl text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+            <h1 className="font-heading text-4xl text-foreground sm:text-5xl lg:text-6xl">
               Professional Laundry,{" "}
               <span className="text-primary">Delivered</span>
             </h1>
@@ -256,7 +259,7 @@ export default async function TenantHomePage() {
         {services.length > 0 && (
           <section id="services" className="px-6 py-16 sm:py-20" aria-labelledby="services-heading">
             <div className="mx-auto max-w-5xl">
-              <h2 id="services-heading" className="text-center text-3xl font-bold text-foreground">
+              <h2 id="services-heading" className="font-heading text-center text-3xl text-foreground">
                 Our Services
               </h2>
               <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
@@ -308,7 +311,8 @@ export default async function TenantHomePage() {
               <div className="mt-10 text-center">
                 <Link
                   href="/order"
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-base font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+                  className="inline-flex items-center gap-2 bg-primary px-6 py-3 text-base font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+                  style={{ borderRadius: "var(--button-radius)" }}
                 >
                   Order Now
                   <ChevronRight className="h-4 w-4" aria-hidden="true" />
@@ -321,14 +325,15 @@ export default async function TenantHomePage() {
         {/* CTA Section */}
         <section className="bg-primary px-6 py-16 text-center text-primary-foreground" aria-labelledby="cta-heading">
           <div className="mx-auto max-w-2xl">
-            <h2 id="cta-heading" className="text-3xl font-bold">Ready to Get Started?</h2>
+            <h2 id="cta-heading" className="font-heading text-3xl">Ready to Get Started?</h2>
             <p className="mt-4 text-lg text-primary-foreground/80">
               Schedule your first pickup in minutes. No commitments, no
               hassle.
             </p>
             <Link
               href="/order"
-              className="mt-8 inline-flex items-center gap-2 rounded-lg bg-background px-6 py-3 text-base font-semibold text-foreground shadow-sm transition-colors hover:bg-accent"
+              className="mt-8 inline-flex items-center gap-2 bg-background px-6 py-3 text-base font-semibold text-foreground shadow-sm transition-colors hover:bg-accent"
+              style={{ borderRadius: "var(--button-radius)" }}
             >
               Schedule a Pickup
               <ChevronRight className="h-4 w-4" aria-hidden="true" />

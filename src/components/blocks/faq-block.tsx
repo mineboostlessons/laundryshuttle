@@ -6,7 +6,7 @@ export function FaqBlockComponent({ block }: { block: FaqBlock }) {
   return (
     <section className="px-6 py-16">
       <div className="mx-auto max-w-3xl">
-        <h2 className="mb-10 text-center text-3xl font-bold text-foreground">
+        <h2 className="font-heading mb-10 text-center text-3xl text-foreground">
           {block.heading}
         </h2>
         <div className="space-y-3">

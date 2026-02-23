@@ -22,6 +22,17 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-heading: var(--font-sans);
+    --heading-weight: 700;
+    --heading-tracking: -0.025em;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    --hero-gradient: radial-gradient(ellipse at 30% 50%, hsl(var(--primary) / 0.08) 0%, hsl(var(--background)) 70%);
+    --section-gap: 4rem;
+    --button-radius: var(--radius);
   }
 
   .dark {
