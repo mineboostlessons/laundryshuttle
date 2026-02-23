@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getCurrentTenant } from "@/lib/tenant";
 import { ThemeProvider } from "@/components/theme/theme-provider";
@@ -7,6 +8,14 @@ export default async function TenantLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const headersList = await headers();
+  const tenantSlug = headersList.get("x-tenant-slug");
+
+  // Platform context — render children directly (marketing pages handle their own layout)
+  if (!tenantSlug || tenantSlug === "__platform__") {
+    return <>{children}</>;
+  }
+
   const tenant = await getCurrentTenant();
   if (!tenant) {
     notFound();
