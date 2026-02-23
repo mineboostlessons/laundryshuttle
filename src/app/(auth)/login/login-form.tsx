@@ -47,7 +47,9 @@ export function LoginForm({ tenantSlug }: { tenantSlug?: string }) {
         )}
 
         <form action={formAction} className="space-y-4">
-          {tenantSlug && <input type="hidden" name="tenantSlug" value={tenantSlug} />}
+          {tenantSlug && tenantSlug !== "__platform__" && (
+            <input type="hidden" name="tenantSlug" value={tenantSlug} />
+          )}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
