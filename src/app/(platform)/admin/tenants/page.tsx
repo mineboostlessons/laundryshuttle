@@ -72,7 +72,7 @@ export default async function TenantsListPage({ searchParams }: PageProps) {
             {total} tenant{total !== 1 ? "s" : ""} total
           </p>
         </div>
-        <Link href="/onboarding">
+        <Link href="/admin/onboarding">
           <Button>+ New Tenant</Button>
         </Link>
       </div>
