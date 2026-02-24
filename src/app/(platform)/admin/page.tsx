@@ -96,7 +96,7 @@ function StatCard({
   href: string;
 }) {
   return (
-    <Link href={href} className="rounded-lg border bg-card p-6 transition-colors hover:bg-accent">
+    <Link href={href} className="block rounded-lg border bg-card p-6 cursor-pointer transition-colors hover:bg-accent">
       <p className="text-sm text-muted-foreground">{label}</p>
       <p
         className={`mt-1 text-3xl font-bold ${
