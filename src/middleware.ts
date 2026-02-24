@@ -158,8 +158,8 @@ export default auth((request) => {
   // --- Auth checks ---
   const session = request.auth;
 
-  // Redirect authenticated users away from auth pages
-  if (isPublicRoute(pathname) && session?.user) {
+  // Redirect authenticated users away from auth pages (but not onboarding — admins need it)
+  if (isPublicRoute(pathname) && !pathname.startsWith("/onboarding") && session?.user) {
     const tenantSlug = headers.get("x-tenant-slug");
     // On platform domain, only redirect platform admins (tenant users have no dashboard here)
     if (tenantSlug === "__platform__" && session.user.role !== "platform_admin") {
