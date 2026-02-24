@@ -14,8 +14,8 @@ export default async function AdminDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total Tenants" value={stats.totalTenants} href="/admin/tenants" />
         <StatCard label="Active Tenants" value={stats.activeTenants} accent="green" href="/admin/tenants" />
-        <StatCard label="Total Users" value={stats.totalUsers} href="/admin/tenants" />
-        <StatCard label="Total Orders" value={stats.totalOrders} href="/admin/tenants" />
+        <StatCard label="Total Users" value={stats.totalUsers} href="/admin/users" />
+        <StatCard label="Total Orders" value={stats.totalOrders} href="/admin/orders" />
       </div>
 
       {/* Recent Tenants */}

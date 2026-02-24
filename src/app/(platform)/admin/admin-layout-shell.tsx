@@ -9,6 +9,8 @@ import { SignOutButton } from "./sign-out-button";
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutIcon },
   { href: "/admin/tenants", label: "Tenants", icon: BuildingIcon },
+  { href: "/admin/users", label: "Users", icon: UsersIcon },
+  { href: "/admin/orders", label: "Orders", icon: ClipboardIcon },
   { href: "/admin/domains", label: "Custom Domains", icon: GlobeIcon },
   { href: "/admin/demo", label: "Demo Tenants", icon: DemoIcon },
   { href: "/admin/tax-reports", label: "1099-K Reports", icon: ReceiptIcon },
@@ -208,6 +210,30 @@ function RocketIcon({ className }: { className?: string }) {
       <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z" />
       <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
       <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+    </svg>
+  );
+}
+
+function UsersIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
+function ClipboardIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+      <path d="M12 11h4" />
+      <path d="M12 16h4" />
+      <path d="M8 11h.01" />
+      <path d="M8 16h.01" />
     </svg>
   );
 }
