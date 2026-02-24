@@ -278,6 +278,7 @@ export function OnboardingWizard() {
                     id="ownerEmail"
                     name="ownerEmail"
                     type="email"
+                    autoComplete="email"
                     value={formValues.ownerEmail || ""}
                     onChange={(e) => updateField("ownerEmail", e.target.value)}
                     required
@@ -292,8 +293,10 @@ export function OnboardingWizard() {
                     id="ownerPhone"
                     name="ownerPhone"
                     type="tel"
+                    autoComplete="tel"
                     value={formValues.ownerPhone || ""}
                     onChange={(e) => updateField("ownerPhone", e.target.value)}
+                    placeholder="(555) 123-4567"
                   />
                 </div>
                 <div className="space-y-2">
