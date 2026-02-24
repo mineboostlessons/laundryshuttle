@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 import type { AddressValue } from "@/components/maps/address-autocomplete";
 import type { TimeSlotData } from "./actions";
 import { createOrder, validateServiceArea, getAvailableDates } from "./actions";
@@ -11,7 +12,6 @@ import { AddressStep } from "./components/address-step";
 import { ScheduleStep } from "./components/schedule-step";
 import { PreferencesStep } from "./components/preferences-step";
 import { ReviewStep } from "./components/review-step";
-import { PaymentStep } from "./components/payment-step";
 
 interface ServiceItem {
   id: string;
@@ -47,12 +47,11 @@ export interface OrderFormData {
 }
 
 const STEPS = [
-  { id: "services", label: "Services" },
   { id: "address", label: "Address" },
+  { id: "services", label: "Services" },
   { id: "schedule", label: "Schedule" },
   { id: "preferences", label: "Preferences" },
   { id: "review", label: "Review" },
-  { id: "payment", label: "Payment" },
 ] as const;
 
 interface OrderFlowProps {
@@ -65,7 +64,7 @@ export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [areaError, setAreaError] = useState<string | null>(null);
-  const [orderId, setOrderId] = useState<string | null>(null);
+  const [orderConfirmed, setOrderConfirmed] = useState(false);
   const [submitResult, setSubmitResult] = useState<{
     success: boolean;
     orderNumber?: string;
@@ -97,31 +96,29 @@ export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
 
   const canProceed = (): boolean => {
     switch (step) {
-      case 0:
-        return formData.services.length > 0;
-      case 1:
+      case 0: // Address
         return formData.address !== null && !areaError;
-      case 2:
+      case 1: // Services
+        return formData.services.length > 0;
+      case 2: // Schedule
         return (
           !!formData.pickupDate &&
           !!formData.pickupTimeSlot &&
           !!formData.deliveryDate &&
           !!formData.deliveryTimeSlot
         );
-      case 3:
+      case 3: // Preferences
         return true;
-      case 4: // Review step — always can proceed to payment
+      case 4: // Review — submission handled by button
         return true;
-      case 5: // Payment step — handled by payment component
-        return false;
       default:
         return false;
     }
   };
 
   const handleNext = async () => {
-    // After address step, validate service area
-    if (step === 1 && formData.address) {
+    // After address step (step 0), validate service area
+    if (step === 0 && formData.address) {
       setAreaError(null);
       const result = await validateServiceArea(
         formData.address.lat,
@@ -135,8 +132,8 @@ export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
       }
     }
 
-    // At review step, create the order before proceeding to payment
-    if (step === 4 && !orderId) {
+    // At review step (step 4), create the order and show confirmation
+    if (step === 4) {
       await handleCreateOrder();
       return;
     }
@@ -180,9 +177,8 @@ export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
       });
 
       if (result.success && result.orderId) {
-        setOrderId(result.orderId);
         setSubmitResult(result);
-        setStep(5); // Go to payment step
+        setOrderConfirmed(true);
       } else {
         setSubmitResult(result);
       }
@@ -196,7 +192,35 @@ export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
     }
   };
 
-  // Note: success/confirmation is now handled after payment on the customer page
+  // Confirmation view after order is created
+  if (orderConfirmed && submitResult?.success) {
+    return (
+      <div className="flex flex-col items-center py-12 text-center">
+        <CheckCircle2 className="h-16 w-16 text-green-500" />
+        <h2 className="mt-4 text-2xl font-bold">Pickup Scheduled!</h2>
+        {submitResult.orderNumber && (
+          <p className="mt-2 text-muted-foreground">
+            Order #{submitResult.orderNumber}
+          </p>
+        )}
+        <div className="mt-4 space-y-1 text-sm text-muted-foreground">
+          <p>Pickup: {formData.pickupDate} &mdash; {formData.pickupTimeSlot}</p>
+          <p>Delivery: {formData.deliveryDate} &mdash; {formData.deliveryTimeSlot}</p>
+        </div>
+        <p className="mt-6 text-muted-foreground">
+          We&apos;ll see you then! Payment will be collected after your laundry is processed.
+        </p>
+        <div className="mt-8 flex gap-4">
+          <Link href={`/${tenantSlug}`}>
+            <Button variant="outline">Back to Home</Button>
+          </Link>
+          <Link href={`/${tenantSlug}/customer`}>
+            <Button>View My Orders</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -256,14 +280,6 @@ export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
       {/* Step content */}
       <div className="rounded-lg border bg-card p-6">
         {step === 0 && (
-          <ServiceSelection
-            services={services}
-            selected={formData.services}
-            onChange={(selected) => updateForm({ services: selected })}
-          />
-        )}
-
-        {step === 1 && (
           <AddressStep
             address={formData.address}
             addressLine2={formData.addressLine2}
@@ -279,6 +295,14 @@ export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
             onPickupNotesChange={(pickupNotes) =>
               updateForm({ pickupNotes })
             }
+          />
+        )}
+
+        {step === 1 && (
+          <ServiceSelection
+            services={services}
+            selected={formData.services}
+            onChange={(selected) => updateForm({ services: selected })}
           />
         )}
 
@@ -308,58 +332,47 @@ export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
           />
         )}
 
-        {step === 5 && (
-          <PaymentStep
-            formData={formData}
-            services={services}
-            orderId={orderId}
-            tenantSlug={tenantSlug}
-          />
-        )}
-
         {/* Error message */}
-        {submitResult?.error && step !== 5 && (
+        {submitResult?.error && (
           <p className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
             {submitResult.error}
           </p>
         )}
       </div>
 
-      {/* Navigation buttons — hidden on payment step (payment has its own buttons) */}
-      {step < 5 && (
-        <div className="mt-6 flex items-center justify-between">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            disabled={step === 0}
-            className={step === 0 ? "invisible" : ""}
-          >
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Back
-          </Button>
+      {/* Navigation buttons */}
+      <div className="mt-6 flex items-center justify-between">
+        <Button
+          variant="outline"
+          onClick={handleBack}
+          disabled={step === 0}
+          className={step === 0 ? "invisible" : ""}
+        >
+          <ChevronLeft className="mr-1 h-4 w-4" />
+          Back
+        </Button>
 
-          {step < 4 ? (
-            <Button onClick={handleNext} disabled={!canProceed()}>
-              Next
-              <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
-          ) : (
-            <Button
-              onClick={handleNext}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Order...
-                </>
-              ) : (
-                "Proceed to Payment"
-              )}
-            </Button>
-          )}
-        </div>
-      )}
+        {step < 4 ? (
+          <Button onClick={handleNext} disabled={!canProceed()}>
+            Next
+            <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
+        ) : (
+          <Button
+            onClick={handleNext}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Scheduling Pickup...
+              </>
+            ) : (
+              "Schedule Pickup"
+            )}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
