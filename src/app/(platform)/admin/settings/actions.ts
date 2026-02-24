@@ -10,21 +10,29 @@ import { resolvePresetName } from "@/lib/theme";
 export async function getPlatformSettings() {
   await requireRole(UserRole.PLATFORM_ADMIN);
 
-  let settings = await prisma.platformSettings.findUnique({
-    where: { id: "platform" },
-  });
-
-  // Auto-create if doesn't exist
-  if (!settings) {
-    settings = await prisma.platformSettings.create({
-      data: { id: "platform", theme: "clean_luxe" },
+  try {
+    let settings = await prisma.platformSettings.findUnique({
+      where: { id: "platform" },
     });
-  }
 
-  return {
-    theme: resolvePresetName(settings.theme) as ThemePreset,
-    logoUrl: settings.logoUrl,
-  };
+    // Auto-create if row doesn't exist
+    if (!settings) {
+      settings = await prisma.platformSettings.create({
+        data: { id: "platform", theme: "clean_luxe" },
+      });
+    }
+
+    return {
+      theme: resolvePresetName(settings.theme) as ThemePreset,
+      logoUrl: settings.logoUrl,
+    };
+  } catch {
+    // Table may not exist if migration hasn't been run — return defaults
+    return {
+      theme: "clean_luxe" as ThemePreset,
+      logoUrl: null,
+    };
+  }
 }
 
 export async function updatePlatformTheme(preset: string) {
@@ -38,11 +46,14 @@ export async function updatePlatformTheme(preset: string) {
     return { success: false, error: "Invalid theme preset" };
   }
 
-  await prisma.platformSettings.upsert({
-    where: { id: "platform" },
-    update: { theme: parsed.data },
-    create: { id: "platform", theme: parsed.data },
-  });
-
-  return { success: true };
+  try {
+    await prisma.platformSettings.upsert({
+      where: { id: "platform" },
+      update: { theme: parsed.data },
+      create: { id: "platform", theme: parsed.data },
+    });
+    return { success: true };
+  } catch {
+    return { success: false, error: "Failed to save theme" };
+  }
 }

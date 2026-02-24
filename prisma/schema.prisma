@@ -1273,7 +1273,7 @@ model ServiceAreaInterest {
 
 model PlatformSettings {
   id        String   @id @default("platform")
-  theme     String   @default("modern")
+  theme     String   @default("clean_luxe")
   logoUrl   String?
   updatedAt DateTime @updatedAt
 
