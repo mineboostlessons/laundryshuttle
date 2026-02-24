@@ -112,18 +112,36 @@ export default auth((request) => {
     }
   }
 
-  // Skip further middleware for API routes
+  // Skip further middleware for API routes (but still resolve tenant for API calls)
   if (pathname.startsWith("/api/")) {
-    return NextResponse.next();
+    const apiHeaders = new Headers(request.headers);
+    const vercelUrlApi = process.env.VERCEL_URL || "";
+    if (hostname.includes("localhost") || hostname === vercelUrlApi || hostname.endsWith(".vercel.app")) {
+      const tenantSlug = url.searchParams.get("tenant");
+      const cookieTenant = request.cookies.get("__tenant_slug")?.value;
+      apiHeaders.set("x-tenant-slug", tenantSlug || cookieTenant || "__platform__");
+    }
+    return NextResponse.next({ request: { headers: apiHeaders } });
   }
 
   // --- Tenant resolution ---
   const headers = new Headers(request.headers);
   const vercelUrl = process.env.VERCEL_URL || "";
+  let tenantFromParam = false;
+  let resolvedTenantSlug = "__platform__";
 
   if (hostname.includes("localhost") || hostname === vercelUrl || hostname.endsWith(".vercel.app")) {
     const tenantSlug = url.searchParams.get("tenant");
-    headers.set("x-tenant-slug", tenantSlug || "__platform__");
+    if (tenantSlug) {
+      // Explicit tenant param — use it and persist via cookie
+      resolvedTenantSlug = tenantSlug;
+      tenantFromParam = true;
+    } else {
+      // Fall back to cookie-persisted tenant
+      const cookieTenant = request.cookies.get("__tenant_slug")?.value;
+      resolvedTenantSlug = cookieTenant || "__platform__";
+    }
+    headers.set("x-tenant-slug", resolvedTenantSlug);
   } else if (hostname === `admin.${platformDomain}` || hostname === platformDomain) {
     headers.set("x-tenant-slug", "__platform__");
   } else if (hostname.endsWith(`.${platformDomain}`)) {
@@ -187,7 +205,19 @@ export default auth((request) => {
     }
   }
 
-  return NextResponse.next({ request: { headers } });
+  const response = NextResponse.next({ request: { headers } });
+
+  // Persist tenant slug in cookie when resolved from ?tenant= param
+  if (tenantFromParam) {
+    response.cookies.set("__tenant_slug", resolvedTenantSlug, {
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24, // 24 hours
+    });
+  }
+
+  return response;
 });
 
 export const config = {

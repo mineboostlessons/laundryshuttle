@@ -83,7 +83,7 @@ export function PaymentStep({
       });
 
       const data = await res.json();
-      if (!data.success) {
+      if (!data.success || !data.data) {
         setError(data.error ?? "Failed to initialize payment");
         return;
       }

@@ -16,12 +16,12 @@ export function PricingBlockComponent({ block }: { block: PricingBlock }) {
           {block.tiers.map((tier, i) => (
             <div
               key={i}
-              className={`rounded-xl border p-8 text-center transition-shadow hover:shadow-lg ${
+              className={`rounded-xl border p-8 text-center transition-all hover:shadow-lg ${
                 tier.featured
-                  ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                  ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-lg scale-[1.03]"
                   : "border-border bg-card"
               }`}
-              style={{ boxShadow: "var(--card-shadow)" }}
+              style={{ boxShadow: tier.featured ? undefined : "var(--card-shadow)" }}
             >
               {tier.featured && (
                 <span className="mb-4 inline-block rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">

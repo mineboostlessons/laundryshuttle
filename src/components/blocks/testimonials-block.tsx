@@ -28,9 +28,12 @@ export function TestimonialsBlockComponent({ block }: { block: TestimonialsBlock
           {block.testimonials.map((item, i) => (
             <div
               key={i}
-              className="rounded-xl border border-border bg-card p-6"
+              className="relative rounded-xl border border-border bg-card p-6 pt-8"
               style={{ boxShadow: "var(--card-shadow)" }}
             >
+              <span className="absolute -top-3 left-5 text-5xl font-serif leading-none text-primary/20" aria-hidden="true">
+                &ldquo;
+              </span>
               <StarRating rating={item.rating} />
               <p className="mt-4 text-sm leading-6 text-muted-foreground">
                 &ldquo;{item.text}&rdquo;

@@ -398,8 +398,9 @@ async function main() {
             subheading: "Demo Laundry Co. offers convenient pickup and delivery laundry services. We handle the dirty work so you can enjoy your free time.",
             ctaText: "Schedule a Pickup",
             ctaLink: "/order",
-            showGradient: true,
+            showGradient: false,
             showAddressChecker: true,
+            backgroundImage: "https://images.unsplash.com/photo-1545173168-9f1947eebb7f?w=1600&q=80",
           },
           {
             type: "features",
@@ -436,7 +437,8 @@ async function main() {
             subheading: "Let us handle your everyday laundry. Drop it off or schedule a pickup — we'll wash, dry, and fold it to perfection.",
             ctaText: "Order Now",
             ctaLink: "/order",
-            showGradient: true,
+            showGradient: false,
+            backgroundImage: "https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=1600&q=80",
           },
           {
             type: "text",
@@ -496,7 +498,8 @@ async function main() {
             subheading: "We come to you. Schedule a pickup online, leave your laundry at the door, and we'll deliver it back fresh and clean.",
             ctaText: "Schedule Now",
             ctaLink: "/order",
-            showGradient: true,
+            showGradient: false,
+            backgroundImage: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80",
           },
           {
             type: "how_it_works",
@@ -555,7 +558,8 @@ async function main() {
             subheading: "Expert care for your finest garments. We handle suits, dresses, silk, cashmere, and delicate fabrics with precision.",
             ctaText: "Schedule a Pickup",
             ctaLink: "/order",
-            showGradient: true,
+            showGradient: false,
+            backgroundImage: "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=1600&q=80",
           },
           {
             type: "text",
@@ -599,6 +603,7 @@ async function main() {
             ctaText: "Order Now",
             ctaLink: "/order",
             showGradient: false,
+            backgroundImage: "https://images.unsplash.com/photo-1604335399105-a0c585fd81a1?w=1600&q=80",
           },
           {
             type: "pricing",
@@ -654,7 +659,8 @@ async function main() {
             subheading: "A modern laundry service built on old-fashioned values: quality, care, and convenience.",
             ctaText: "",
             ctaLink: "",
-            showGradient: true,
+            showGradient: false,
+            backgroundImage: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1600&q=80",
           },
           {
             type: "text",
@@ -705,6 +711,7 @@ async function main() {
             ctaText: "",
             ctaLink: "",
             showGradient: false,
+            backgroundImage: "https://images.unsplash.com/photo-1517677129300-07b130802f46?w=1600&q=80",
           },
           {
             type: "faq",
@@ -740,6 +747,7 @@ async function main() {
             ctaText: "",
             ctaLink: "",
             showGradient: false,
+            backgroundImage: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1600&q=80",
           },
           {
             type: "service_areas",
@@ -772,6 +780,7 @@ async function main() {
             ctaText: "",
             ctaLink: "",
             showGradient: false,
+            backgroundImage: "https://images.unsplash.com/photo-1556740758-90de374c12ad?w=1600&q=80",
           },
           {
             type: "contact",
