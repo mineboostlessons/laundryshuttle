@@ -1,14 +1,23 @@
-import { Suspense } from "react";
 import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { formatCurrency } from "@/lib/utils";
 import { requireRole } from "@/lib/auth-helpers";
 import { UserRole } from "@/types";
 
 interface PageProps {
-  searchParams: Promise<{ search?: string; status?: string; page?: string }>;
+  searchParams: Promise<{
+    search?: string;
+    status?: string;
+    type?: string;
+    tenant?: string;
+    amountMin?: string;
+    amountMax?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    page?: string;
+  }>;
 }
 
 export default async function OrdersListPage({ searchParams }: PageProps) {
@@ -17,22 +26,54 @@ export default async function OrdersListPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const search = params.search || "";
   const statusFilter = params.status || "all";
+  const typeFilter = params.type || "all";
+  const tenantFilter = params.tenant || "all";
+  const amountMin = params.amountMin || "";
+  const amountMax = params.amountMax || "";
+  const dateFrom = params.dateFrom || "";
+  const dateTo = params.dateTo || "";
   const page = parseInt(params.page || "1", 10);
   const limit = 20;
 
+  // Build where clause
   const where: Record<string, unknown> = {};
+
   if (search) {
     where.OR = [
       { orderNumber: { contains: search, mode: "insensitive" } },
       { customer: { email: { contains: search, mode: "insensitive" } } },
-      { tenant: { businessName: { contains: search, mode: "insensitive" } } },
+      { customer: { firstName: { contains: search, mode: "insensitive" } } },
+      { customer: { lastName: { contains: search, mode: "insensitive" } } },
     ];
   }
   if (statusFilter !== "all") {
     where.status = statusFilter;
   }
+  if (typeFilter !== "all") {
+    where.orderType = typeFilter;
+  }
+  if (tenantFilter !== "all") {
+    where.tenantId = tenantFilter;
+  }
+  if (amountMin || amountMax) {
+    const amountCondition: Record<string, number> = {};
+    if (amountMin) amountCondition.gte = parseFloat(amountMin);
+    if (amountMax) amountCondition.lte = parseFloat(amountMax);
+    where.totalAmount = amountCondition;
+  }
+  if (dateFrom || dateTo) {
+    const dateCondition: Record<string, Date> = {};
+    if (dateFrom) dateCondition.gte = new Date(dateFrom);
+    if (dateTo) {
+      const end = new Date(dateTo);
+      end.setHours(23, 59, 59, 999);
+      dateCondition.lte = end;
+    }
+    where.createdAt = dateCondition;
+  }
 
-  const [orders, total] = await Promise.all([
+  // Fetch orders, count, and tenants for filter dropdown in parallel
+  const [orders, total, tenants] = await Promise.all([
     prisma.order.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -56,6 +97,11 @@ export default async function OrdersListPage({ searchParams }: PageProps) {
       },
     }),
     prisma.order.count({ where }),
+    prisma.tenant.findMany({
+      where: { isActive: true },
+      orderBy: { businessName: "asc" },
+      select: { id: true, businessName: true },
+    }),
   ]);
 
   const totalPages = Math.ceil(total / limit);
@@ -70,6 +116,21 @@ export default async function OrdersListPage({ searchParams }: PageProps) {
     }
   };
 
+  const hasFilters = search || statusFilter !== "all" || typeFilter !== "all" ||
+    tenantFilter !== "all" || amountMin || amountMax || dateFrom || dateTo;
+
+  // Build query string for pagination links
+  const filterParams = new URLSearchParams();
+  if (search) filterParams.set("search", search);
+  if (statusFilter !== "all") filterParams.set("status", statusFilter);
+  if (typeFilter !== "all") filterParams.set("type", typeFilter);
+  if (tenantFilter !== "all") filterParams.set("tenant", tenantFilter);
+  if (amountMin) filterParams.set("amountMin", amountMin);
+  if (amountMax) filterParams.set("amountMax", amountMax);
+  if (dateFrom) filterParams.set("dateFrom", dateFrom);
+  if (dateTo) filterParams.set("dateTo", dateTo);
+  const filterString = filterParams.toString();
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -80,49 +141,141 @@ export default async function OrdersListPage({ searchParams }: PageProps) {
       </div>
 
       {/* Filters */}
-      <Suspense fallback={<div className="h-10" />}>
-        <form className="mb-4 flex flex-wrap gap-3">
-          <input
-            type="text"
-            name="search"
-            defaultValue={search}
-            placeholder="Search by order #, email, or business..."
-            className="rounded-md border bg-background px-3 py-2 text-sm w-72"
-          />
-          <select
-            name="status"
-            defaultValue={statusFilter}
-            className="rounded-md border bg-background px-3 py-2 text-sm"
-          >
-            <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="picked_up">Picked Up</option>
-            <option value="processing">Processing</option>
-            <option value="washing">Washing</option>
-            <option value="drying">Drying</option>
-            <option value="ready_for_pickup">Ready for Pickup</option>
-            <option value="out_for_delivery">Out for Delivery</option>
-            <option value="delivered">Delivered</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+      <form className="mb-4 rounded-lg border bg-card p-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Search */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Search</label>
+            <input
+              type="text"
+              name="search"
+              defaultValue={search}
+              placeholder="Order #, customer name or email..."
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            />
+          </div>
+
+          {/* Status */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Status</label>
+            <select
+              name="status"
+              defaultValue={statusFilter}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            >
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="picked_up">Picked Up</option>
+              <option value="processing">Processing</option>
+              <option value="washing">Washing</option>
+              <option value="drying">Drying</option>
+              <option value="ready_for_pickup">Ready for Pickup</option>
+              <option value="out_for_delivery">Out for Delivery</option>
+              <option value="delivered">Delivered</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          {/* Order Type */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Order Type</label>
+            <select
+              name="type"
+              defaultValue={typeFilter}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            >
+              <option value="all">All Types</option>
+              <option value="delivery">Delivery</option>
+              <option value="walk_in">Walk-in</option>
+              <option value="pos">POS</option>
+            </select>
+          </div>
+
+          {/* Tenant */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Tenant</label>
+            <select
+              name="tenant"
+              defaultValue={tenantFilter}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            >
+              <option value="all">All Tenants</option>
+              {tenants.map((t) => (
+                <option key={t.id} value={t.id}>{t.businessName}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Amount Min */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Amount Min ($)</label>
+            <input
+              type="number"
+              name="amountMin"
+              defaultValue={amountMin}
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            />
+          </div>
+
+          {/* Amount Max */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Amount Max ($)</label>
+            <input
+              type="number"
+              name="amountMax"
+              defaultValue={amountMax}
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            />
+          </div>
+
+          {/* Date From */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Created From</label>
+            <input
+              type="date"
+              name="dateFrom"
+              defaultValue={dateFrom}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            />
+          </div>
+
+          {/* Date To */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Created To</label>
+            <input
+              type="date"
+              name="dateTo"
+              defaultValue={dateTo}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="mt-3 flex gap-3">
           <button
             type="submit"
             className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            Filter
+            Apply Filters
           </button>
-          {(search || statusFilter !== "all") && (
+          {hasFilters && (
             <Link
               href="/admin/orders"
               className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
             >
-              Clear
+              Clear All
             </Link>
           )}
-        </form>
-      </Suspense>
+        </div>
+      </form>
 
       {/* Table */}
       <div className="rounded-lg border bg-card">
@@ -179,7 +332,9 @@ export default async function OrdersListPage({ searchParams }: PageProps) {
                     {order.totalAmount != null ? formatCurrency(order.totalAmount) : "-"}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {formatDistanceToNow(order.createdAt, { addSuffix: true })}
+                    <span title={order.createdAt ? format(order.createdAt, "MMM d, yyyy h:mm a") : ""}>
+                      {formatDistanceToNow(order.createdAt, { addSuffix: true })}
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -204,7 +359,7 @@ export default async function OrdersListPage({ searchParams }: PageProps) {
           <div className="flex gap-2">
             {page > 1 && (
               <Link
-                href={`/admin/orders?page=${page - 1}&search=${search}&status=${statusFilter}`}
+                href={`/admin/orders?page=${page - 1}${filterString ? `&${filterString}` : ""}`}
               >
                 <button className="rounded-md border px-3 py-1.5 text-sm hover:bg-muted">
                   Previous
@@ -213,7 +368,7 @@ export default async function OrdersListPage({ searchParams }: PageProps) {
             )}
             {page < totalPages && (
               <Link
-                href={`/admin/orders?page=${page + 1}&search=${search}&status=${statusFilter}`}
+                href={`/admin/orders?page=${page + 1}${filterString ? `&${filterString}` : ""}`}
               >
                 <button className="rounded-md border px-3 py-1.5 text-sm hover:bg-muted">
                   Next
