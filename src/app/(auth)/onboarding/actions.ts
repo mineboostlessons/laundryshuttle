@@ -39,7 +39,7 @@ const onboardingSchema = z.object({
   serviceTemplate: z.enum(["standard", "premium", "minimal", "custom"]).default("standard"),
 
   // Step 5: Branding
-  themePreset: z.enum(["modern", "classic", "bold", "minimal"]).default("modern"),
+  themePreset: z.enum(["clean_luxe", "fresh_wave", "eco_zen", "neon_express", "soft_cloud", "metro_editorial"]).default("clean_luxe"),
 });
 
 export type OnboardingState = {
