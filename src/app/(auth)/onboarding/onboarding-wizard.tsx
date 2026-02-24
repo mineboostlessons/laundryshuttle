@@ -43,7 +43,7 @@ export function OnboardingWizard() {
     numWashers: "0",
     numDryers: "0",
     serviceTemplate: "standard",
-    themePreset: "modern",
+    themePreset: "clean_luxe",
   });
 
   const updateField = (name: string, value: string) => {
@@ -455,12 +455,14 @@ export function OnboardingWizard() {
                   <p className="text-xs text-muted-foreground">
                     Pick a visual style for your customer-facing site.
                   </p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {[
-                      { value: "modern", label: "Modern", color: "bg-blue-500" },
-                      { value: "classic", label: "Classic", color: "bg-emerald-600" },
-                      { value: "bold", label: "Bold", color: "bg-purple-600" },
-                      { value: "minimal", label: "Minimal", color: "bg-gray-800" },
+                      { value: "clean_luxe", label: "Clean Luxe", desc: "Navy & Gold on Ivory", color: "bg-[#0D1B2A]" },
+                      { value: "fresh_wave", label: "Fresh Wave", desc: "Blue tones, airy", color: "bg-[#2563EB]" },
+                      { value: "eco_zen", label: "Eco Zen", desc: "Earthy forest green", color: "bg-[#2D4A3E]" },
+                      { value: "neon_express", label: "Neon Express", desc: "Bold dark mode", color: "bg-[#0A0A0A]" },
+                      { value: "soft_cloud", label: "Soft Cloud", desc: "Warm & friendly", color: "bg-[#E8927C]" },
+                      { value: "metro_editorial", label: "Metro Editorial", desc: "Clean black & white", color: "bg-[#000000]" },
                     ].map((t) => (
                       <button
                         key={t.value}
@@ -472,8 +474,11 @@ export function OnboardingWizard() {
                             : "border-border hover:border-primary/50"
                         }`}
                       >
-                        <div className={`h-8 w-8 rounded ${t.color}`} />
-                        <span className="text-sm font-medium">{t.label}</span>
+                        <div className={`h-8 w-8 shrink-0 rounded ${t.color}`} />
+                        <div>
+                          <p className="text-sm font-medium">{t.label}</p>
+                          <p className="text-xs text-muted-foreground">{t.desc}</p>
+                        </div>
                       </button>
                     ))}
                   </div>
