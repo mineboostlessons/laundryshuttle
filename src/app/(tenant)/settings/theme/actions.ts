@@ -11,7 +11,7 @@ export async function updateTenantTheme(preset: string) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
 
-  const parsed = z.enum(["modern", "classic", "bold", "minimal", "warm", "ocean"]).safeParse(preset);
+  const parsed = z.enum(["clean_luxe", "fresh_wave", "eco_zen", "neon_express", "soft_cloud", "metro_editorial"]).safeParse(preset);
   if (!parsed.success) {
     return { success: false, error: "Invalid theme preset" };
   }
@@ -61,7 +61,7 @@ export async function getTenantThemeSettings() {
   });
 
   return {
-    preset: (data?.themePreset || "modern") as ThemePreset,
+    preset: (data?.themePreset || "clean_luxe") as ThemePreset,
     logoUrl: (data?.themeConfig as Record<string, string> | null)?.logoUrl || null,
   };
 }
