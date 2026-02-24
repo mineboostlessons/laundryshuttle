@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow, format } from "date-fns";
 import { requireRole } from "@/lib/auth-helpers";
 import { UserRole } from "@/types";
+import { SortableHeader } from "@/components/ui/sortable-header";
 
 interface PageProps {
   searchParams: Promise<{
@@ -16,6 +17,8 @@ interface PageProps {
     joinedFrom?: string;
     joinedTo?: string;
     page?: string;
+    sortBy?: string;
+    sortOrder?: string;
   }>;
 }
 
@@ -32,6 +35,8 @@ export default async function UsersListPage({ searchParams }: PageProps) {
   const joinedFrom = params.joinedFrom || "";
   const joinedTo = params.joinedTo || "";
   const page = parseInt(params.page || "1", 10);
+  const sortBy = params.sortBy || "createdAt";
+  const sortOrder = (params.sortOrder === "asc" ? "asc" : "desc") as "asc" | "desc";
   const limit = 20;
 
   // Build where clause
@@ -79,7 +84,7 @@ export default async function UsersListPage({ searchParams }: PageProps) {
   const [users, total, tenants] = await Promise.all([
     prisma.user.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy: { [sortBy]: sortOrder },
       take: limit,
       skip: (page - 1) * limit,
       select: {
@@ -131,7 +136,14 @@ export default async function UsersListPage({ searchParams }: PageProps) {
   if (loginTo) filterParams.set("loginTo", loginTo);
   if (joinedFrom) filterParams.set("joinedFrom", joinedFrom);
   if (joinedTo) filterParams.set("joinedTo", joinedTo);
+  if (sortBy !== "createdAt") filterParams.set("sortBy", sortBy);
+  if (sortOrder !== "desc") filterParams.set("sortOrder", sortOrder);
   const filterString = filterParams.toString();
+  // Filter string without sort params (for SortableHeader to control sort independently)
+  const sortFilterParams = new URLSearchParams(filterParams);
+  sortFilterParams.delete("sortBy");
+  sortFilterParams.delete("sortOrder");
+  const sortFilterString = sortFilterParams.toString();
 
   return (
     <div className="p-6">
@@ -274,13 +286,13 @@ export default async function UsersListPage({ searchParams }: PageProps) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-left text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Email</th>
-                <th className="px-4 py-3 font-medium">Role</th>
+                <SortableHeader column="firstName" label="Name" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/users" filterParams={sortFilterString} />
+                <SortableHeader column="email" label="Email" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/users" filterParams={sortFilterString} />
+                <SortableHeader column="role" label="Role" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/users" filterParams={sortFilterString} />
                 <th className="px-4 py-3 font-medium">Tenant</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Last Login</th>
-                <th className="px-4 py-3 font-medium">Joined</th>
+                <SortableHeader column="isActive" label="Status" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/users" filterParams={sortFilterString} />
+                <SortableHeader column="lastLoginAt" label="Last Login" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/users" filterParams={sortFilterString} />
+                <SortableHeader column="createdAt" label="Joined" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/users" filterParams={sortFilterString} />
               </tr>
             </thead>
             <tbody>

@@ -5,6 +5,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import { formatCurrency } from "@/lib/utils";
 import { requireRole } from "@/lib/auth-helpers";
 import { UserRole } from "@/types";
+import { SortableHeader } from "@/components/ui/sortable-header";
 
 interface PageProps {
   searchParams: Promise<{
@@ -17,6 +18,8 @@ interface PageProps {
     dateFrom?: string;
     dateTo?: string;
     page?: string;
+    sortBy?: string;
+    sortOrder?: string;
   }>;
 }
 
@@ -33,6 +36,8 @@ export default async function OrdersListPage({ searchParams }: PageProps) {
   const dateFrom = params.dateFrom || "";
   const dateTo = params.dateTo || "";
   const page = parseInt(params.page || "1", 10);
+  const sortBy = params.sortBy || "createdAt";
+  const sortOrder = (params.sortOrder === "asc" ? "asc" : "desc") as "asc" | "desc";
   const limit = 20;
 
   // Build where clause
@@ -76,7 +81,7 @@ export default async function OrdersListPage({ searchParams }: PageProps) {
   const [orders, total, tenants] = await Promise.all([
     prisma.order.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy: { [sortBy]: sortOrder },
       take: limit,
       skip: (page - 1) * limit,
       select: {
@@ -129,7 +134,13 @@ export default async function OrdersListPage({ searchParams }: PageProps) {
   if (amountMax) filterParams.set("amountMax", amountMax);
   if (dateFrom) filterParams.set("dateFrom", dateFrom);
   if (dateTo) filterParams.set("dateTo", dateTo);
+  if (sortBy !== "createdAt") filterParams.set("sortBy", sortBy);
+  if (sortOrder !== "desc") filterParams.set("sortOrder", sortOrder);
   const filterString = filterParams.toString();
+  const sortFilterParams = new URLSearchParams(filterParams);
+  sortFilterParams.delete("sortBy");
+  sortFilterParams.delete("sortOrder");
+  const sortFilterString = sortFilterParams.toString();
 
   return (
     <div className="p-6">
@@ -283,13 +294,13 @@ export default async function OrdersListPage({ searchParams }: PageProps) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-left text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Order #</th>
+                <SortableHeader column="orderNumber" label="Order #" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/orders" filterParams={sortFilterString} />
                 <th className="px-4 py-3 font-medium">Customer</th>
                 <th className="px-4 py-3 font-medium">Tenant</th>
-                <th className="px-4 py-3 font-medium">Type</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium text-right">Amount</th>
-                <th className="px-4 py-3 font-medium">Created</th>
+                <SortableHeader column="orderType" label="Type" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/orders" filterParams={sortFilterString} />
+                <SortableHeader column="status" label="Status" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/orders" filterParams={sortFilterString} />
+                <SortableHeader column="totalAmount" label="Amount" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/orders" filterParams={sortFilterString} className="text-right" />
+                <SortableHeader column="createdAt" label="Created" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/orders" filterParams={sortFilterString} />
               </tr>
             </thead>
             <tbody>

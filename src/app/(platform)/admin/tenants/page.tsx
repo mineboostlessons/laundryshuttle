@@ -5,9 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { TenantSearchFilter } from "./tenant-search-filter";
+import { SortableHeader } from "@/components/ui/sortable-header";
 
 interface PageProps {
-  searchParams: Promise<{ search?: string; status?: string; page?: string }>;
+  searchParams: Promise<{ search?: string; status?: string; page?: string; sortBy?: string; sortOrder?: string }>;
 }
 
 export default async function TenantsListPage({ searchParams }: PageProps) {
@@ -15,6 +16,8 @@ export default async function TenantsListPage({ searchParams }: PageProps) {
   const search = params.search || "";
   const statusFilter = params.status || "all";
   const page = parseInt(params.page || "1", 10);
+  const sortBy = params.sortBy || "createdAt";
+  const sortOrder = (params.sortOrder === "asc" ? "asc" : "desc") as "asc" | "desc";
   const limit = 20;
 
   const where: Record<string, unknown> = {};
@@ -28,10 +31,16 @@ export default async function TenantsListPage({ searchParams }: PageProps) {
   if (statusFilter === "active") where.isActive = true;
   if (statusFilter === "inactive") where.isActive = false;
 
+  // Build dynamic orderBy
+  const countColumns: Record<string, string> = { users: "users", orders: "orders", laundromats: "laundromats" };
+  const orderBy = countColumns[sortBy]
+    ? { [countColumns[sortBy]]: { _count: sortOrder } }
+    : { [sortBy]: sortOrder };
+
   const [tenants, total] = await Promise.all([
     prisma.tenant.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy,
       take: limit,
       skip: (page - 1) * limit,
       select: {
@@ -78,14 +87,14 @@ export default async function TenantsListPage({ searchParams }: PageProps) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-left text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Business</th>
-                <th className="px-4 py-3 font-medium">Type</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Subscription</th>
-                <th className="px-4 py-3 font-medium">Locations</th>
-                <th className="px-4 py-3 font-medium">Users</th>
-                <th className="px-4 py-3 font-medium">Orders</th>
-                <th className="px-4 py-3 font-medium">Created</th>
+                <SortableHeader column="businessName" label="Business" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/tenants" filterParams={`search=${search}&status=${statusFilter}`} />
+                <SortableHeader column="businessType" label="Type" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/tenants" filterParams={`search=${search}&status=${statusFilter}`} />
+                <SortableHeader column="isActive" label="Status" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/tenants" filterParams={`search=${search}&status=${statusFilter}`} />
+                <SortableHeader column="subscriptionStatus" label="Subscription" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/tenants" filterParams={`search=${search}&status=${statusFilter}`} />
+                <SortableHeader column="laundromats" label="Locations" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/tenants" filterParams={`search=${search}&status=${statusFilter}`} />
+                <SortableHeader column="users" label="Users" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/tenants" filterParams={`search=${search}&status=${statusFilter}`} />
+                <SortableHeader column="orders" label="Orders" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/tenants" filterParams={`search=${search}&status=${statusFilter}`} />
+                <SortableHeader column="createdAt" label="Created" currentSort={sortBy} currentOrder={sortOrder} basePath="/admin/tenants" filterParams={`search=${search}&status=${statusFilter}`} />
               </tr>
             </thead>
             <tbody>
@@ -150,14 +159,14 @@ export default async function TenantsListPage({ searchParams }: PageProps) {
           <div className="flex gap-2">
             {page > 1 && (
               <Link
-                href={`/admin/tenants?page=${page - 1}&search=${search}&status=${statusFilter}`}
+                href={`/admin/tenants?page=${page - 1}&search=${search}&status=${statusFilter}&sortBy=${sortBy}&sortOrder=${sortOrder}`}
               >
                 <Button variant="outline" size="sm">Previous</Button>
               </Link>
             )}
             {page < totalPages && (
               <Link
-                href={`/admin/tenants?page=${page + 1}&search=${search}&status=${statusFilter}`}
+                href={`/admin/tenants?page=${page + 1}&search=${search}&status=${statusFilter}&sortBy=${sortBy}&sortOrder=${sortOrder}`}
               >
                 <Button variant="outline" size="sm">Next</Button>
               </Link>

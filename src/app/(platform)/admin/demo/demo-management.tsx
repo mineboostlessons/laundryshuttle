@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,6 +17,9 @@ import {
   Package,
   Globe,
   Activity,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
 } from "lucide-react";
 import { toggleDemoFlag, resetDemoTenant } from "./actions";
 
@@ -44,6 +47,40 @@ export function DemoManagement({
   totalSessions,
 }: DemoManagementProps) {
   const [loading, setLoading] = useState<string | null>(null);
+  const [sortColumn, setSortColumn] = useState<string>("businessName");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  const sortedTenants = useMemo(() => {
+    return [...demoTenants].sort((a, b) => {
+      let aVal: string | number | boolean;
+      let bVal: string | number | boolean;
+      switch (sortColumn) {
+        case "businessName": aVal = a.businessName.toLowerCase(); bVal = b.businessName.toLowerCase(); break;
+        case "isDemo": aVal = a.isDemo ? 1 : 0; bVal = b.isDemo ? 1 : 0; break;
+        case "isActive": aVal = a.isActive ? 1 : 0; bVal = b.isActive ? 1 : 0; break;
+        case "userCount": aVal = a.userCount; bVal = b.userCount; break;
+        case "orderCount": aVal = a.orderCount; bVal = b.orderCount; break;
+        default: aVal = a.businessName.toLowerCase(); bVal = b.businessName.toLowerCase();
+      }
+      if (aVal < bVal) return sortOrder === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [demoTenants, sortColumn, sortOrder]);
+
+  const toggleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortOrder("asc");
+    }
+  };
+
+  const SortIcon = ({ column }: { column: string }) => {
+    if (sortColumn !== column) return <ChevronsUpDown className="h-3.5 w-3.5 opacity-40" />;
+    return sortOrder === "asc" ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />;
+  };
 
   const handleToggleDemo = async (tenantId: string) => {
     setLoading(`toggle-${tenantId}`);
@@ -122,15 +159,27 @@ export function DemoManagement({
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
-                    <th className="px-4 py-3 font-medium">Tenant</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
-                    <th className="px-4 py-3 font-medium">Data</th>
+                    <th className="px-4 py-3 font-medium">
+                      <button onClick={() => toggleSort("businessName")} className="inline-flex items-center gap-1 hover:text-foreground">
+                        Tenant <SortIcon column="businessName" />
+                      </button>
+                    </th>
+                    <th className="px-4 py-3 font-medium">
+                      <button onClick={() => toggleSort("isDemo")} className="inline-flex items-center gap-1 hover:text-foreground">
+                        Status <SortIcon column="isDemo" />
+                      </button>
+                    </th>
+                    <th className="px-4 py-3 font-medium">
+                      <button onClick={() => toggleSort("userCount")} className="inline-flex items-center gap-1 hover:text-foreground">
+                        Data <SortIcon column="userCount" />
+                      </button>
+                    </th>
                     <th className="px-4 py-3 font-medium">Auto Reset</th>
                     <th className="px-4 py-3 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {demoTenants.map((tenant) => (
+                  {sortedTenants.map((tenant) => (
                     <tr key={tenant.id} className="border-b last:border-0">
                       <td className="px-4 py-3">
                         <div>
