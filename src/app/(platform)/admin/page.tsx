@@ -12,10 +12,10 @@ export default async function AdminDashboardPage() {
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total Tenants" value={stats.totalTenants} />
-        <StatCard label="Active Tenants" value={stats.activeTenants} accent="green" />
-        <StatCard label="Total Users" value={stats.totalUsers} />
-        <StatCard label="Total Orders" value={stats.totalOrders} />
+        <StatCard label="Total Tenants" value={stats.totalTenants} href="/admin/tenants" />
+        <StatCard label="Active Tenants" value={stats.activeTenants} accent="green" href="/admin/tenants" />
+        <StatCard label="Total Users" value={stats.totalUsers} href="/admin/tenants" />
+        <StatCard label="Total Orders" value={stats.totalOrders} href="/admin/tenants" />
       </div>
 
       {/* Recent Tenants */}
@@ -88,13 +88,15 @@ function StatCard({
   label,
   value,
   accent,
+  href,
 }: {
   label: string;
   value: number;
   accent?: "green" | "red";
+  href: string;
 }) {
   return (
-    <div className="rounded-lg border bg-card p-6">
+    <Link href={href} className="rounded-lg border bg-card p-6 transition-colors hover:bg-accent">
       <p className="text-sm text-muted-foreground">{label}</p>
       <p
         className={`mt-1 text-3xl font-bold ${
@@ -107,6 +109,6 @@ function StatCard({
       >
         {value}
       </p>
-    </div>
+    </Link>
   );
 }
