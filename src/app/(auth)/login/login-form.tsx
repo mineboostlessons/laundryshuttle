@@ -23,16 +23,46 @@ export function LoginForm({ tenantSlug }: { tenantSlug?: string }) {
   const [state, formAction, isPending] = useActionState(loginAction, initialState);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const defaultRedirect = !tenantSlug || tenantSlug === "__platform__" ? "/admin" : "/";
-  const callbackUrl = searchParams.get("callbackUrl") || defaultRedirect;
+  const callbackUrl = searchParams.get("callbackUrl");
   const error = searchParams.get("error");
 
   useEffect(() => {
     if (state.success) {
-      router.push(callbackUrl);
+      // Determine the right redirect based on the user's role and tenant
+      const role = state.role;
+      const userTenantSlug = state.tenantSlug;
+
+      let redirect = callbackUrl || "/";
+
+      if (!callbackUrl) {
+        // No explicit callback — redirect based on role
+        if (role === "platform_admin") {
+          redirect = "/admin";
+        } else if (role === "owner") {
+          redirect = "/dashboard";
+        } else if (role === "manager") {
+          redirect = "/manager";
+        } else if (role === "attendant") {
+          redirect = "/attendant";
+        } else if (role === "driver") {
+          redirect = "/driver";
+        } else if (role === "customer") {
+          redirect = "/customer";
+        }
+      }
+
+      // If the user belongs to a tenant but we're on the platform domain,
+      // redirect to their subdomain
+      if (userTenantSlug && (!tenantSlug || tenantSlug === "__platform__")) {
+        const platformDomain = window.location.hostname;
+        window.location.href = `${window.location.protocol}//${userTenantSlug}.${platformDomain}${redirect}`;
+        return;
+      }
+
+      router.push(redirect);
       router.refresh();
     }
-  }, [state.success, router, callbackUrl]);
+  }, [state.success, state.role, state.tenantSlug, router, callbackUrl, tenantSlug]);
 
   return (
     <Card>

@@ -29,6 +29,8 @@ export type AuthState = {
   error?: string;
   success?: boolean;
   message?: string;
+  role?: string;
+  tenantSlug?: string | null;
 };
 
 export async function registerAction(
@@ -120,7 +122,22 @@ export async function loginAction(
       redirect: false,
     });
 
-    return { success: true };
+    // Fetch the user to return role and tenantSlug for proper redirect
+    const user = await prisma.user.findFirst({
+      where: { email: parsed.data.email },
+      select: { role: true, tenantId: true },
+    });
+
+    let userTenantSlug: string | null = null;
+    if (user?.tenantId) {
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: user.tenantId },
+        select: { slug: true },
+      });
+      userTenantSlug = tenant?.slug ?? null;
+    }
+
+    return { success: true, role: user?.role, tenantSlug: userTenantSlug };
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
