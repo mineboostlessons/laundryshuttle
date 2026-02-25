@@ -83,7 +83,7 @@ function checkRateLimit(key: string, limit: number, windowMs: number): boolean {
 export default auth((request) => {
   const url = request.nextUrl;
   const hostname = request.headers.get("host") || "";
-  const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "laundryshuttle.com";
+  const platformDomain = (process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "laundryshuttle.com").trim();
   const pathname = url.pathname;
 
   // Skip middleware for static files, assets
