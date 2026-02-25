@@ -33,9 +33,9 @@ export function AdminLayoutShell({
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside className="hidden w-64 flex-col border-r bg-card md:flex">
-        <div className="border-b p-4">
+      {/* Sidebar — Clean Luxe navy */}
+      <aside className="hidden w-64 flex-col bg-[#0D1B2A] md:flex">
+        <div className="border-b border-white/10 p-4">
           <Link href="/admin" className="flex items-center gap-2">
             <Image
               src="/images/logo-circle.png"
@@ -44,11 +44,11 @@ export function AdminLayoutShell({
               height={32}
               className="rounded-full"
             />
-            <span className="text-lg font-bold">Laundry Shuttle</span>
+            <span className="text-lg font-bold text-[#F0EDE5]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Laundry Shuttle</span>
           </Link>
-          <p className="text-xs text-muted-foreground mt-1">Platform Admin</p>
+          <p className="text-xs text-[#C9A96E] mt-1">Platform Admin</p>
         </div>
-        <nav className="flex-1 space-y-1 p-3">
+        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
           {NAV_ITEMS.map((item) => {
             const isActive =
               item.href === "/admin"
@@ -61,8 +61,8 @@ export function AdminLayoutShell({
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-[#C9A96E]/20 text-[#C9A96E]"
+                    : "text-[#F0EDE5]/60 hover:bg-white/5 hover:text-[#F0EDE5]"
                 )}
               >
                 <item.icon className="h-4 w-4" />
@@ -71,16 +71,16 @@ export function AdminLayoutShell({
             );
           })}
         </nav>
-        <div className="border-t p-4">
-          <p className="mb-2 truncate text-xs text-muted-foreground">{email}</p>
+        <div className="border-t border-white/10 p-4">
+          <p className="mb-2 truncate text-xs text-[#F0EDE5]/50">{email}</p>
           <SignOutButton />
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 bg-muted/30">
+      <main className="flex-1 bg-[#F0EDE5]/50">
         {/* Mobile header */}
-        <header className="flex items-center justify-between border-b bg-background p-4 md:hidden">
+        <header className="flex items-center justify-between border-b border-[#C9A96E]/20 bg-[#0D1B2A] p-4 md:hidden">
           <Link href="/admin" className="flex items-center gap-2">
             <Image
               src="/images/logo-circle.png"
@@ -89,7 +89,7 @@ export function AdminLayoutShell({
               height={24}
               className="rounded-full"
             />
-            <span className="font-bold">Laundry Shuttle</span>
+            <span className="font-bold text-[#F0EDE5]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Laundry Shuttle</span>
           </Link>
           <SignOutButton />
         </header>
