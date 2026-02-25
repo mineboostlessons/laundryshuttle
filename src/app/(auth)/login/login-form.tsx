@@ -53,10 +53,14 @@ export function LoginForm({ tenantSlug }: { tenantSlug?: string }) {
 
       // If the user belongs to a tenant but we're on the platform domain,
       // redirect to their subdomain
-      if (userTenantSlug && (!tenantSlug || tenantSlug === "__platform__")) {
-        const platformDomain = window.location.hostname;
-        window.location.href = `${window.location.protocol}//${userTenantSlug}.${platformDomain}${redirect}`;
-        return;
+      if (userTenantSlug) {
+        const currentHostname = window.location.hostname;
+        const alreadyOnSubdomain = currentHostname.startsWith(`${userTenantSlug}.`);
+
+        if (!alreadyOnSubdomain && (!tenantSlug || tenantSlug === "__platform__")) {
+          window.location.href = `${window.location.protocol}//${userTenantSlug}.${currentHostname}${redirect}`;
+          return;
+        }
       }
 
       router.push(redirect);
