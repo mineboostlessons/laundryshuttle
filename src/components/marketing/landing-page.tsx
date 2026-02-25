@@ -192,20 +192,14 @@ export function MarketingLandingPage() {
                 Simple, <span className="text-[#C9A96E]">Transparent</span> Pricing
               </h2>
               <p className="mt-4 text-lg text-[#0D1B2A]/60">
-                No hidden fees. One plan. Everything included.
+                Everything you need to run your laundry business online.
               </p>
 
               <div className="mt-12 rounded-2xl border border-[#C9A96E]/20 bg-[#F0EDE5]/50 p-10 shadow-lg">
                 <div className="flex flex-col items-center">
                   <p className="text-sm font-medium uppercase tracking-wider text-[#C9A96E]">All-Inclusive Plan</p>
-                  <div className="mt-4 flex items-baseline gap-1">
-                    <span className="text-5xl font-bold text-[#0D1B2A]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-                      $99
-                    </span>
-                    <span className="text-lg text-[#0D1B2A]/60">/month</span>
-                  </div>
-                  <p className="mt-2 text-sm text-[#0D1B2A]/50">
-                    + $2,000 one-time setup + 1% platform fee on transactions
+                  <p className="mt-4 text-lg text-[#0D1B2A]/70">
+                    Contact us for pricing details
                   </p>
                 </div>
 
