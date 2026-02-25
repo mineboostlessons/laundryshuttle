@@ -136,9 +136,10 @@ export default auth((request) => {
       // Explicit tenant param — use it and persist via cookie
       resolvedTenantSlug = tenantSlug;
       tenantFromParam = true;
-    } else if (pathname !== "/") {
-      // Fall back to cookie-persisted tenant (only for non-root paths)
+    } else if (pathname !== "/" && !isPublicRoute(pathname)) {
+      // Fall back to cookie-persisted tenant (only for non-root, non-auth paths)
       // Root "/" without ?tenant= always shows the platform marketing page
+      // Auth pages (/login, /register, etc.) without ?tenant= default to platform
       const cookieTenant = request.cookies.get("__tenant_slug")?.value;
       resolvedTenantSlug = cookieTenant || "__platform__";
     }
