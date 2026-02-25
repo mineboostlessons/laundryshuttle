@@ -120,6 +120,13 @@ export default auth((request) => {
       const tenantSlug = url.searchParams.get("tenant");
       const cookieTenant = request.cookies.get("__tenant_slug")?.value;
       apiHeaders.set("x-tenant-slug", tenantSlug || cookieTenant || "__platform__");
+    } else if (hostname === `admin.${platformDomain}` || hostname === platformDomain) {
+      apiHeaders.set("x-tenant-slug", "__platform__");
+    } else if (hostname.endsWith(`.${platformDomain}`)) {
+      const tenantSlug = hostname.replace(`.${platformDomain}`, "");
+      if (tenantSlug && tenantSlug !== "www") {
+        apiHeaders.set("x-tenant-slug", tenantSlug);
+      }
     }
     return NextResponse.next({ request: { headers: apiHeaders } });
   }

@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 export async function GET(request: NextRequest) {
   const headersList = await headers();
   const hostname = request.headers.get("host") || "";
-  const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "laundryshuttle.com";
+  const platformDomain = (process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "laundryshuttle.com").trim();
   const vercelUrl = process.env.VERCEL_URL || "";
 
   return NextResponse.json({
