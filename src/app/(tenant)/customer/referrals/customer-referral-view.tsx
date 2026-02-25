@@ -13,7 +13,7 @@ export function CustomerReferralView({ data }: CustomerReferralViewProps) {
 
   if (!config.enabled) {
     return (
-      <div className="rounded-lg border p-8 text-center">
+      <div className="p-6 lg:p-8 rounded-lg border text-center">
         <h1 className="text-2xl font-bold">Refer a Friend</h1>
         <p className="mt-2 text-muted-foreground">
           The referral program is not currently available. Check back soon!
@@ -42,7 +42,7 @@ export function CustomerReferralView({ data }: CustomerReferralViewProps) {
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="p-6 lg:p-8 mx-auto max-w-2xl space-y-6">
       {/* Hero */}
       <div className="rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 p-6 text-center">
         <h1 className="text-2xl font-bold">Refer a Friend, Earn Rewards</h1>

@@ -8,7 +8,7 @@ export default async function PaymentMethodsPage() {
   const methods = await getPaymentMethods();
 
   return (
-    <div>
+    <div className="p-6 lg:p-8 space-y-6">
       <h1 className="text-2xl font-bold">Payment Methods</h1>
       <p className="mt-1 text-muted-foreground">
         Manage your saved cards for faster checkout.

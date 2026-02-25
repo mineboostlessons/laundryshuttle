@@ -69,7 +69,7 @@ export function WalletView({ initialData }: WalletViewProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 lg:p-8 space-y-6">
       {/* Balance Card */}
       <Card>
         <CardContent className="flex items-center justify-between py-6">
