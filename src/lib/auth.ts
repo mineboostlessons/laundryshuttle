@@ -68,6 +68,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         const user = await prisma.user.findFirst({ where });
+
+        // If no tenant-scoped user found, try platform admin as fallback
+        if (!user && tenantSlug && tenantSlug !== "__platform__") {
+          const platformAdmin = await prisma.user.findFirst({
+            where: { email, tenantId: null, role: "platform_admin" },
+          });
+          if (platformAdmin && platformAdmin.passwordHash) {
+            const valid = await bcrypt.compare(password, platformAdmin.passwordHash);
+            if (valid && platformAdmin.isActive) {
+              await prisma.user.update({
+                where: { id: platformAdmin.id },
+                data: { lastLoginAt: new Date() },
+              });
+              return {
+                id: platformAdmin.id,
+                email: platformAdmin.email,
+                name: [platformAdmin.firstName, platformAdmin.lastName].filter(Boolean).join(" ") || null,
+                image: platformAdmin.avatarUrl,
+                role: platformAdmin.role as UserRole,
+                tenantId: null,
+                tenantSlug: null,
+              };
+            }
+          }
+        }
+
         if (!user || !user.passwordHash) return null;
 
         const passwordValid = await bcrypt.compare(password, user.passwordHash);
