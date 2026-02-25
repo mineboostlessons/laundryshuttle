@@ -1,5 +1,6 @@
 import { MarketingHeader } from "./marketing-header";
 import { MarketingFooter } from "./marketing-footer";
+import { DemoRequestForm } from "./demo-request-form";
 
 export function MarketingLandingPage() {
   return (
@@ -295,39 +296,8 @@ export function MarketingLandingPage() {
               <p className="mt-4 text-lg text-white/60">
                 Schedule a free demo and see how Laundry Shuttle can transform your business.
               </p>
-              <div className="mt-10 rounded-xl bg-white/5 p-8 backdrop-blur">
-                <form className="space-y-4" action="#" method="POST">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <input
-                      type="text"
-                      placeholder="Your Name"
-                      className="rounded-md border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 focus:border-[#C9A96E] focus:outline-none focus:ring-1 focus:ring-[#C9A96E]"
-                    />
-                    <input
-                      type="email"
-                      placeholder="Email Address"
-                      className="rounded-md border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 focus:border-[#C9A96E] focus:outline-none focus:ring-1 focus:ring-[#C9A96E]"
-                    />
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <input
-                      type="text"
-                      placeholder="Business Name"
-                      className="rounded-md border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 focus:border-[#C9A96E] focus:outline-none focus:ring-1 focus:ring-[#C9A96E]"
-                    />
-                    <input
-                      type="tel"
-                      placeholder="Phone Number"
-                      className="rounded-md border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/40 focus:border-[#C9A96E] focus:outline-none focus:ring-1 focus:ring-[#C9A96E]"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full rounded-md bg-[#C9A96E] py-3 text-base font-semibold text-[#0D1B2A] transition-colors hover:bg-[#C9A96E]/90"
-                  >
-                    Schedule a Demo
-                  </button>
-                </form>
+              <div className="mt-10">
+                <DemoRequestForm />
               </div>
             </div>
           </section>
