@@ -21,9 +21,12 @@ import {
 import { loadStripe } from "@stripe/stripe-js";
 import { setDefaultPaymentMethod, deletePaymentMethod, addPaymentMethod } from "./actions";
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-);
+function getStripePromise(connectedAccountId?: string) {
+  return loadStripe(
+    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
+    connectedAccountId ? { stripeAccount: connectedAccountId } : undefined
+  );
+}
 
 interface PaymentMethod {
   id: string;
@@ -124,13 +127,16 @@ export function PaymentMethodsView({
   const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [connectedAccountId, setConnectedAccountId] = useState<string | null>(null);
   const [loadingSetup, setLoadingSetup] = useState(false);
+  const [setupError, setSetupError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [settingDefaultId, setSettingDefaultId] = useState<string | null>(null);
 
   const startAddCard = async () => {
     setLoadingSetup(true);
     setDialogOpen(true);
+    setSetupError(null);
 
     try {
       const res = await fetch("/api/stripe/setup-intent", {
@@ -139,9 +145,12 @@ export function PaymentMethodsView({
       const data = await res.json();
       if (data.success) {
         setClientSecret(data.data.clientSecret);
+        setConnectedAccountId(data.data.stripeConnectAccountId ?? null);
+      } else {
+        setSetupError(data.error ?? "Failed to initialize card form");
       }
     } catch {
-      // Handle error silently
+      setSetupError("Something went wrong. Please try again.");
     } finally {
       setLoadingSetup(false);
     }
@@ -238,7 +247,11 @@ export function PaymentMethodsView({
 
       <Dialog open={dialogOpen} onOpenChange={(open) => {
         setDialogOpen(open);
-        if (!open) setClientSecret(null);
+        if (!open) {
+          setClientSecret(null);
+          setConnectedAccountId(null);
+          setSetupError(null);
+        }
       }}>
         <DialogTrigger asChild>
           <Button onClick={startAddCard} className="w-full">
@@ -254,9 +267,13 @@ export function PaymentMethodsView({
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
+          ) : setupError ? (
+            <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+              {setupError}
+            </p>
           ) : clientSecret ? (
             <Elements
-              stripe={stripePromise}
+              stripe={getStripePromise(connectedAccountId ?? undefined)}
               options={{
                 clientSecret,
                 appearance: { theme: "stripe" },
@@ -267,6 +284,7 @@ export function PaymentMethodsView({
                 onCancel={() => {
                   setDialogOpen(false);
                   setClientSecret(null);
+                  setConnectedAccountId(null);
                 }}
               />
             </Elements>

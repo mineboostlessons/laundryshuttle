@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import Stripe from "stripe";
-import { createStripeCustomer } from "@/lib/stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-02-24.acacia",
@@ -24,7 +23,7 @@ export async function POST() {
       select: { stripeConnectAccountId: true, stripeConnectStatus: true },
     });
 
-    if (!tenant?.stripeConnectAccountId || tenant.stripeConnectStatus !== "active") {
+    if (!tenant?.stripeConnectAccountId) {
       return NextResponse.json(
         { success: false, error: "Payments not set up for this business" },
         { status: 400 }
@@ -40,11 +39,15 @@ export async function POST() {
       .then((u) => u?.stripeCustomerId);
 
     if (!stripeCustomerId) {
-      const customer = await createStripeCustomer({
-        email: session.user.email,
-        name: session.user.name ?? undefined,
-        metadata: { userId: session.user.id },
-      });
+      // Create customer on the connected account (not the platform account)
+      const customer = await stripe.customers.create(
+        {
+          email: session.user.email,
+          name: session.user.name ?? undefined,
+          metadata: { userId: session.user.id },
+        },
+        { stripeAccount: tenant.stripeConnectAccountId }
+      );
       stripeCustomerId = customer.id;
       await prisma.user.update({
         where: { id: session.user.id },
@@ -71,12 +74,19 @@ export async function POST() {
       success: true,
       data: {
         clientSecret: setupIntent.client_secret,
+        stripeConnectAccountId: tenant.stripeConnectAccountId,
       },
     });
   } catch (error) {
     console.error("Setup intent error:", error);
+
+    let message = "Failed to create setup intent";
+    if (error instanceof Error) {
+      message = error.message;
+    }
+
     return NextResponse.json(
-      { success: false, error: "Failed to create setup intent" },
+      { success: false, error: message },
       { status: 500 }
     );
   }
