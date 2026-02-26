@@ -116,7 +116,7 @@ const NAV_ITEMS: NavItem[] = [
     href: "/dashboard/invoices",
     label: "Invoices",
     icon: Receipt,
-    roles: ["owner", "manager"],
+    roles: ["owner"],
   },
   {
     href: "/dashboard/webhooks",
@@ -134,7 +134,7 @@ const NAV_ITEMS: NavItem[] = [
     href: "/dashboard/marketplace",
     label: "Marketplace",
     icon: Store,
-    roles: ["owner", "manager"],
+    roles: ["owner"],
   },
   {
     href: "/dashboard/launch-kit",
@@ -165,13 +165,13 @@ const NAV_ITEMS: NavItem[] = [
     href: "/dashboard/migrations",
     label: "Migration Tools",
     icon: ArrowRightLeft,
-    roles: ["owner", "manager"],
+    roles: ["owner"],
   },
   {
     href: "/dashboard/interest",
     label: "Service Interests",
     icon: MapPin,
-    roles: ["owner", "manager"],
+    roles: ["owner"],
   },
   {
     href: "/settings/theme",
@@ -242,9 +242,33 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["manager"],
   },
   {
-    href: "/dashboard/sms-inbox",
+    href: "/manager/sms-inbox",
     label: "SMS Inbox",
     icon: MessageSquare,
+    roles: ["manager"],
+  },
+  {
+    href: "/manager/invoices",
+    label: "Invoices",
+    icon: Receipt,
+    roles: ["manager"],
+  },
+  {
+    href: "/manager/marketplace",
+    label: "Marketplace",
+    icon: Store,
+    roles: ["manager"],
+  },
+  {
+    href: "/manager/migrations",
+    label: "Migration Tools",
+    icon: ArrowRightLeft,
+    roles: ["manager"],
+  },
+  {
+    href: "/manager/interest",
+    label: "Service Interests",
+    icon: MapPin,
     roles: ["manager"],
   },
   // Attendant items
