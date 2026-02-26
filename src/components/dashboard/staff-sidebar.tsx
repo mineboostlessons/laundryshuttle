@@ -40,6 +40,7 @@ import {
   ArrowRightLeft,
   Globe,
   Palette,
+  Map,
   MapPin,
   Layout,
 } from "lucide-react";
@@ -188,6 +189,12 @@ const NAV_ITEMS: NavItem[] = [
     href: "/settings/payments",
     label: "Payments",
     icon: CreditCard,
+    roles: ["owner"],
+  },
+  {
+    href: "/settings/service-area",
+    label: "Service Area",
+    icon: Map,
     roles: ["owner"],
   },
   {

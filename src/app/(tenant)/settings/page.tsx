@@ -5,10 +5,18 @@ import { UserRole } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { prisma } from "@/lib/prisma";
 
 export default async function SettingsPage() {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
+
+  const laundromat = await prisma.laundromat.findFirst({
+    where: { tenantId: tenant.id, isActive: true },
+    select: { serviceAreaPolygons: true },
+  });
+  const polygons = laundromat?.serviceAreaPolygons as GeoJSON.FeatureCollection | null;
+  const polygonCount = polygons?.features?.length ?? 0;
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
@@ -134,6 +142,26 @@ export default async function SettingsPage() {
               <Button variant="outline" size="sm">
                 Manage Domain
               </Button>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/settings/service-area">
+          <Card className="transition-shadow hover:shadow-md">
+            <CardHeader>
+              <CardTitle className="text-lg">Service Area</CardTitle>
+              <CardDescription>
+                Define the delivery zone on a map
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <Badge variant={polygonCount > 0 ? "secondary" : "outline"}>
+                  {polygonCount > 0
+                    ? `${polygonCount} polygon${polygonCount !== 1 ? "s" : ""}`
+                    : "Not configured"}
+                </Badge>
+              </div>
             </CardContent>
           </Card>
         </Link>
