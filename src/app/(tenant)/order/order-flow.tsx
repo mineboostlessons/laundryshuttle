@@ -55,13 +55,28 @@ const STEPS = [
   { id: "review", label: "Review" },
 ] as const;
 
+export interface SavedAddress {
+  id: string;
+  label: string | null;
+  addressLine1: string;
+  addressLine2: string | null;
+  city: string;
+  state: string;
+  zip: string;
+  lat: number | null;
+  lng: number | null;
+  isDefault: boolean;
+  pickupNotes: string | null;
+}
+
 interface OrderFlowProps {
   services: ServiceItem[];
   timeSlots: TimeSlotData;
   tenantSlug: string;
+  savedAddresses: SavedAddress[];
 }
 
-export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
+export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses }: OrderFlowProps) {
   const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -76,11 +91,14 @@ export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
 
   const [formData, setFormData] = useState<OrderFormData>(() => {
     let initialAddress: AddressValue | null = null;
+    let initialLine2 = "";
+    let initialPickupNotes = "";
     const addressLine1 = searchParams.get("addressLine1");
     const lat = searchParams.get("lat");
     const lng = searchParams.get("lng");
 
     if (addressLine1 && lat && lng) {
+      // Query params take priority
       initialAddress = {
         addressLine1,
         city: searchParams.get("city") ?? "",
@@ -90,13 +108,29 @@ export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
         lng: parseFloat(lng),
         placeName: searchParams.get("placeName") ?? addressLine1,
       };
+    } else {
+      // Pre-populate from default saved address
+      const defaultAddr = savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0];
+      if (defaultAddr && defaultAddr.lat != null && defaultAddr.lng != null) {
+        initialAddress = {
+          addressLine1: defaultAddr.addressLine1,
+          city: defaultAddr.city,
+          state: defaultAddr.state,
+          zip: defaultAddr.zip,
+          lat: defaultAddr.lat,
+          lng: defaultAddr.lng,
+          placeName: defaultAddr.addressLine1,
+        };
+        initialLine2 = defaultAddr.addressLine2 ?? "";
+        initialPickupNotes = defaultAddr.pickupNotes ?? "";
+      }
     }
 
     return {
       services: [],
       address: initialAddress,
-      addressLine2: "",
-      pickupNotes: "",
+      addressLine2: initialLine2,
+      pickupNotes: initialPickupNotes,
       pickupDate: "",
       pickupTimeSlot: "",
       deliveryDate: "",
@@ -306,6 +340,7 @@ export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
             addressLine2={formData.addressLine2}
             pickupNotes={formData.pickupNotes}
             areaError={areaError}
+            savedAddresses={savedAddresses}
             onAddressChange={(address) => {
               setAreaError(null);
               updateForm({ address });

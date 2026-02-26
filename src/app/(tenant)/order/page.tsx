@@ -35,6 +35,50 @@ export default async function OrderPage() {
     getAvailableTimeSlots(),
   ]);
 
+  // Fetch saved addresses for logged-in customers
+  let savedAddresses: {
+    id: string;
+    label: string | null;
+    addressLine1: string;
+    addressLine2: string | null;
+    city: string;
+    state: string;
+    zip: string;
+    lat: number | null;
+    lng: number | null;
+    isDefault: boolean;
+    pickupNotes: string | null;
+  }[] = [];
+
+  if (session?.user?.id) {
+    const allAddresses = await prisma.customerAddress.findMany({
+      where: { userId: session.user.id },
+      orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+      select: {
+        id: true,
+        label: true,
+        addressLine1: true,
+        addressLine2: true,
+        city: true,
+        state: true,
+        zip: true,
+        lat: true,
+        lng: true,
+        isDefault: true,
+        pickupNotes: true,
+      },
+    });
+
+    // Deduplicate by addressLine1
+    const seen = new Set<string>();
+    savedAddresses = allAddresses.filter((addr) => {
+      const key = addr.addressLine1.toLowerCase().trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <TenantHeader />
@@ -51,6 +95,7 @@ export default async function OrderPage() {
               services={services}
               timeSlots={timeSlots}
               tenantSlug={tenant.slug}
+              savedAddresses={savedAddresses}
             />
           </div>
         </div>
