@@ -90,12 +90,17 @@ function AddStaffDialog({
     startTransition(async () => {
       const result = await createStaffMember(data);
       if (result.success) {
-        setSuccess(true);
+        if (result.emailError) {
+          setError(result.emailError);
+        } else {
+          setSuccess(true);
+        }
         setTimeout(() => {
           setOpen(false);
           setSuccess(false);
+          setError(null);
           router.refresh();
-        }, 1500);
+        }, 2500);
       } else {
         setError(result.error);
       }

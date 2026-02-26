@@ -268,7 +268,7 @@ export async function createStaffMember(data: {
   phone?: string;
   role: string;
   tenantSlug: string;
-}): Promise<{ success: true; staffId: string } | { success: false; error: string }> {
+}): Promise<{ success: true; staffId: string; emailError?: string } | { success: false; error: string }> {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
 
@@ -307,7 +307,7 @@ export async function createStaffMember(data: {
 
   // Send welcome email with temp password
   const loginUrl = `https://${data.tenantSlug}.laundryshuttle.com/staff/login`;
-  await sendEmail({
+  const emailResult = await sendEmail({
     to: email.toLowerCase(),
     subject: `You've been added as ${role} at ${tenant.businessName}`,
     html: wrapInEmailLayout({
@@ -331,6 +331,15 @@ export async function createStaffMember(data: {
       `,
     }),
   });
+
+  if (!emailResult.success) {
+    console.error("Failed to send staff welcome email:", emailResult.error);
+    return {
+      success: true,
+      staffId: user.id,
+      emailError: `Staff account created but welcome email failed to send: ${emailResult.error}`,
+    };
+  }
 
   return { success: true, staffId: user.id };
 }
