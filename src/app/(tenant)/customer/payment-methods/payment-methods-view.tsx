@@ -246,7 +246,7 @@ export function PaymentMethodsView({
             Add New Card
           </Button>
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add a New Card</DialogTitle>
           </DialogHeader>
