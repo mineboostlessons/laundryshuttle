@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -41,9 +42,10 @@ export function CustomerListView({ customers }: { customers: Customer[] }) {
           {customers.map((c) => {
             const name = `${c.firstName ?? ""} ${c.lastName ?? ""}`.trim();
             return (
-              <div
+              <Link
                 key={c.id}
-                className="flex items-center justify-between py-3"
+                href={`/manager/customers/${c.id}`}
+                className="flex items-center justify-between py-3 hover:bg-muted/50 transition-colors px-2 rounded"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-medium flex-shrink-0">
@@ -71,7 +73,7 @@ export function CustomerListView({ customers }: { customers: Customer[] }) {
                     Joined {new Date(c.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
