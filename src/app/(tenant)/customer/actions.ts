@@ -282,10 +282,39 @@ const addressSchema = z.object({
 
 export async function getCustomerAddresses() {
   const session = await requireRole(UserRole.CUSTOMER);
-  return prisma.customerAddress.findMany({
+
+  const addresses = await prisma.customerAddress.findMany({
     where: { userId: session.user.id },
     orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
   });
+
+  // Deduplicate by addressLine1 — keep the first (most recent default or newest)
+  const seen = new Set<string>();
+  const duplicateIds: string[] = [];
+  const unique = addresses.filter((addr) => {
+    const key = addr.addressLine1.toLowerCase().trim();
+    if (seen.has(key)) {
+      duplicateIds.push(addr.id);
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+
+  // Clean up duplicates in the background (only if not referenced by orders)
+  if (duplicateIds.length > 0) {
+    // Delete duplicates that are not linked to any order
+    prisma.customerAddress.deleteMany({
+      where: {
+        id: { in: duplicateIds },
+        orders: { none: {} },
+      },
+    }).catch(() => {
+      // Silently ignore — duplicates linked to orders are kept
+    });
+  }
+
+  return unique;
 }
 
 export async function createAddress(data: z.infer<typeof addressSchema>) {

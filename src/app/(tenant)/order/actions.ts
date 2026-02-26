@@ -308,24 +308,49 @@ export async function createOrder(
   const taxAmount = subtotal * taxRate;
   const totalAmount = subtotal + taxAmount;
 
-  // Create or link customer address
+  // Reuse existing customer address or create a new one
   let addressId: string | undefined;
   if (session?.user?.id) {
-    const address = await prisma.customerAddress.create({
-      data: {
+    // Check for an existing address with the same addressLine1
+    const existing = await prisma.customerAddress.findFirst({
+      where: {
         userId: session.user.id,
-        label: data.address.label ?? "Pickup Address",
         addressLine1: data.address.addressLine1,
-        addressLine2: data.address.addressLine2 ?? null,
-        city: data.address.city,
-        state: data.address.state,
-        zip: data.address.zip,
-        lat: data.address.lat,
-        lng: data.address.lng,
-        pickupNotes: data.address.pickupNotes ?? null,
       },
     });
-    addressId = address.id;
+
+    if (existing) {
+      // Update mutable fields on the existing address
+      await prisma.customerAddress.update({
+        where: { id: existing.id },
+        data: {
+          addressLine2: data.address.addressLine2 ?? existing.addressLine2,
+          city: data.address.city,
+          state: data.address.state,
+          zip: data.address.zip,
+          lat: data.address.lat,
+          lng: data.address.lng,
+          pickupNotes: data.address.pickupNotes ?? existing.pickupNotes,
+        },
+      });
+      addressId = existing.id;
+    } else {
+      const address = await prisma.customerAddress.create({
+        data: {
+          userId: session.user.id,
+          label: data.address.label ?? "Pickup Address",
+          addressLine1: data.address.addressLine1,
+          addressLine2: data.address.addressLine2 ?? null,
+          city: data.address.city,
+          state: data.address.state,
+          zip: data.address.zip,
+          lat: data.address.lat,
+          lng: data.address.lng,
+          pickupNotes: data.address.pickupNotes ?? null,
+        },
+      });
+      addressId = address.id;
+    }
   }
 
   // Create order
