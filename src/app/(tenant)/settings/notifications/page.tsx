@@ -12,21 +12,18 @@ export default async function NotificationSettingsPage() {
   ]);
 
   return (
-    <main className="min-h-screen bg-muted/30">
-      <header className="border-b bg-background px-6 py-4">
-        <div className="mx-auto max-w-5xl">
-          <h1 className="text-xl font-bold">Notification Settings</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage email, SMS, and push notification preferences and templates
-          </p>
-        </div>
-      </header>
-      <div className="mx-auto max-w-5xl p-6">
-        <NotificationSettingsView
-          initialSettings={settings}
-          initialTemplates={templates}
-        />
+    <div className="p-6 lg:p-8 space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Notification Settings</h1>
+        <p className="text-muted-foreground">
+          Manage email, SMS, and push notification preferences and templates
+        </p>
       </div>
-    </main>
+
+      <NotificationSettingsView
+        initialSettings={settings}
+        initialTemplates={templates}
+      />
+    </div>
   );
 }

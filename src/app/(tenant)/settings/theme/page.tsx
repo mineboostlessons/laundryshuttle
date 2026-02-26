@@ -8,21 +8,18 @@ export default async function ThemeSettingsPage() {
   const settings = await getTenantThemeSettings();
 
   return (
-    <main className="min-h-screen bg-muted/30">
-      <header className="border-b bg-background px-6 py-4">
-        <div className="mx-auto max-w-3xl">
-          <h1 className="text-xl font-bold">Theme Settings</h1>
-          <p className="text-sm text-muted-foreground">
-            Customize your website&apos;s look and feel
-          </p>
-        </div>
-      </header>
-      <div className="mx-auto max-w-3xl p-6">
-        <ThemeSettingsView
-          currentPreset={settings.preset}
-          currentLogoUrl={settings.logoUrl}
-        />
+    <div className="p-6 lg:p-8 space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Theme Settings</h1>
+        <p className="text-muted-foreground">
+          Customize your website&apos;s look and feel
+        </p>
       </div>
-    </main>
+
+      <ThemeSettingsView
+        currentPreset={settings.preset}
+        currentLogoUrl={settings.logoUrl}
+      />
+    </div>
   );
 }
