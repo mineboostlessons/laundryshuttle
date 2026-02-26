@@ -88,6 +88,16 @@ export async function getOrderDetail(orderId: string) {
           walletBalance: true,
         },
       },
+      pickupAddress: {
+        select: {
+          addressLine1: true,
+          addressLine2: true,
+          city: true,
+          state: true,
+          zip: true,
+          pickupNotes: true,
+        },
+      },
       statusHistory: {
         orderBy: { createdAt: "desc" },
       },

@@ -18,6 +18,20 @@ import { Loader2, RotateCcw, ArrowRight } from "lucide-react";
 import { processRefund, updateOrderStatus } from "../actions";
 import { formatCurrency } from "@/lib/utils";
 
+const PREF_LABELS: Record<string, string> = {
+  regular: "Regular",
+  hypoallergenic: "Hypoallergenic",
+  fragrance_free: "Fragrance Free",
+  eco_friendly: "Eco-Friendly",
+  cold: "Cold",
+  warm: "Warm",
+  hot: "Hot",
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+  hang_dry: "Hang Dry",
+};
+
 interface OrderDetailViewProps {
   order: {
     id: string;
@@ -34,6 +48,13 @@ interface OrderDetailViewProps {
     stripePaymentIntentId: string | null;
     paidAt: Date | null;
     createdAt: Date;
+    pickupDate: Date | null;
+    pickupTimeSlot: string | null;
+    deliveryDate: Date | null;
+    deliveryTimeSlot: string | null;
+    pickupNotes: string | null;
+    specialInstructions: string | null;
+    preferencesSnapshot: Record<string, unknown> | null;
     customer: {
       id: string;
       firstName: string | null;
@@ -41,6 +62,14 @@ interface OrderDetailViewProps {
       email: string;
       phone: string | null;
       walletBalance: number;
+    } | null;
+    pickupAddress: {
+      addressLine1: string;
+      addressLine2: string | null;
+      city: string;
+      state: string;
+      zip: string;
+      pickupNotes: string | null;
     } | null;
     items: Array<{
       id: string;
@@ -200,6 +229,122 @@ export function OrderDetailView({ order }: OrderDetailViewProps) {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Pickup Address */}
+      {order.pickupAddress && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Pickup Address</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1 text-sm">
+            <p>{order.pickupAddress.addressLine1}</p>
+            {order.pickupAddress.addressLine2 && (
+              <p>{order.pickupAddress.addressLine2}</p>
+            )}
+            <p>
+              {order.pickupAddress.city}, {order.pickupAddress.state}{" "}
+              {order.pickupAddress.zip}
+            </p>
+            {(order.pickupNotes || order.pickupAddress.pickupNotes) && (
+              <p className="mt-2 text-muted-foreground">
+                <span className="font-medium text-foreground">Pickup Instructions: </span>
+                {order.pickupNotes || order.pickupAddress.pickupNotes}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Schedule & Preferences */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {(order.pickupDate || order.deliveryDate) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Schedule</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {order.pickupDate && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Pickup</p>
+                  <p className="font-medium">
+                    {new Date(order.pickupDate).toLocaleDateString(undefined, {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </p>
+                  {order.pickupTimeSlot && (
+                    <p className="text-muted-foreground">{order.pickupTimeSlot}</p>
+                  )}
+                </div>
+              )}
+              {order.deliveryDate && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Delivery</p>
+                  <p className="font-medium">
+                    {new Date(order.deliveryDate).toLocaleDateString(undefined, {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </p>
+                  {order.deliveryTimeSlot && (
+                    <p className="text-muted-foreground">{order.deliveryTimeSlot}</p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {(order.preferencesSnapshot || order.specialInstructions) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Preferences</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {order.preferencesSnapshot && (() => {
+                const prefs = order.preferencesSnapshot as {
+                  detergent?: string;
+                  waterTemp?: string;
+                  dryerTemp?: string;
+                  fabricSoftener?: boolean;
+                };
+                return (
+                  <div className="flex flex-wrap gap-2">
+                    {prefs.detergent && (
+                      <Badge variant="outline">
+                        Detergent: {PREF_LABELS[prefs.detergent] ?? prefs.detergent}
+                      </Badge>
+                    )}
+                    {prefs.waterTemp && (
+                      <Badge variant="outline">
+                        Water: {PREF_LABELS[prefs.waterTemp] ?? prefs.waterTemp}
+                      </Badge>
+                    )}
+                    {prefs.dryerTemp && (
+                      <Badge variant="outline">
+                        Dryer: {PREF_LABELS[prefs.dryerTemp] ?? prefs.dryerTemp}
+                      </Badge>
+                    )}
+                    {prefs.fabricSoftener && (
+                      <Badge variant="outline">Fabric Softener</Badge>
+                    )}
+                  </div>
+                );
+              })()}
+              {order.specialInstructions && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Special Instructions</p>
+                  <p className="mt-1">{order.specialInstructions}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Line Items */}
