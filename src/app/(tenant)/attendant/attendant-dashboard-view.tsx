@@ -308,56 +308,59 @@ export function AttendantDashboardView({ data }: { data: AttendantData }) {
           ) : (
             <div className="space-y-3">
               {data.incomingOrders.map((order) => (
-                <Card key={order.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">{order.orderNumber}</p>
-                          <Badge variant="outline" className="text-xs capitalize">
-                            {order.orderType.replace(/_/g, " ")}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {customerName(order.customer)}
-                        </p>
-                        {order.items.length > 0 && (
-                          <div className="mt-2 text-xs text-muted-foreground">
-                            {order.items.map((item, i) => (
-                              <span key={i}>
-                                {item.name} x{item.quantity}
-                                {i < order.items.length - 1 ? ", " : ""}
-                              </span>
-                            ))}
+                <Link key={order.id} href={`/attendant/orders/${order.id}`} className="block">
+                  <Card className="hover:bg-muted/50 transition-colors">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{order.orderNumber}</p>
+                            <Badge variant="outline" className="text-xs capitalize">
+                              {order.orderType.replace(/_/g, " ")}
+                            </Badge>
                           </div>
-                        )}
-                        {order.specialInstructions && (
-                          <p className="mt-2 text-xs text-amber-600 bg-amber-50 rounded px-2 py-1">
-                            Note: {order.specialInstructions}
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {customerName(order.customer)}
                           </p>
-                        )}
-                        {order.numBags && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {order.numBags} bags
-                            {order.totalWeightLbs
-                              ? ` | ${order.totalWeightLbs} lbs`
-                              : ""}
-                          </p>
-                        )}
+                          {order.items.length > 0 && (
+                            <div className="mt-2 text-xs text-muted-foreground">
+                              {order.items.map((item, i) => (
+                                <span key={i}>
+                                  {item.name} x{item.quantity}
+                                  {i < order.items.length - 1 ? ", " : ""}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {order.specialInstructions && (
+                            <p className="mt-2 text-xs text-amber-600 bg-amber-50 rounded px-2 py-1">
+                              Note: {order.specialInstructions}
+                            </p>
+                          )}
+                          {order.numBags && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {order.numBags} bags
+                              {order.totalWeightLbs
+                                ? ` | ${order.totalWeightLbs} lbs`
+                                : ""}
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          disabled={isPending}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setProcessDialog(order);
+                            setBinNumber(order.binNumber ?? "");
+                          }}
+                        >
+                          Process
+                        </Button>
                       </div>
-                      <Button
-                        size="sm"
-                        disabled={isPending}
-                        onClick={() => {
-                          setProcessDialog(order);
-                          setBinNumber(order.binNumber ?? "");
-                        }}
-                      >
-                        Process
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           )}
@@ -374,64 +377,67 @@ export function AttendantDashboardView({ data }: { data: AttendantData }) {
           ) : (
             <div className="space-y-3">
               {data.processingOrders.map((order) => (
-                <Card key={order.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">{order.orderNumber}</p>
-                          {order.binNumber && (
-                            <Badge variant="outline">Bin: {order.binNumber}</Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {customerName(order.customer)}
-                        </p>
-                        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                          {order.washerNumber && (
-                            <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
-                              Washer #{order.washerNumber}
-                            </span>
-                          )}
-                          {order.dryerNumber && (
-                            <span className="bg-orange-50 text-orange-700 px-2 py-0.5 rounded">
-                              Dryer #{order.dryerNumber}
-                            </span>
-                          )}
-                          {order.totalWeightLbs && (
-                            <span>{order.totalWeightLbs} lbs</span>
-                          )}
-                        </div>
-                        {order.specialInstructions && (
-                          <p className="mt-2 text-xs text-amber-600 bg-amber-50 rounded px-2 py-1">
-                            Note: {order.specialInstructions}
+                <Link key={order.id} href={`/attendant/orders/${order.id}`} className="block">
+                  <Card className="hover:bg-muted/50 transition-colors">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{order.orderNumber}</p>
+                            {order.binNumber && (
+                              <Badge variant="outline">Bin: {order.binNumber}</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {customerName(order.customer)}
                           </p>
-                        )}
+                          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                            {order.washerNumber && (
+                              <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
+                                Washer #{order.washerNumber}
+                              </span>
+                            )}
+                            {order.dryerNumber && (
+                              <span className="bg-orange-50 text-orange-700 px-2 py-0.5 rounded">
+                                Dryer #{order.dryerNumber}
+                              </span>
+                            )}
+                            {order.totalWeightLbs && (
+                              <span>{order.totalWeightLbs} lbs</span>
+                            )}
+                          </div>
+                          {order.specialInstructions && (
+                            <p className="mt-2 text-xs text-amber-600 bg-amber-50 rounded px-2 py-1">
+                              Note: {order.specialInstructions}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={isPending}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setAssignDialog(order);
+                              setAssignWasher(order.washerNumber?.toString() ?? "");
+                              setAssignDryer(order.dryerNumber?.toString() ?? "");
+                            }}
+                          >
+                            Assign
+                          </Button>
+                          <Button
+                            size="sm"
+                            disabled={isPending}
+                            onClick={(e) => { e.preventDefault(); handleMarkReady(order.id); }}
+                          >
+                            Mark Ready
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={isPending}
-                          onClick={() => {
-                            setAssignDialog(order);
-                            setAssignWasher(order.washerNumber?.toString() ?? "");
-                            setAssignDryer(order.dryerNumber?.toString() ?? "");
-                          }}
-                        >
-                          Assign
-                        </Button>
-                        <Button
-                          size="sm"
-                          disabled={isPending}
-                          onClick={() => handleMarkReady(order.id)}
-                        >
-                          Mark Ready
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           )}
@@ -448,25 +454,27 @@ export function AttendantDashboardView({ data }: { data: AttendantData }) {
           ) : (
             <div className="space-y-3">
               {data.readyOrders.map((order) => (
-                <Card key={order.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">{order.orderNumber}</p>
-                          <Badge variant="success">Ready</Badge>
-                          <Badge variant="outline" className="text-xs capitalize">
-                            {order.orderType.replace(/_/g, " ")}
-                          </Badge>
+                <Link key={order.id} href={`/attendant/orders/${order.id}`} className="block">
+                  <Card className="hover:bg-muted/50 transition-colors">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{order.orderNumber}</p>
+                            <Badge variant="success">Ready</Badge>
+                            <Badge variant="outline" className="text-xs capitalize">
+                              {order.orderType.replace(/_/g, " ")}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {customerName(order.customer)}
+                            {order.binNumber ? ` | Bin: ${order.binNumber}` : ""}
+                          </p>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {customerName(order.customer)}
-                          {order.binNumber ? ` | Bin: ${order.binNumber}` : ""}
-                        </p>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           )}
