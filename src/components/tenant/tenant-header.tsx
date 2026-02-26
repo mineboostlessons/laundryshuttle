@@ -1,6 +1,7 @@
 import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { requireTenant } from "@/lib/tenant";
+import { getSession } from "@/lib/auth-helpers";
 import { MobileNavToggle } from "./mobile-nav-toggle";
 import { NavDropdown } from "./nav-dropdown";
 
@@ -9,6 +10,9 @@ const SECONDARY_SLUGS = ["faq", "service-areas", "contact"];
 
 export async function TenantHeader() {
   const tenant = await requireTenant();
+
+  const session = await getSession();
+  const user = session?.user ?? null;
 
   const pages = await prisma.page.findMany({
     where: { tenantId: tenant.id, isPublished: true, slug: { not: "home" } },
@@ -87,10 +91,31 @@ export async function TenantHeader() {
           >
             Order Now
           </Link>
+
+          {user ? (
+            <Link
+              href="/customer"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <span className="font-medium text-foreground">{user.name}</span>
+              <br />
+              <span className="text-xs">{user.email}</span>
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Login
+            </Link>
+          )}
         </nav>
 
         {/* Mobile nav */}
-        <MobileNavToggle pages={pages} />
+        <MobileNavToggle
+          pages={pages}
+          user={user ? { name: user.name ?? "", email: user.email ?? "" } : null}
+        />
       </div>
     </header>
   );

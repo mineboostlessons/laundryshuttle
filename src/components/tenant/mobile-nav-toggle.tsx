@@ -5,9 +5,10 @@ import Link from "next/link";
 
 interface MobileNavToggleProps {
   pages: Array<{ title: string; slug: string }>;
+  user?: { name: string; email: string } | null;
 }
 
-export function MobileNavToggle({ pages }: MobileNavToggleProps) {
+export function MobileNavToggle({ pages, user }: MobileNavToggleProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -55,6 +56,25 @@ export function MobileNavToggle({ pages }: MobileNavToggleProps) {
             >
               Order Now
             </Link>
+
+            {user ? (
+              <Link
+                href="/customer"
+                onClick={() => setOpen(false)}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                <span className="font-medium text-foreground">{user.name}</span>{" "}
+                <span className="text-xs">({user.email})</span>
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground"
+              >
+                Login
+              </Link>
+            )}
           </div>
         </nav>
       )}

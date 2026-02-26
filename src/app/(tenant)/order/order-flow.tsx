@@ -12,7 +12,6 @@ import { ServiceSelection } from "./components/service-selection";
 import { AddressStep } from "./components/address-step";
 import { ScheduleStep } from "./components/schedule-step";
 import { PreferencesStep } from "./components/preferences-step";
-import { ReviewStep } from "./components/review-step";
 
 interface ServiceItem {
   id: string;
@@ -52,7 +51,6 @@ const STEPS = [
   { id: "services", label: "Services" },
   { id: "schedule", label: "Schedule" },
   { id: "preferences", label: "Preferences" },
-  { id: "review", label: "Review" },
 ] as const;
 
 export interface SavedAddress {
@@ -164,8 +162,6 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses }: O
         );
       case 3: // Preferences — optional, always can proceed
         return true;
-      case 4: // Review — submission handled by button
-        return true;
       default:
         return false;
     }
@@ -187,8 +183,8 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses }: O
       }
     }
 
-    // At review step (step 4), create the order and show confirmation
-    if (step === 4) {
+    // At preferences step (step 3), create the order and show confirmation
+    if (step === 3) {
       await handleCreateOrder();
       return;
     }
@@ -266,10 +262,10 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses }: O
           We&apos;ll see you then! Payment will be collected after your laundry is processed.
         </p>
         <div className="mt-8 flex gap-4">
-          <Link href={`/${tenantSlug}`}>
+          <Link href="/">
             <Button variant="outline">Back to Home</Button>
           </Link>
-          <Link href={`/${tenantSlug}/customer`}>
+          <Link href="/customer">
             <Button>View My Orders</Button>
           </Link>
         </div>
@@ -381,13 +377,6 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses }: O
           />
         )}
 
-        {step === 4 && (
-          <ReviewStep
-            formData={formData}
-            services={services}
-          />
-        )}
-
         {/* Error message */}
         {submitResult?.error && (
           <p className="mt-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
@@ -408,7 +397,7 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses }: O
           Back
         </Button>
 
-        {step < 4 ? (
+        {step < 3 ? (
           <Button onClick={handleNext} disabled={!canProceed()}>
             Next
             <ChevronRight className="ml-1 h-4 w-4" />
