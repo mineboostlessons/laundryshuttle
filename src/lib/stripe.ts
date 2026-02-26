@@ -374,3 +374,38 @@ export async function getStripeInvoice(params: {
     stripeAccount: params.connectedAccountId,
   });
 }
+
+// =============================================================================
+// Charge Stored Card (Off-Session)
+// =============================================================================
+
+/**
+ * Create and immediately confirm a PaymentIntent using a customer's stored card.
+ * Uses destination charges (same pattern as createPaymentIntent).
+ */
+export async function chargeStoredCard(params: {
+  amount: number; // in dollars
+  connectedAccountId: string;
+  platformFeePercent: number;
+  stripeCustomerId: string;
+  paymentMethodId: string;
+  metadata?: Record<string, string>;
+}): Promise<Stripe.PaymentIntent> {
+  const amountInCents = Math.round(params.amount * 100);
+  const platformFee = Math.round(amountInCents * params.platformFeePercent);
+
+  return stripe.paymentIntents.create({
+    amount: amountInCents,
+    currency: "usd",
+    payment_method_types: ["card"],
+    customer: params.stripeCustomerId,
+    payment_method: params.paymentMethodId,
+    confirm: true,
+    off_session: true,
+    application_fee_amount: platformFee,
+    transfer_data: {
+      destination: params.connectedAccountId,
+    },
+    metadata: params.metadata ?? {},
+  });
+}

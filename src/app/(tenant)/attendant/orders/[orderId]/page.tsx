@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth-helpers";
 import { UserRole } from "@/types";
-import { getOrderDetail } from "@/app/(tenant)/dashboard/orders/actions";
-import { OrderDetailView } from "@/app/(tenant)/dashboard/orders/[orderId]/order-detail-view";
+import { getAttendantOrderDetail } from "../../actions";
+import { AttendantOrderDetailView } from "./attendant-order-detail-view";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -13,9 +13,9 @@ interface Props {
 export default async function AttendantOrderDetailPage({ params }: Props) {
   await requireRole(UserRole.OWNER, UserRole.MANAGER, UserRole.ATTENDANT);
   const { orderId } = await params;
-  const order = await getOrderDetail(orderId);
+  const data = await getAttendantOrderDetail(orderId);
 
-  if (!order) notFound();
+  if (!data) notFound();
 
   return (
     <main className="min-h-screen bg-muted/30">
@@ -28,11 +28,15 @@ export default async function AttendantOrderDetailPage({ params }: Props) {
             <ArrowLeft className="h-4 w-4" />
             Order Queue
           </Link>
-          <h1 className="text-xl font-bold">Order {order.orderNumber}</h1>
+          <h1 className="text-xl font-bold">Order {data.order.orderNumber}</h1>
         </div>
       </header>
       <div className="mx-auto max-w-4xl p-6">
-        <OrderDetailView order={order} />
+        <AttendantOrderDetailView
+          order={data.order}
+          equipment={data.equipment}
+          services={data.services}
+        />
       </div>
     </main>
   );
