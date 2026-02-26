@@ -26,6 +26,9 @@ export const telnyx = new Proxy({} as TelnyxClient, {
   },
 });
 
+const FROM_NUMBER = process.env.TELNYX_PHONE_NUMBER!;
+const MESSAGING_PROFILE_ID = process.env.TELNYX_MESSAGING_PROFILE_ID!;
+
 // =============================================================================
 // Send SMS
 // =============================================================================

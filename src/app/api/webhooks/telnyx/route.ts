@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { sendSms } from "@/lib/telnyx";
+import { sendSms, normalizePhone, verifyWebhookSignature } from "@/lib/telnyx";
 
 /**
  * POST /api/webhooks/telnyx
@@ -9,6 +9,19 @@ import { sendSms } from "@/lib/telnyx";
 export async function POST(request: Request) {
   try {
     const body = await request.text();
+
+    // Verify webhook signature
+    const signature = request.headers.get("telnyx-signature-ed25519") ?? "";
+    const timestamp = request.headers.get("telnyx-timestamp") ?? "";
+
+    if (process.env.TELNYX_WEBHOOK_SECRET) {
+      const isValid = verifyWebhookSignature(body, signature, timestamp);
+      if (!isValid) {
+        console.error("Telnyx webhook signature verification failed");
+        return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+      }
+    }
+
     const payload = JSON.parse(body);
 
     // Telnyx webhook events have a data.event_type field
@@ -102,19 +115,25 @@ async function handleInboundMessage(
   if (!eventData) return;
 
   const from = (eventData.from as { phone_number?: string })?.phone_number;
-  const to = (eventData.to as Array<{ phone_number?: string }>)?.[0]
-    ?.phone_number;
   const text = eventData.text as string | undefined;
 
   if (!from || !text) return;
 
-  // Find the customer by phone number
+  // Normalize inbound phone to E.164 for consistent matching
+  const normalizedFrom = normalizePhone(from);
+  const digits = normalizedFrom.replace(/\D/g, "");
+
+  // Find the customer by phone number — try exact E.164 first, then suffix match
   const user = await prisma.user.findFirst({
     where: {
-      phone: {
-        contains: from.replace("+1", "").replace("+", ""),
-      },
       role: "customer",
+      OR: [
+        { phone: normalizedFrom },
+        // Match last 10 digits to handle varied storage formats
+        ...(digits.length >= 10
+          ? [{ phone: { endsWith: digits.slice(-10) } }]
+          : []),
+      ],
     },
     select: {
       id: true,
@@ -139,12 +158,12 @@ async function handleInboundMessage(
   const command = KEYWORD_COMMANDS[keyword];
 
   if (command) {
-    await handleKeywordCommand(command, user, from, businessName);
+    await handleKeywordCommand(command, user, normalizedFrom, businessName);
     return;
   }
 
   // Find the customer's most recent active order
-  const recentOrder = await prisma.order.findFirst({
+  let order = await prisma.order.findFirst({
     where: {
       customerId: user.id,
       tenantId: user.tenantId,
@@ -156,11 +175,23 @@ async function handleInboundMessage(
     select: { id: true, orderNumber: true },
   });
 
+  // Fallback: if no active order, use the most recent order of any status
+  if (!order) {
+    order = await prisma.order.findFirst({
+      where: {
+        customerId: user.id,
+        tenantId: user.tenantId,
+      },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, orderNumber: true },
+    });
+  }
+
   // Save as an order message (linked to order if available)
-  if (recentOrder) {
+  if (order) {
     await prisma.orderMessage.create({
       data: {
-        orderId: recentOrder.id,
+        orderId: order.id,
         senderType: "customer",
         senderId: user.id,
         message: text,
@@ -171,7 +202,7 @@ async function handleInboundMessage(
 
   // Send auto-acknowledgment
   await sendSms({
-    to: from,
+    to: normalizedFrom,
     body: `${businessName}: Got your message! Our team will reply shortly. Reply HELP for commands.`,
   }).catch(console.error);
 }
