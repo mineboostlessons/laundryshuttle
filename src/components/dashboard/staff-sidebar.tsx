@@ -305,7 +305,15 @@ export function StaffSidebar({
   function isActive(href: string) {
     const basePaths = ["/dashboard", "/manager", "/attendant", "/driver"];
     if (basePaths.includes(href)) return pathname === href;
-    return pathname.startsWith(href);
+    if (pathname === href) return true;
+    if (pathname.startsWith(href + "/")) {
+      // Only highlight if no other nav item is a more specific match
+      const hasMoreSpecific = filteredNavItems.some(
+        (item) => item.href !== href && item.href.startsWith(href + "/") && pathname.startsWith(item.href)
+      );
+      return !hasMoreSpecific;
+    }
+    return false;
   }
 
   const roleLabels: Record<string, string> = {
