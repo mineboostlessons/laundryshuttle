@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import { LocalDateOnly } from "@/components/ui/local-date";
 import { getCustomerDashboard, getCustomerUpsells } from "./actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -118,9 +119,7 @@ export default async function CustomerDashboardPage() {
                   <p className="text-sm text-muted-foreground">
                     Next pickup:{" "}
                     {data.activeSubscription.nextPickupDate
-                      ? new Date(
-                          data.activeSubscription.nextPickupDate
-                        ).toLocaleDateString()
+                      ? <LocalDateOnly date={data.activeSubscription.nextPickupDate} />
                       : "Not scheduled"}
                   </p>
                 </div>
@@ -190,7 +189,7 @@ export default async function CustomerDashboardPage() {
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       {order.laundromat.name} &middot;{" "}
-                      {new Date(order.createdAt).toLocaleDateString()}
+                      <LocalDateOnly date={order.createdAt} />
                     </p>
                   </div>
                   <p className="font-semibold text-sm whitespace-nowrap ml-4">

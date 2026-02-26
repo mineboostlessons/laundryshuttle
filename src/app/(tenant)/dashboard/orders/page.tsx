@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
+import { LocalDate } from "@/components/ui/local-date";
 
 const STATUS_COLORS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   pending: "secondary",
@@ -69,7 +70,7 @@ export default async function OrdersPage() {
                         : "Guest"}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(order.createdAt).toLocaleString()}
+                      <LocalDate date={order.createdAt} />
                     </p>
                   </div>
                   <div className="text-right">

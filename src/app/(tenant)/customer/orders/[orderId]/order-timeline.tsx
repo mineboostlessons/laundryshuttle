@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Check, Circle } from "lucide-react";
+import { LocalDate } from "@/components/ui/local-date";
 
 interface StatusHistoryEntry {
   id: string;
@@ -71,12 +72,15 @@ export function OrderTimeline({
                 {STATUS_LABELS[entry.status] ?? entry.status}
               </p>
               <p className="text-xs text-muted-foreground">
-                {new Date(entry.createdAt).toLocaleString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
+                <LocalDate
+                  date={entry.createdAt}
+                  options={{
+                    month: "short",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  }}
+                />
               </p>
               {entry.notes && (
                 <p className="text-xs text-muted-foreground mt-1">

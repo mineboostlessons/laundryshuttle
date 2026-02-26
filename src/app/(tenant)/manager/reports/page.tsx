@@ -3,6 +3,7 @@ import { requireTenant } from "@/lib/tenant";
 import { UserRole } from "@/types";
 import prisma from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
+import { LocalDateOnly } from "@/components/ui/local-date";
 import {
   Card,
   CardContent,
@@ -181,7 +182,7 @@ export default async function ManagerReportsPage() {
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Order {issue.order.orderNumber} &middot;{" "}
-                      {new Date(issue.createdAt).toLocaleDateString()}
+                      <LocalDateOnly date={issue.createdAt} />
                     </p>
                   </div>
                   <Badge

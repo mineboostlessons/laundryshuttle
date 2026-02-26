@@ -1,5 +1,6 @@
 import { getCustomerProfile } from "../actions";
 import { formatCurrency } from "@/lib/utils";
+import { LocalDateOnly } from "@/components/ui/local-date";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Wallet } from "lucide-react";
@@ -40,10 +41,10 @@ export default async function ProfilePage() {
           </div>
           <Badge variant="outline">
             Member since{" "}
-            {new Date(profile.createdAt).toLocaleDateString("en-US", {
-              month: "short",
-              year: "numeric",
-            })}
+            <LocalDateOnly
+              date={profile.createdAt}
+              options={{ month: "short", year: "numeric" }}
+            />
           </Badge>
         </CardContent>
       </Card>

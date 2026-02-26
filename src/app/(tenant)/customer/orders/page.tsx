@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import { LocalDateOnly } from "@/components/ui/local-date";
 import { getCustomerOrders } from "../actions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -89,14 +90,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                       </p>
                       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                         <span>
-                          {new Date(order.createdAt).toLocaleDateString(
-                            "en-US",
-                            {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            }
-                          )}
+                          <LocalDateOnly date={order.createdAt} />
                         </span>
                         {order.items.length > 0 && (
                           <span>

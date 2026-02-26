@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getPlatformReferralAnalytics } from "./actions";
+import { LocalDateOnly } from "@/components/ui/local-date";
 
 export const metadata: Metadata = {
   title: "Referral Analytics — Admin",
@@ -114,7 +115,7 @@ export default async function AdminReferralsPage() {
                       {ref.status}
                     </span>
                     <div className="mt-1 text-xs text-muted-foreground">
-                      {new Date(ref.createdAt).toLocaleDateString()}
+                      <LocalDateOnly date={ref.createdAt} />
                     </div>
                   </div>
                 </div>

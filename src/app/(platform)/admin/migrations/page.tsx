@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getAllMigrationLogs, getMigrationStats } from "./actions";
+import { LocalDateOnly } from "@/components/ui/local-date";
 
 export const metadata: Metadata = {
   title: "Migration Logs — Admin",
@@ -103,7 +104,7 @@ export default async function AdminMigrationsPage() {
                   <td className="px-4 py-2 text-right text-green-600">{log.successCount}</td>
                   <td className="px-4 py-2 text-right text-red-600">{log.failedCount}</td>
                   <td className="px-4 py-2 text-muted-foreground">
-                    {new Date(log.createdAt).toLocaleDateString()}
+                    <LocalDateOnly date={log.createdAt} />
                   </td>
                 </tr>
               ))

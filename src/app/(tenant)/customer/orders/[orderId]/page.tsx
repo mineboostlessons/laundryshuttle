@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import { LocalDateOnly } from "@/components/ui/local-date";
 import { getOrderDetail } from "../../actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -65,12 +66,15 @@ export default async function OrderDetailPage({
           </div>
           <p className="text-sm text-muted-foreground mt-1">
             Placed on{" "}
-            {new Date(order.createdAt).toLocaleDateString("en-US", {
-              weekday: "long",
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })}
+            <LocalDateOnly
+              date={order.createdAt}
+              options={{
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              }}
+            />
           </p>
         </div>
       </div>
@@ -232,7 +236,7 @@ export default async function OrderDetailPage({
                   <div>
                     <p className="text-xs text-muted-foreground">Pickup</p>
                     <p className="text-sm">
-                      {new Date(order.pickupDate).toLocaleDateString()}
+                      <LocalDateOnly date={order.pickupDate} />
                       {order.pickupTimeSlot && ` (${order.pickupTimeSlot})`}
                     </p>
                   </div>
@@ -244,7 +248,7 @@ export default async function OrderDetailPage({
                   <div>
                     <p className="text-xs text-muted-foreground">Delivery</p>
                     <p className="text-sm">
-                      {new Date(order.deliveryDate).toLocaleDateString()}
+                      <LocalDateOnly date={order.deliveryDate} />
                       {order.deliveryTimeSlot &&
                         ` (${order.deliveryTimeSlot})`}
                     </p>
