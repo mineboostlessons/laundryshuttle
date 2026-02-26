@@ -226,7 +226,7 @@ export function ManagerDashboardView({ stats }: { stats: ManagerStats }) {
             ) : (
               <div className="space-y-3">
                 {stats.todayPickups.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between rounded-md border p-3">
+                  <Link key={p.id} href={`/manager/orders/${p.id}`} className="flex items-center justify-between rounded-md border p-3 hover:bg-muted/50 transition-colors">
                     <div>
                       <p className="text-sm font-medium">{p.orderNumber}</p>
                       <p className="text-xs text-muted-foreground">
@@ -247,13 +247,13 @@ export function ManagerDashboardView({ stats }: { stats: ManagerStats }) {
                           size="sm"
                           variant="outline"
                           disabled={isPending}
-                          onClick={() => handleStatusUpdate(p.id, "picked_up")}
+                          onClick={(e) => { e.preventDefault(); handleStatusUpdate(p.id, "picked_up"); }}
                         >
                           Mark Picked Up
                         </Button>
                       )}
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
@@ -273,7 +273,7 @@ export function ManagerDashboardView({ stats }: { stats: ManagerStats }) {
             ) : (
               <div className="space-y-3">
                 {stats.todayDeliveries.map((d) => (
-                  <div key={d.id} className="flex items-center justify-between rounded-md border p-3">
+                  <Link key={d.id} href={`/manager/orders/${d.id}`} className="flex items-center justify-between rounded-md border p-3 hover:bg-muted/50 transition-colors">
                     <div>
                       <p className="text-sm font-medium">{d.orderNumber}</p>
                       <p className="text-xs text-muted-foreground">
@@ -294,13 +294,13 @@ export function ManagerDashboardView({ stats }: { stats: ManagerStats }) {
                           size="sm"
                           variant="outline"
                           disabled={isPending}
-                          onClick={() => handleStatusUpdate(d.id, "out_for_delivery")}
+                          onClick={(e) => { e.preventDefault(); handleStatusUpdate(d.id, "out_for_delivery"); }}
                         >
                           Out for Delivery
                         </Button>
                       )}
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
@@ -386,7 +386,11 @@ export function ManagerDashboardView({ stats }: { stats: ManagerStats }) {
           {customerResults.length > 0 && (
             <div className="divide-y rounded-md border">
               {customerResults.map((c) => (
-                <div key={c.id} className="flex items-center justify-between p-3">
+                <Link
+                  key={c.id}
+                  href={`/manager/customers/${c.id}`}
+                  className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
+                >
                   <div>
                     <p className="text-sm font-medium">
                       {c.firstName ? `${c.firstName} ${c.lastName ?? ""}` : c.email}
@@ -398,7 +402,7 @@ export function ManagerDashboardView({ stats }: { stats: ManagerStats }) {
                   <Badge variant="outline">
                     {c._count.ordersAsCustomer} orders
                   </Badge>
-                </div>
+                </Link>
               ))}
             </div>
           )}
@@ -440,9 +444,10 @@ function OrderQueue({
           : "Walk-in";
 
         return (
-          <div
+          <Link
             key={order.id}
-            className="flex items-center justify-between rounded-md border p-3"
+            href={`/manager/orders/${order.id}`}
+            className="flex items-center justify-between rounded-md border p-3 hover:bg-muted/50 transition-colors"
           >
             <div className="min-w-0">
               <div className="flex items-center gap-2">
@@ -461,11 +466,11 @@ function OrderQueue({
             <Button
               size="sm"
               disabled={isPending}
-              onClick={() => onAction(order.id, nextAction)}
+              onClick={(e) => { e.preventDefault(); onAction(order.id, nextAction); }}
             >
               {nextLabel}
             </Button>
-          </div>
+          </Link>
         );
       })}
     </div>
