@@ -269,8 +269,13 @@ export async function createStaffMember(data: {
   role: string;
   tenantSlug: string;
 }): Promise<{ success: true; staffId: string; emailError?: string } | { success: false; error: string }> {
-  await requireRole(UserRole.OWNER);
+  const session = await requireRole(UserRole.OWNER, UserRole.MANAGER);
   const tenant = await requireTenant();
+
+  // Managers can only create staff if the owner has enabled the permission
+  if (session.user.role === UserRole.MANAGER && !tenant.managerCanCreateStaff) {
+    return { success: false, error: "You do not have permission to create staff members" };
+  }
 
   const parsed = createStaffSchema.safeParse(data);
   if (!parsed.success) {
@@ -412,4 +417,22 @@ export async function toggleStaffActive(staffId: string): Promise<
   });
 
   return { success: true, isActive: updated.isActive };
+}
+
+// =============================================================================
+// Manager Staff Permission
+// =============================================================================
+
+export async function updateManagerStaffPermission(
+  enabled: boolean
+): Promise<{ success: true } | { success: false; error: string }> {
+  await requireRole(UserRole.OWNER);
+  const tenant = await requireTenant();
+
+  await prisma.tenant.update({
+    where: { id: tenant.id },
+    data: { managerCanCreateStaff: enabled },
+  });
+
+  return { success: true };
 }

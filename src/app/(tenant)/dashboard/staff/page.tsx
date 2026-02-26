@@ -17,7 +17,7 @@ export default async function StaffPage() {
           Manage your team members and their roles
         </p>
       </div>
-      <StaffListView staff={staff} tenantSlug={tenant.slug} />
+      <StaffListView staff={staff} tenantSlug={tenant.slug} canCreate canManage />
     </div>
   );
 }

@@ -78,6 +78,9 @@ model Tenant {
   referralCodePrefix     String?                     // Custom prefix e.g. "FRESH"
   referralExpiryDays     Int       @default(90)      // Days before referral code expires
 
+  // Permissions
+  managerCanCreateStaff  Boolean   @default(false)
+
   // Status
   isActive               Boolean   @default(true)
   onboardingComplete     Boolean   @default(false)

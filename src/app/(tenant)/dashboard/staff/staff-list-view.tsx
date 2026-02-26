@@ -331,9 +331,13 @@ function ToggleActiveButton({ member }: { member: StaffMember }) {
 export function StaffListView({
   staff,
   tenantSlug,
+  canCreate = false,
+  canManage = false,
 }: {
   staff: StaffMember[];
-  tenantSlug?: string;
+  tenantSlug: string;
+  canCreate?: boolean;
+  canManage?: boolean;
 }) {
   const grouped = {
     manager: staff.filter((s) => s.role === "manager"),
@@ -343,7 +347,7 @@ export function StaffListView({
 
   return (
     <div className="space-y-6">
-      {tenantSlug && (
+      {canCreate && (
         <div className="flex justify-end">
           <AddStaffDialog tenantSlug={tenantSlug} />
         </div>
@@ -398,7 +402,7 @@ export function StaffListView({
                         <Badge variant={member.isActive ? "success" : "destructive"}>
                           {member.isActive ? "Active" : "Inactive"}
                         </Badge>
-                        {tenantSlug && (
+                        {canManage && (
                           <>
                             <EditStaffDialog member={member} />
                             <ToggleActiveButton member={member} />

@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
+import { StaffPermissionToggle } from "./staff-permission-toggle";
 
 export default async function SettingsPage() {
   await requireRole(UserRole.OWNER);
@@ -165,6 +166,18 @@ export default async function SettingsPage() {
             </CardContent>
           </Card>
         </Link>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Staff Permissions</CardTitle>
+            <CardDescription>
+              Control what managers can do
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <StaffPermissionToggle enabled={tenant.managerCanCreateStaff} />
+          </CardContent>
+        </Card>
 
         <Card className="opacity-60">
           <CardHeader>
