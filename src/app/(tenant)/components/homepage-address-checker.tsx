@@ -23,7 +23,16 @@ export function HomepageAddressChecker() {
     setChecking(false);
 
     if (result.serviceable) {
-      router.push("/order");
+      const params = new URLSearchParams({
+        addressLine1: address.addressLine1,
+        city: address.city,
+        state: address.state,
+        zip: address.zip,
+        lat: String(address.lat),
+        lng: String(address.lng),
+        placeName: address.placeName,
+      });
+      router.push(`/order?${params.toString()}`);
     } else {
       setShowDialog(true);
     }

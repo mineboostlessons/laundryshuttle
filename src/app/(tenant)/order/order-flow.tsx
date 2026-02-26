@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Loader2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
@@ -60,6 +61,7 @@ interface OrderFlowProps {
 }
 
 export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [areaError, setAreaError] = useState<string | null>(null);
@@ -71,22 +73,41 @@ export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
     error?: string;
   } | null>(null);
 
-  const [formData, setFormData] = useState<OrderFormData>({
-    services: [],
-    address: null,
-    addressLine2: "",
-    pickupNotes: "",
-    pickupDate: "",
-    pickupTimeSlot: "",
-    deliveryDate: "",
-    deliveryTimeSlot: "",
-    specialInstructions: "",
-    preferences: {
-      detergent: "regular",
-      waterTemp: "warm",
-      fabricSoftener: false,
-      dryerTemp: "medium",
-    },
+  const [formData, setFormData] = useState<OrderFormData>(() => {
+    let initialAddress: AddressValue | null = null;
+    const addressLine1 = searchParams.get("addressLine1");
+    const lat = searchParams.get("lat");
+    const lng = searchParams.get("lng");
+
+    if (addressLine1 && lat && lng) {
+      initialAddress = {
+        addressLine1,
+        city: searchParams.get("city") ?? "",
+        state: searchParams.get("state") ?? "",
+        zip: searchParams.get("zip") ?? "",
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+        placeName: searchParams.get("placeName") ?? addressLine1,
+      };
+    }
+
+    return {
+      services: [],
+      address: initialAddress,
+      addressLine2: "",
+      pickupNotes: "",
+      pickupDate: "",
+      pickupTimeSlot: "",
+      deliveryDate: "",
+      deliveryTimeSlot: "",
+      specialInstructions: "",
+      preferences: {
+        detergent: "regular",
+        waterTemp: "warm",
+        fabricSoftener: false,
+        dryerTemp: "medium",
+      },
+    };
   });
 
   const updateForm = (partial: Partial<OrderFormData>) => {
