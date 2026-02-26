@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { DollarSign, TrendingUp, Truck, Heart } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { getDriverEarnings } from "../actions";
@@ -63,56 +64,64 @@ export function EarningsView({ initialData }: { initialData: EarningsData }) {
 
       {/* Stats Grid */}
       <div className="grid gap-4 grid-cols-2">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <DollarSign className="h-5 w-5 text-green-600" />
-              <div>
-                <p className="text-xs text-muted-foreground">Total Tips</p>
-                <p className="text-2xl font-bold">
-                  {formatCurrency(data.totalTips)}
-                </p>
+        <Link href="/driver" className="transition-shadow hover:shadow-md rounded-lg">
+          <Card className="h-full">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <DollarSign className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Total Tips</p>
+                  <p className="text-2xl font-bold">
+                    {formatCurrency(data.totalTips)}
+                  </p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="h-5 w-5 text-blue-600" />
-              <div>
-                <p className="text-xs text-muted-foreground">Avg Tip</p>
-                <p className="text-2xl font-bold">
-                  {formatCurrency(data.averageTip)}
-                </p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/driver" className="transition-shadow hover:shadow-md rounded-lg">
+          <Card className="h-full">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="h-5 w-5 text-blue-600" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Avg Tip</p>
+                  <p className="text-2xl font-bold">
+                    {formatCurrency(data.averageTip)}
+                  </p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Truck className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-xs text-muted-foreground">Deliveries</p>
-                <p className="text-2xl font-bold">
-                  {data.deliveriesCompleted}
-                </p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/driver" className="transition-shadow hover:shadow-md rounded-lg">
+          <Card className="h-full">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Truck className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Deliveries</p>
+                  <p className="text-2xl font-bold">
+                    {data.deliveriesCompleted}
+                  </p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Heart className="h-5 w-5 text-pink-500" />
-              <div>
-                <p className="text-xs text-muted-foreground">Tips Received</p>
-                <p className="text-2xl font-bold">{data.tipCount}</p>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/driver" className="transition-shadow hover:shadow-md rounded-lg">
+          <Card className="h-full">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Heart className="h-5 w-5 text-pink-500" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Tips Received</p>
+                  <p className="text-2xl font-bold">{data.tipCount}</p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Recent Tips */}
