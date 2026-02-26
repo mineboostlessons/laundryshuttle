@@ -21,6 +21,20 @@ import { ReviewForm } from "./review-form";
 import { TipForm } from "./tip-form";
 import { StarRating } from "@/components/ui/star-rating";
 
+const PREF_LABELS: Record<string, string> = {
+  regular: "Regular",
+  hypoallergenic: "Hypoallergenic",
+  fragrance_free: "Fragrance Free",
+  eco_friendly: "Eco-Friendly",
+  cold: "Cold",
+  warm: "Warm",
+  hot: "Hot",
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+  hang_dry: "Hang Dry",
+};
+
 interface OrderDetailPageProps {
   params: Promise<{ orderId: string }>;
 }
@@ -194,6 +208,12 @@ export default async function OrderDetailPage({
                       {order.pickupAddress.city}, {order.pickupAddress.state}{" "}
                       {order.pickupAddress.zip}
                     </p>
+                    {(order.pickupNotes || order.pickupAddress.pickupNotes) && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        <span className="font-medium">Instructions: </span>
+                        {order.pickupNotes || order.pickupAddress.pickupNotes}
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -233,6 +253,49 @@ export default async function OrderDetailPage({
               )}
             </CardContent>
           </Card>
+
+          {/* Preferences */}
+          {order.preferencesSnapshot && (() => {
+            const prefs = order.preferencesSnapshot as {
+              detergent?: string;
+              waterTemp?: string;
+              dryerTemp?: string;
+              fabricSoftener?: boolean;
+            };
+            const hasPrefs = prefs.detergent || prefs.waterTemp || prefs.dryerTemp || prefs.fabricSoftener;
+            if (!hasPrefs) return null;
+            return (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Preferences</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-1.5">
+                    {prefs.detergent && (
+                      <Badge variant="outline" className="text-xs">
+                        Detergent: {PREF_LABELS[prefs.detergent] ?? prefs.detergent}
+                      </Badge>
+                    )}
+                    {prefs.waterTemp && (
+                      <Badge variant="outline" className="text-xs">
+                        Water: {PREF_LABELS[prefs.waterTemp] ?? prefs.waterTemp}
+                      </Badge>
+                    )}
+                    {prefs.dryerTemp && (
+                      <Badge variant="outline" className="text-xs">
+                        Dryer: {PREF_LABELS[prefs.dryerTemp] ?? prefs.dryerTemp}
+                      </Badge>
+                    )}
+                    {prefs.fabricSoftener && (
+                      <Badge variant="outline" className="text-xs">
+                        Fabric Softener
+                      </Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
 
           {/* Driver */}
           {order.driver && (
