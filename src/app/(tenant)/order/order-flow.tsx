@@ -50,6 +50,7 @@ export interface OrderFormData {
 const STEPS = [
   { id: "address", label: "Address" },
   { id: "services", label: "Services" },
+  { id: "schedule", label: "Schedule" },
   { id: "preferences", label: "Preferences" },
   { id: "review", label: "Review" },
 ] as const;
@@ -120,14 +121,16 @@ export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
         return formData.address !== null && !areaError;
       case 1: // Services
         return formData.services.length > 0;
-      case 2: // Preferences (schedule + laundry prefs)
+      case 2: // Schedule
         return (
           !!formData.pickupDate &&
           !!formData.pickupTimeSlot &&
           !!formData.deliveryDate &&
           !!formData.deliveryTimeSlot
         );
-      case 3: // Review — submission handled by button
+      case 3: // Preferences — optional, always can proceed
+        return true;
+      case 4: // Review — submission handled by button
         return true;
       default:
         return false;
@@ -150,8 +153,8 @@ export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
       }
     }
 
-    // At review step (step 3), create the order and show confirmation
-    if (step === 3) {
+    // At review step (step 4), create the order and show confirmation
+    if (step === 4) {
       await handleCreateOrder();
       return;
     }
@@ -325,26 +328,25 @@ export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
         )}
 
         {step === 2 && (
-          <div className="space-y-10">
-            <ScheduleStep
-              timeSlots={timeSlots}
-              pickupDate={formData.pickupDate}
-              pickupTimeSlot={formData.pickupTimeSlot}
-              deliveryDate={formData.deliveryDate}
-              deliveryTimeSlot={formData.deliveryTimeSlot}
-              onChange={(partial) => updateForm(partial)}
-            />
-            <div className="border-t pt-8">
-              <PreferencesStep
-                preferences={formData.preferences}
-                specialInstructions={formData.specialInstructions}
-                onChange={(partial) => updateForm(partial)}
-              />
-            </div>
-          </div>
+          <ScheduleStep
+            timeSlots={timeSlots}
+            pickupDate={formData.pickupDate}
+            pickupTimeSlot={formData.pickupTimeSlot}
+            deliveryDate={formData.deliveryDate}
+            deliveryTimeSlot={formData.deliveryTimeSlot}
+            onChange={(partial) => updateForm(partial)}
+          />
         )}
 
         {step === 3 && (
+          <PreferencesStep
+            preferences={formData.preferences}
+            specialInstructions={formData.specialInstructions}
+            onChange={(partial) => updateForm(partial)}
+          />
+        )}
+
+        {step === 4 && (
           <ReviewStep
             formData={formData}
             services={services}
@@ -371,7 +373,7 @@ export function OrderFlow({ services, timeSlots, tenantSlug }: OrderFlowProps) {
           Back
         </Button>
 
-        {step < 3 ? (
+        {step < 4 ? (
           <Button onClick={handleNext} disabled={!canProceed()}>
             Next
             <ChevronRight className="ml-1 h-4 w-4" />
