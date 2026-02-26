@@ -160,8 +160,14 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     console.error("Stripe Connect error:", error);
+
+    let message = "Internal server error";
+    if (error instanceof Error) {
+      message = error.message;
+    }
+
     return NextResponse.json(
-      { success: false, error: "Internal server error" },
+      { success: false, error: message },
       { status: 500 }
     );
   }
@@ -252,8 +258,14 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error("Stripe Connect status error:", error);
+
+    let message = "Internal server error";
+    if (error instanceof Error) {
+      message = error.message;
+    }
+
     return NextResponse.json(
-      { success: false, error: "Internal server error" },
+      { success: false, error: message },
       { status: 500 }
     );
   }
