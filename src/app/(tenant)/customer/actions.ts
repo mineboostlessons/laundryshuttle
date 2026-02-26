@@ -192,6 +192,78 @@ export async function getOrderDetail(orderId: string) {
 }
 
 // ---------------------------------------------------------------------------
+// Reorder
+// ---------------------------------------------------------------------------
+
+export async function getOrderForReorder(orderId: string) {
+  const session = await requireRole(UserRole.CUSTOMER);
+  const tenant = await requireTenant();
+
+  const order = await prisma.order.findFirst({
+    where: {
+      id: orderId,
+      customerId: session.user.id,
+      tenantId: tenant.id,
+    },
+    include: {
+      items: {
+        where: { serviceId: { not: null } },
+        select: { serviceId: true, quantity: true },
+      },
+      pickupAddress: {
+        select: {
+          addressLine1: true,
+          addressLine2: true,
+          city: true,
+          state: true,
+          zip: true,
+          lat: true,
+          lng: true,
+          pickupNotes: true,
+        },
+      },
+    },
+  });
+
+  if (!order) return null;
+
+  const services = order.items
+    .filter((item): item is typeof item & { serviceId: string } => item.serviceId !== null)
+    .map((item) => ({
+      serviceId: item.serviceId,
+      quantity: item.quantity,
+    }));
+
+  const address = order.pickupAddress && order.pickupAddress.lat != null && order.pickupAddress.lng != null
+    ? {
+        addressLine1: order.pickupAddress.addressLine1,
+        city: order.pickupAddress.city,
+        state: order.pickupAddress.state,
+        zip: order.pickupAddress.zip,
+        lat: order.pickupAddress.lat,
+        lng: order.pickupAddress.lng,
+        placeName: order.pickupAddress.addressLine1,
+      }
+    : null;
+
+  const prefs = order.preferencesSnapshot as Record<string, unknown> | null;
+
+  return {
+    services,
+    address,
+    addressLine2: order.pickupAddress?.addressLine2 ?? "",
+    pickupNotes: order.pickupAddress?.pickupNotes ?? "",
+    specialInstructions: order.specialInstructions ?? "",
+    preferences: {
+      detergent: (prefs?.detergent as string) ?? "regular",
+      waterTemp: (prefs?.waterTemp as string) ?? "warm",
+      fabricSoftener: (prefs?.fabricSoftener as boolean) ?? false,
+      dryerTemp: (prefs?.dryerTemp as string) ?? "medium",
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Addresses
 // ---------------------------------------------------------------------------
 

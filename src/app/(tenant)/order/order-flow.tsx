@@ -67,16 +67,26 @@ export interface SavedAddress {
   pickupNotes: string | null;
 }
 
+export interface ReorderData {
+  services: SelectedService[];
+  address: AddressValue | null;
+  addressLine2: string;
+  pickupNotes: string;
+  specialInstructions: string;
+  preferences: OrderFormData["preferences"];
+}
+
 interface OrderFlowProps {
   services: ServiceItem[];
   timeSlots: TimeSlotData;
   tenantSlug: string;
   savedAddresses: SavedAddress[];
+  reorderData?: ReorderData | null;
 }
 
-export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses }: OrderFlowProps) {
+export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reorderData }: OrderFlowProps) {
   const searchParams = useSearchParams();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(reorderData ? 2 : 0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [areaError, setAreaError] = useState<string | null>(null);
   const [orderConfirmed, setOrderConfirmed] = useState(false);
@@ -88,6 +98,22 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses }: O
   } | null>(null);
 
   const [formData, setFormData] = useState<OrderFormData>(() => {
+    // If reorder data is available, pre-populate from the previous order
+    if (reorderData) {
+      return {
+        services: reorderData.services,
+        address: reorderData.address,
+        addressLine2: reorderData.addressLine2,
+        pickupNotes: reorderData.pickupNotes,
+        pickupDate: "",
+        pickupTimeSlot: "",
+        deliveryDate: "",
+        deliveryTimeSlot: "",
+        specialInstructions: reorderData.specialInstructions,
+        preferences: reorderData.preferences,
+      };
+    }
+
     let initialAddress: AddressValue | null = null;
     let initialLine2 = "";
     let initialPickupNotes = "";

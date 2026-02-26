@@ -7,16 +7,32 @@ import { TenantHeader } from "@/components/tenant/tenant-header";
 import { TenantFooter } from "@/components/tenant/tenant-footer";
 import { OrderFlow } from "./order-flow";
 import { getAvailableTimeSlots } from "./actions";
+import { getOrderForReorder } from "../customer/actions";
 
 export const metadata: Metadata = {
   title: "Place an Order",
 };
 
-export default async function OrderPage() {
+export default async function OrderPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ reorder?: string }>;
+}) {
   const tenant = await getCurrentTenant();
   if (!tenant) notFound();
 
   const session = await getSession();
+  const params = await searchParams;
+
+  // Fetch reorder data if requested
+  let reorderData: Awaited<ReturnType<typeof getOrderForReorder>> = null;
+  if (params.reorder && session?.user?.id) {
+    try {
+      reorderData = await getOrderForReorder(params.reorder);
+    } catch {
+      // Ignore — user may not be logged in or order not found
+    }
+  }
 
   const [services, timeSlots] = await Promise.all([
     prisma.service.findMany({
@@ -96,6 +112,7 @@ export default async function OrderPage() {
               timeSlots={timeSlots}
               tenantSlug={tenant.slug}
               savedAddresses={savedAddresses}
+              reorderData={reorderData}
             />
           </div>
         </div>

@@ -12,6 +12,7 @@ import {
   Clock,
   ArrowRight,
   RefreshCw,
+  RotateCcw,
 } from "lucide-react";
 import { OrderStatusBadge } from "./components/order-status-badge";
 import { UpsellBanner } from "@/components/upsell/upsell-banner";
@@ -175,12 +176,14 @@ export default async function CustomerDashboardPage() {
           ) : (
             <div className="space-y-3">
               {data.recentOrders.map((order) => (
-                <Link
+                <div
                   key={order.id}
-                  href={`/customer/orders/${order.id}`}
                   className="flex items-center justify-between rounded-lg border p-4 hover:bg-muted/50 transition-colors"
                 >
-                  <div className="min-w-0">
+                  <Link
+                    href={`/customer/orders/${order.id}`}
+                    className="min-w-0 flex-1"
+                  >
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-sm">
                         {order.orderNumber}
@@ -191,11 +194,21 @@ export default async function CustomerDashboardPage() {
                       {order.laundromat.name} &middot;{" "}
                       <LocalDateOnly date={order.createdAt} />
                     </p>
+                  </Link>
+                  <div className="flex items-center gap-3 ml-4">
+                    <p className="font-semibold text-sm whitespace-nowrap">
+                      {formatCurrency(order.totalAmount)}
+                    </p>
+                    {order.status !== "cancelled" && (
+                      <Link href={`/order?reorder=${order.id}`}>
+                        <Button variant="ghost" size="sm" className="gap-1">
+                          <RotateCcw className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">Reorder</span>
+                        </Button>
+                      </Link>
+                    )}
                   </div>
-                  <p className="font-semibold text-sm whitespace-nowrap ml-4">
-                    {formatCurrency(order.totalAmount)}
-                  </p>
-                </Link>
+                </div>
               ))}
             </div>
           )}

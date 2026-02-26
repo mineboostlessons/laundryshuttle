@@ -4,7 +4,7 @@ import { LocalDateOnly } from "@/components/ui/local-date";
 import { getCustomerOrders } from "../actions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Package, ChevronLeft, ChevronRight } from "lucide-react";
+import { Package, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { OrderStatusBadge } from "../components/order-status-badge";
 import { OrderFilters } from "./order-filters";
 
@@ -72,44 +72,51 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
       ) : (
         <div className="space-y-3">
           {orders.map((order) => (
-            <Link
-              key={order.id}
-              href={`/customer/orders/${order.id}`}
-              className="block"
-            >
-              <Card className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold">{order.orderNumber}</p>
-                        <OrderStatusBadge status={order.status} />
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {order.laundromat.name}
-                      </p>
-                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                        <span>
-                          <LocalDateOnly date={order.createdAt} />
-                        </span>
-                        {order.items.length > 0 && (
-                          <span>
-                            {order.items.length} item
-                            {order.items.length !== 1 ? "s" : ""}
-                          </span>
-                        )}
-                        {order.totalWeightLbs && (
-                          <span>{order.totalWeightLbs} lbs</span>
-                        )}
-                      </div>
+            <Card key={order.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <Link
+                    href={`/customer/orders/${order.id}`}
+                    className="min-w-0 flex-1"
+                  >
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold">{order.orderNumber}</p>
+                      <OrderStatusBadge status={order.status} />
                     </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {order.laundromat.name}
+                    </p>
+                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                      <span>
+                        <LocalDateOnly date={order.createdAt} />
+                      </span>
+                      {order.items.length > 0 && (
+                        <span>
+                          {order.items.length} item
+                          {order.items.length !== 1 ? "s" : ""}
+                        </span>
+                      )}
+                      {order.totalWeightLbs && (
+                        <span>{order.totalWeightLbs} lbs</span>
+                      )}
+                    </div>
+                  </Link>
+                  <div className="flex items-center gap-3">
                     <p className="text-lg font-bold whitespace-nowrap">
                       {formatCurrency(order.totalAmount)}
                     </p>
+                    {order.status !== "cancelled" && (
+                      <Link href={`/order?reorder=${order.id}`}>
+                        <Button variant="outline" size="sm" className="gap-1.5">
+                          <RotateCcw className="h-3.5 w-3.5" />
+                          Reorder
+                        </Button>
+                      </Link>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
-            </Link>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}

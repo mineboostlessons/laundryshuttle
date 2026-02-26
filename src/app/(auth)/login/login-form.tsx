@@ -47,7 +47,7 @@ export function LoginForm({ tenantSlug }: { tenantSlug?: string }) {
         } else if (role === "driver") {
           redirect = "/driver";
         } else if (role === "customer") {
-          redirect = "/customer";
+          redirect = "/";
         }
       }
 
