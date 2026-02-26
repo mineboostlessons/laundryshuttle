@@ -71,6 +71,25 @@ export default async function SettingsPage() {
           </Card>
         </Link>
 
+        <Link href="/settings/tax">
+          <Card className="transition-shadow hover:shadow-md">
+            <CardHeader>
+              <CardTitle className="text-lg">Tax</CardTitle>
+              <CardDescription>
+                Set the default tax rate for taxable items
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">
+                  {(tenant.defaultTaxRate * 100).toFixed(2)}%
+                </Badge>
+                <span className="text-sm text-muted-foreground">rate</span>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
         <Link href="/settings/notifications">
           <Card className="transition-shadow hover:shadow-md">
             <CardHeader>
