@@ -215,7 +215,7 @@ export async function getRevenueChartData() {
 // =============================================================================
 
 export async function getStaffList() {
-  await requireRole(UserRole.OWNER);
+  await requireRole(UserRole.OWNER, UserRole.MANAGER);
   const tenant = await requireTenant();
 
   return prisma.user.findMany({
