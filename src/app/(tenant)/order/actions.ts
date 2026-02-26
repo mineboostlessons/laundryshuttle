@@ -341,6 +341,7 @@ export async function createOrder(
       pickupTimeSlot: data.pickupTimeSlot,
       deliveryDate: parseISO(data.deliveryDate),
       deliveryTimeSlot: data.deliveryTimeSlot,
+      pickupNotes: data.address.pickupNotes ?? null,
       specialInstructions: data.specialInstructions ?? null,
       preferencesSnapshot: data.preferences ?? undefined,
       subtotal,
