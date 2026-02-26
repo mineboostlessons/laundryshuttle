@@ -71,7 +71,7 @@ export async function listOrders(params?: {
 // =============================================================================
 
 export async function getOrderDetail(orderId: string) {
-  await requireRole(UserRole.OWNER, UserRole.MANAGER);
+  await requireRole(UserRole.OWNER, UserRole.MANAGER, UserRole.ATTENDANT);
   const tenant = await requireTenant();
 
   return prisma.order.findFirst({
