@@ -8,7 +8,7 @@ export default async function OwnerDashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await requireRole(UserRole.OWNER);
+  const session = await requireRole(UserRole.OWNER, UserRole.MANAGER);
   const tenant = await requireTenant();
 
   return (
@@ -17,7 +17,7 @@ export default async function OwnerDashboardLayout({
         <StaffSidebar
           userName={session.user.name ?? session.user.email}
           userEmail={session.user.email}
-          userRole={UserRole.OWNER}
+          userRole={session.user.role}
           businessName={tenant.businessName}
         />
         <main className="flex-1 min-w-0">{children}</main>
