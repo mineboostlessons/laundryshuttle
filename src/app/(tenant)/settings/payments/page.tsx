@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ConnectOnboarding } from "./connect-onboarding";
+import { getConnectAccount } from "@/lib/stripe";
 
 export default async function PaymentsSettingsPage() {
   await requireRole(UserRole.OWNER);
@@ -19,6 +20,36 @@ export default async function PaymentsSettingsPage() {
       platformFeePercent: true,
     },
   });
+
+  // Sync status from Stripe whenever a connected account exists
+  if (tenantRecord?.stripeConnectAccountId) {
+    try {
+      const account = await getConnectAccount(tenantRecord.stripeConnectAccountId);
+      const newStatus = account.charges_enabled
+        ? "active"
+        : account.details_submitted
+          ? "restricted"
+          : "pending";
+      const onboardingComplete = account.details_submitted ?? false;
+
+      if (
+        newStatus !== tenantRecord.stripeConnectStatus ||
+        onboardingComplete !== tenantRecord.stripeOnboardingComplete
+      ) {
+        await prisma.tenant.update({
+          where: { id: tenant.id },
+          data: {
+            stripeConnectStatus: newStatus,
+            stripeOnboardingComplete: onboardingComplete,
+          },
+        });
+        tenantRecord.stripeConnectStatus = newStatus;
+        tenantRecord.stripeOnboardingComplete = onboardingComplete;
+      }
+    } catch {
+      // If Stripe is unreachable, show the cached status
+    }
+  }
 
   const statusColors: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
     active: "default",
