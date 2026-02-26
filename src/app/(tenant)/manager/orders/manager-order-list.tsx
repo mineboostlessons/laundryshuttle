@@ -113,7 +113,7 @@ export function ManagerOrderList({
                 return (
                   <Link
                     key={order.id}
-                    href={`/dashboard/orders/${order.id}`}
+                    href={`/manager/orders/${order.id}`}
                     className="flex items-center justify-between py-3 hover:bg-muted/50 transition-colors px-2 rounded"
                   >
                     <div className="min-w-0">
