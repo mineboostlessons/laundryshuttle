@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -125,17 +126,19 @@ export function ManagerDashboardView({ stats }: { stats: ManagerStats }) {
 
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Today&apos;s Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(stats.todayRevenue)}
-            </div>
-          </CardContent>
-        </Card>
+        <Link href="/pos" className="transition-shadow hover:shadow-md rounded-lg">
+          <Card className="h-full">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Today&apos;s Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {formatCurrency(stats.todayRevenue)}
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -192,18 +195,20 @@ export function ManagerDashboardView({ stats }: { stats: ManagerStats }) {
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active Attendants</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-muted-foreground" />
-              <span className="text-lg font-semibold">{stats.activeAttendants}</span>
-              <span className="text-sm text-muted-foreground">on shift</span>
-            </div>
-          </CardContent>
-        </Card>
+        <Link href="/attendant" className="transition-shadow hover:shadow-md rounded-lg">
+          <Card className="h-full">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Active Attendants</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-muted-foreground" />
+                <span className="text-lg font-semibold">{stats.activeAttendants}</span>
+                <span className="text-sm text-muted-foreground">on shift</span>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Today's Pickups & Deliveries */}

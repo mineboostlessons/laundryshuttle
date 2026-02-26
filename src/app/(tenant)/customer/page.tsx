@@ -34,65 +34,73 @@ export default async function CustomerDashboardPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="rounded-lg bg-primary/10 p-3">
-                <Package className="h-5 w-5 text-primary" />
+        <Link href="/customer/orders" className="transition-shadow hover:shadow-md rounded-lg">
+          <Card className="h-full">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="rounded-lg bg-primary/10 p-3">
+                  <Package className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Orders</p>
+                  <p className="text-2xl font-bold">{data.totalOrders}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Orders</p>
-                <p className="text-2xl font-bold">{data.totalOrders}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="rounded-lg bg-yellow-100 p-3">
-                <Clock className="h-5 w-5 text-yellow-700" />
+        <Link href="/customer/orders" className="transition-shadow hover:shadow-md rounded-lg">
+          <Card className="h-full">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="rounded-lg bg-yellow-100 p-3">
+                  <Clock className="h-5 w-5 text-yellow-700" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Active Orders</p>
+                  <p className="text-2xl font-bold">{data.activeOrders}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Active Orders</p>
-                <p className="text-2xl font-bold">{data.activeOrders}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="rounded-lg bg-green-100 p-3">
-                <Wallet className="h-5 w-5 text-green-700" />
+        <Link href="/customer/profile" className="transition-shadow hover:shadow-md rounded-lg">
+          <Card className="h-full">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="rounded-lg bg-green-100 p-3">
+                  <Wallet className="h-5 w-5 text-green-700" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Wallet Balance</p>
+                  <p className="text-2xl font-bold">
+                    {formatCurrency(data.walletBalance)}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Wallet Balance</p>
-                <p className="text-2xl font-bold">
-                  {formatCurrency(data.walletBalance)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="rounded-lg bg-blue-100 p-3">
-                <MapPin className="h-5 w-5 text-blue-700" />
+        <Link href="/customer/addresses" className="transition-shadow hover:shadow-md rounded-lg">
+          <Card className="h-full">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="rounded-lg bg-blue-100 p-3">
+                  <MapPin className="h-5 w-5 text-blue-700" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Saved Addresses
+                  </p>
+                  <p className="text-2xl font-bold">{data.addressCount}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Saved Addresses
-                </p>
-                <p className="text-2xl font-bold">{data.addressCount}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Upsell Recommendations */}

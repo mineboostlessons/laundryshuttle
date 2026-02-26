@@ -122,21 +122,25 @@ export function DriverDashboardView({
           icon={<MapPin className="h-4 w-4" />}
           label="Total Stops"
           value={stats.totalStops}
+          href="/driver/earnings"
         />
         <StatCard
           icon={<CheckCircle2 className="h-4 w-4 text-green-600" />}
           label="Completed"
           value={stats.completed}
+          href="/driver/earnings"
         />
         <StatCard
           icon={<Clock className="h-4 w-4 text-amber-600" />}
           label="Remaining"
           value={stats.pending + stats.inProgress}
+          href="/driver/earnings"
         />
         <StatCard
           icon={<Truck className="h-4 w-4 text-blue-600" />}
           label="In Progress"
           value={stats.inProgress}
+          href="/driver/earnings"
         />
       </div>
 
@@ -382,13 +386,15 @@ function StatCard({
   icon,
   label,
   value,
+  href,
 }: {
   icon: React.ReactNode;
   label: string;
   value: number;
+  href?: string;
 }) {
-  return (
-    <Card>
+  const card = (
+    <Card className="h-full">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-1">{icon}</div>
         <p className="text-2xl font-bold">{value}</p>
@@ -396,6 +402,16 @@ function StatCard({
       </CardContent>
     </Card>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className="transition-shadow hover:shadow-md rounded-lg">
+        {card}
+      </Link>
+    );
+  }
+
+  return card;
 }
 
 function getGreeting(): string {
