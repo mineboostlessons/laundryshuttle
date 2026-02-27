@@ -38,6 +38,18 @@ export async function POST() {
       })
       .then((u) => u?.stripeCustomerId);
 
+    // Verify the customer exists on the connected account; if not, recreate
+    if (stripeCustomerId) {
+      try {
+        await stripe.customers.retrieve(stripeCustomerId, {
+          stripeAccount: tenant.stripeConnectAccountId,
+        });
+      } catch {
+        // Customer doesn't exist on connected account (was created on platform)
+        stripeCustomerId = null;
+      }
+    }
+
     if (!stripeCustomerId) {
       // Create customer on the connected account (not the platform account)
       const customer = await stripe.customers.create(
