@@ -1,6 +1,7 @@
 "use client";
 
 import { formatCurrency } from "@/lib/utils";
+import { WashingMachine, Wind, Sparkles } from "lucide-react";
 
 interface ServiceItem {
   id: string;
@@ -24,16 +25,26 @@ const PRICING_LABELS: Record<string, string> = {
   flat_rate: " flat",
 };
 
+const SERVICE_TYPES = [
+  { value: "laundry_only", label: "LAUNDRY ONLY", Icon: WashingMachine },
+  { value: "dry_cleaning_only", label: "DRY CLEANING ONLY", Icon: Wind },
+  { value: "laundry_and_dry_cleaning", label: "LAUNDRY & DRY CLEANING", Icon: Sparkles },
+] as const;
+
 interface ServiceSelectionProps {
   services: ServiceItem[];
   selected: SelectedService[];
   onChange: (selected: SelectedService[]) => void;
+  serviceType: string;
+  onServiceTypeChange: (type: string) => void;
 }
 
 export function ServiceSelection({
   services,
   selected,
   onChange,
+  serviceType,
+  onServiceTypeChange,
 }: ServiceSelectionProps) {
   const selectedId = selected[0]?.serviceId ?? null;
 
@@ -53,9 +64,32 @@ export function ServiceSelection({
         Select Service
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Choose your pickup frequency.
+        Choose your service type and pickup frequency.
       </p>
 
+      {/* Service type buttons */}
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {SERVICE_TYPES.map(({ value, label, Icon }) => {
+          const isSelected = serviceType === value;
+          return (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onServiceTypeChange(value)}
+              className={`flex items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 text-sm font-semibold transition-all ${
+                isSelected
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-background text-foreground hover:border-primary/50"
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Frequency circles */}
       <div className="mt-8 flex flex-wrap justify-center gap-6">
         {services.map((service) => {
           const isSelected = selectedId === service.id;

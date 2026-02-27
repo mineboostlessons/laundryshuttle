@@ -30,6 +30,7 @@ interface SelectedService {
 
 export interface OrderFormData {
   services: SelectedService[];
+  serviceType: string;
   address: AddressValue | null;
   addressLine2: string;
   pickupNotes: string;
@@ -50,7 +51,6 @@ const STEPS = [
   { id: "address", label: "Address" },
   { id: "services", label: "Services" },
   { id: "schedule", label: "Schedule" },
-  { id: "preferences", label: "Preferences" },
 ] as const;
 
 export interface SavedAddress {
@@ -86,7 +86,7 @@ interface OrderFlowProps {
 
 export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reorderData }: OrderFlowProps) {
   const searchParams = useSearchParams();
-  const [step, setStep] = useState(reorderData ? 2 : 0);
+  const [step, setStep] = useState(reorderData ? 1 : 0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [areaError, setAreaError] = useState<string | null>(null);
   const [orderConfirmed, setOrderConfirmed] = useState(false);
@@ -102,6 +102,7 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reo
     if (reorderData) {
       return {
         services: reorderData.services,
+        serviceType: "",
         address: reorderData.address,
         addressLine2: reorderData.addressLine2,
         pickupNotes: reorderData.pickupNotes,
@@ -152,6 +153,7 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reo
 
     return {
       services: [],
+      serviceType: "",
       address: initialAddress,
       addressLine2: initialLine2,
       pickupNotes: initialPickupNotes,
@@ -177,16 +179,16 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reo
     switch (step) {
       case 0: // Address
         return formData.address !== null && !areaError;
-      case 1: // Services
-        return formData.services.length > 0;
-      case 2: // Schedule
+      case 1: // Services (type + frequency + schedule)
         return (
+          formData.serviceType !== "" &&
+          formData.services.length > 0 &&
           !!formData.pickupDate &&
           !!formData.pickupTimeSlot &&
           !!formData.deliveryDate &&
           !!formData.deliveryTimeSlot
         );
-      case 3: // Preferences — optional, always can proceed
+      case 2: // Schedule (preferences) — optional, always can proceed
         return true;
       default:
         return false;
@@ -209,8 +211,8 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reo
       }
     }
 
-    // At preferences step (step 3), create the order and show confirmation
-    if (step === 3) {
+    // At schedule/preferences step (step 2), create the order and show confirmation
+    if (step === 2) {
       await handleCreateOrder();
       return;
     }
@@ -235,6 +237,7 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reo
     try {
       const result = await createOrder({
         services: formData.services,
+        serviceType: formData.serviceType as "laundry_only" | "dry_cleaning_only" | "laundry_and_dry_cleaning",
         address: {
           addressLine1: formData.address.addressLine1,
           addressLine2: formData.addressLine2 || undefined,
@@ -377,25 +380,28 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reo
         )}
 
         {step === 1 && (
-          <ServiceSelection
-            services={services}
-            selected={formData.services}
-            onChange={(selected) => updateForm({ services: selected })}
-          />
+          <>
+            <ServiceSelection
+              services={services}
+              selected={formData.services}
+              onChange={(selected) => updateForm({ services: selected })}
+              serviceType={formData.serviceType}
+              onServiceTypeChange={(serviceType) => updateForm({ serviceType })}
+            />
+            <div className="mt-8 border-t pt-8">
+              <ScheduleStep
+                timeSlots={timeSlots}
+                pickupDate={formData.pickupDate}
+                pickupTimeSlot={formData.pickupTimeSlot}
+                deliveryDate={formData.deliveryDate}
+                deliveryTimeSlot={formData.deliveryTimeSlot}
+                onChange={(partial) => updateForm(partial)}
+              />
+            </div>
+          </>
         )}
 
         {step === 2 && (
-          <ScheduleStep
-            timeSlots={timeSlots}
-            pickupDate={formData.pickupDate}
-            pickupTimeSlot={formData.pickupTimeSlot}
-            deliveryDate={formData.deliveryDate}
-            deliveryTimeSlot={formData.deliveryTimeSlot}
-            onChange={(partial) => updateForm(partial)}
-          />
-        )}
-
-        {step === 3 && (
           <PreferencesStep
             preferences={formData.preferences}
             specialInstructions={formData.specialInstructions}
@@ -423,7 +429,7 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reo
           Back
         </Button>
 
-        {step < 3 ? (
+        {step < 2 ? (
           <Button onClick={handleNext} disabled={!canProceed()}>
             Next
             <ChevronRight className="ml-1 h-4 w-4" />

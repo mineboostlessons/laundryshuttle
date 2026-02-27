@@ -41,6 +41,7 @@ const createOrderSchema = z.object({
       })
     )
     .min(1, "Select at least one service"),
+  serviceType: z.enum(["laundry_only", "dry_cleaning_only", "laundry_and_dry_cleaning"]),
   address: addressSchema,
   pickupDate: z.string().min(1, "Pickup date is required"),
   pickupTimeSlot: z.string().min(1, "Pickup time slot is required"),
@@ -361,6 +362,7 @@ export async function createOrder(
       laundromatId: laundromat.id,
       customerId: session?.user?.id ?? null,
       orderType: "delivery",
+      serviceType: data.serviceType,
       pickupAddressId: addressId ?? null,
       pickupDate: parseISO(data.pickupDate),
       pickupTimeSlot: data.pickupTimeSlot,
