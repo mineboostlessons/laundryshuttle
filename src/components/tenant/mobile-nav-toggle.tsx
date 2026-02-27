@@ -2,13 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface MobileNavToggleProps {
   pages: Array<{ title: string; slug: string }>;
   user?: { name: string; email: string } | null;
+  logoUrl?: string | null;
+  businessName?: string;
 }
 
-export function MobileNavToggle({ pages, user }: MobileNavToggleProps) {
+export function MobileNavToggle({ pages, user, logoUrl, businessName }: MobileNavToggleProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -32,6 +35,12 @@ export function MobileNavToggle({ pages, user }: MobileNavToggleProps) {
       {open && (
         <nav className="absolute left-0 right-0 top-16 border-b bg-background p-6 shadow-lg">
           <div className="flex flex-col gap-4">
+            {logoUrl && (
+              <div className="flex items-center gap-2 pb-2 border-b">
+                <Image src={logoUrl} alt={businessName ?? ""} width={32} height={32} className="h-8 w-8 object-contain" />
+                <span className="text-sm font-semibold text-foreground">{businessName}</span>
+              </div>
+            )}
             <Link
               href="/"
               onClick={() => setOpen(false)}

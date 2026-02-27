@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import prisma from "@/lib/prisma";
 import { requireTenant } from "@/lib/tenant";
 import { getSession } from "@/lib/auth-helpers";
@@ -10,6 +11,7 @@ const SECONDARY_SLUGS = ["faq", "service-areas", "contact"];
 
 export async function TenantHeader() {
   const tenant = await requireTenant();
+  const logoUrl = tenant.themeConfig?.logoUrl ?? null;
 
   const session = await getSession();
   const user = session?.user ?? null;
@@ -30,7 +32,16 @@ export async function TenantHeader() {
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <Link href="/" className="text-xl font-bold text-foreground">
+        <Link href="/" className="flex items-center gap-2 text-xl font-bold text-foreground">
+          {logoUrl && (
+            <Image
+              src={logoUrl}
+              alt={tenant.businessName}
+              width={40}
+              height={40}
+              className="h-10 w-10 object-contain"
+            />
+          )}
           {tenant.businessName}
         </Link>
 
@@ -115,6 +126,8 @@ export async function TenantHeader() {
         <MobileNavToggle
           pages={pages}
           user={user ? { name: user.name ?? "", email: user.email ?? "" } : null}
+          logoUrl={logoUrl}
+          businessName={tenant.businessName}
         />
       </div>
     </header>

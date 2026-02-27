@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import prisma from "@/lib/prisma";
 import { getFullTenantInfo } from "@/lib/tenant";
 import { formatPhone } from "@/lib/utils";
@@ -9,6 +10,8 @@ const COMPANY_SLUGS = ["about", "contact", "faq"];
 export async function TenantFooter() {
   const tenant = await getFullTenantInfo();
   if (!tenant) return null;
+
+  const logoUrl = (tenant.themeConfig as Record<string, string> | null)?.logoUrl ?? null;
 
   const pages = await prisma.page.findMany({
     where: { tenantId: tenant.id, isPublished: true, slug: { not: "home" } },
@@ -30,9 +33,20 @@ export async function TenantFooter() {
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Business info */}
           <div>
-            <h3 className="mb-3 text-lg font-semibold text-foreground">
-              {tenant.businessName}
-            </h3>
+            <div className="mb-3 flex items-center gap-2">
+              {logoUrl && (
+                <Image
+                  src={logoUrl}
+                  alt={tenant.businessName}
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 object-contain"
+                />
+              )}
+              <h3 className="text-lg font-semibold text-foreground">
+                {tenant.businessName}
+              </h3>
+            </div>
             {tenant.phone && (
               <p className="text-sm text-muted-foreground">
                 Phone:{" "}
