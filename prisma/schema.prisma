@@ -351,6 +351,7 @@ model Service {
   price          Float
   icon           String?
   isActive       Boolean  @default(true)
+  isSystem       Boolean  @default(false)
   sortOrder      Int      @default(0)
   taxable        Boolean  @default(true)
 

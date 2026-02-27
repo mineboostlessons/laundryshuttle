@@ -221,57 +221,42 @@ async function main() {
     });
     console.log("Created demo customer with address");
 
-    // Demo Services
+    // System Services (mandatory Wash & Fold frequency plans)
     const services = [
       {
         tenantId: tenant.id,
         category: "wash_and_fold",
-        name: "Wash & Fold - Regular",
-        description: "Standard wash and fold service. Sorted by color, washed in warm water, tumble dried, and neatly folded.",
+        name: "One Time Pickup",
+        description: "Single pickup and delivery — no commitment.",
         pricingType: "per_pound",
         price: 1.99,
         sortOrder: 1,
+        isSystem: true,
       },
       {
         tenantId: tenant.id,
         category: "wash_and_fold",
-        name: "Wash & Fold - Delicate",
-        description: "Gentle cycle for delicate fabrics. Cold water wash with mild detergent.",
+        name: "Every Week",
+        description: "Weekly scheduled pickup and delivery.",
         pricingType: "per_pound",
-        price: 2.99,
+        price: 1.79,
         sortOrder: 2,
+        isSystem: true,
       },
       {
         tenantId: tenant.id,
-        category: "dry_cleaning",
-        name: "Dry Cleaning - Shirts",
-        description: "Professional dry cleaning for dress shirts and blouses.",
-        pricingType: "per_item",
-        price: 4.99,
+        category: "wash_and_fold",
+        name: "Every Other Week",
+        description: "Bi-weekly scheduled pickup and delivery.",
+        pricingType: "per_pound",
+        price: 1.89,
         sortOrder: 3,
-      },
-      {
-        tenantId: tenant.id,
-        category: "dry_cleaning",
-        name: "Dry Cleaning - Suits",
-        description: "Full suit dry cleaning — jacket and pants.",
-        pricingType: "per_item",
-        price: 14.99,
-        sortOrder: 4,
-      },
-      {
-        tenantId: tenant.id,
-        category: "specialty",
-        name: "Comforter / Bedding",
-        description: "Large item cleaning for comforters, duvets, and blankets.",
-        pricingType: "per_item",
-        price: 24.99,
-        sortOrder: 5,
+        isSystem: true,
       },
     ];
 
     await prisma.service.createMany({ data: services });
-    console.log(`Created ${services.length} demo services`);
+    console.log(`Created ${services.length} system services`);
 
     // Demo Service Options
     await prisma.serviceOption.createMany({

@@ -36,6 +36,7 @@ interface Service {
   price: number;
   icon: string | null;
   isActive: boolean;
+  isSystem: boolean;
   sortOrder: number;
   taxable: boolean;
   createdAt: Date;
@@ -86,6 +87,7 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
   const router = useRouter();
   const [showCreate, setShowCreate] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingIsSystem, setEditingIsSystem] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState(defaultForm);
@@ -127,6 +129,7 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
     });
     setError(null);
     setEditingId(service.id);
+    setEditingIsSystem(service.isSystem);
   };
 
   const handleUpdate = async () => {
@@ -147,6 +150,7 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
 
     if (result.success) {
       setEditingId(null);
+      setEditingIsSystem(false);
       setForm(defaultForm);
       router.refresh();
     } else {
@@ -157,6 +161,7 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
   };
 
   const handleToggleActive = async (service: Service) => {
+    if (service.isSystem) return;
     if (service.isActive) {
       await deleteService(service.id);
     } else {
@@ -172,6 +177,7 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
         <Select
           value={form.category}
           onValueChange={(v) => setForm({ ...form, category: v })}
+          disabled={editingIsSystem}
         >
           <SelectTrigger>
             <SelectValue />
@@ -193,7 +199,13 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
           placeholder="e.g. Standard Wash & Fold"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
+          disabled={editingIsSystem}
         />
+        {editingIsSystem && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            System service names cannot be changed.
+          </p>
+        )}
       </div>
 
       <div>
@@ -301,6 +313,7 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
         onOpenChange={(open) => {
           if (!open) {
             setEditingId(null);
+            setEditingIsSystem(false);
             setForm(defaultForm);
             setError(null);
           }
@@ -308,7 +321,14 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Service</DialogTitle>
+            <DialogTitle>
+              Edit Service
+              {editingIsSystem && (
+                <Badge variant="secondary" className="ml-2 align-middle">
+                  System
+                </Badge>
+              )}
+            </DialogTitle>
           </DialogHeader>
           {serviceForm}
           <Button
@@ -342,6 +362,9 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
                 <div className="flex items-center gap-2">
                   <span className="font-semibold">{service.name}</span>
                   <Badge variant="outline">{categoryLabel(service.category)}</Badge>
+                  {service.isSystem && (
+                    <Badge variant="secondary">System</Badge>
+                  )}
                   <Badge variant={service.isActive ? "default" : "secondary"}>
                     {service.isActive ? "Active" : "Inactive"}
                   </Badge>
@@ -369,13 +392,15 @@ export function ServiceManager({ initialServices }: ServiceManagerProps) {
                   <Pencil className="mr-1 h-3 w-3" />
                   Edit
                 </Button>
-                <Button
-                  variant={service.isActive ? "secondary" : "default"}
-                  size="sm"
-                  onClick={() => handleToggleActive(service)}
-                >
-                  {service.isActive ? "Deactivate" : "Activate"}
-                </Button>
+                {!service.isSystem && (
+                  <Button
+                    variant={service.isActive ? "secondary" : "default"}
+                    size="sm"
+                    onClick={() => handleToggleActive(service)}
+                  >
+                    {service.isActive ? "Deactivate" : "Activate"}
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

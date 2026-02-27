@@ -33,12 +33,68 @@ const updateServiceSchema = z.object({
 });
 
 // =============================================================================
+// System Services Definition
+// =============================================================================
+
+const SYSTEM_SERVICES = [
+  {
+    name: "One Time Pickup",
+    category: "wash_and_fold",
+    description: "Single pickup and delivery — no commitment.",
+    pricingType: "per_pound",
+    price: 1.99,
+    sortOrder: 1,
+  },
+  {
+    name: "Every Week",
+    category: "wash_and_fold",
+    description: "Weekly scheduled pickup and delivery.",
+    pricingType: "per_pound",
+    price: 1.79,
+    sortOrder: 2,
+  },
+  {
+    name: "Every Other Week",
+    category: "wash_and_fold",
+    description: "Bi-weekly scheduled pickup and delivery.",
+    pricingType: "per_pound",
+    price: 1.89,
+    sortOrder: 3,
+  },
+];
+
+async function ensureSystemServices(tenantId: string) {
+  const existing = await prisma.service.findMany({
+    where: { tenantId, isSystem: true },
+    select: { name: true },
+  });
+
+  const existingNames = new Set(existing.map((s) => s.name));
+  const missing = SYSTEM_SERVICES.filter((s) => !existingNames.has(s.name));
+
+  if (missing.length > 0) {
+    await prisma.service.createMany({
+      data: missing.map((s) => ({
+        tenantId,
+        ...s,
+        isSystem: true,
+        isActive: true,
+        taxable: true,
+      })),
+    });
+  }
+}
+
+// =============================================================================
 // List Services
 // =============================================================================
 
 export async function listServices() {
   await requireRole(UserRole.OWNER, UserRole.MANAGER);
   const tenant = await requireTenant();
+
+  // Ensure system services exist for this tenant
+  await ensureSystemServices(tenant.id);
 
   return prisma.service.findMany({
     where: { tenantId: tenant.id },
@@ -52,6 +108,7 @@ export async function listServices() {
       price: true,
       icon: true,
       isActive: true,
+      isSystem: true,
       sortOrder: true,
       taxable: true,
       createdAt: true,
@@ -121,10 +178,19 @@ export async function updateService(input: z.infer<typeof updateServiceSchema>) 
     return { success: false, error: "Service not found" };
   }
 
-  await prisma.service.update({
-    where: { id },
-    data,
-  });
+  // System services: only allow editing price, pricingType, description, taxable, icon
+  if (service.isSystem) {
+    const { name: _name, category: _category, isActive: _isActive, ...allowed } = data;
+    await prisma.service.update({
+      where: { id },
+      data: allowed,
+    });
+  } else {
+    await prisma.service.update({
+      where: { id },
+      data,
+    });
+  }
 
   return { success: true };
 }
@@ -143,6 +209,10 @@ export async function deleteService(serviceId: string) {
 
   if (!service) {
     return { success: false, error: "Service not found" };
+  }
+
+  if (service.isSystem) {
+    return { success: false, error: "System services cannot be deactivated" };
   }
 
   await prisma.service.update({

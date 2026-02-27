@@ -36,8 +36,8 @@ export default async function OrderPage({
 
   const [services, timeSlots] = await Promise.all([
     prisma.service.findMany({
-      where: { tenantId: tenant.id, isActive: true },
-      orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
+      where: { tenantId: tenant.id, isActive: true, isSystem: true },
+      orderBy: { sortOrder: "asc" },
       select: {
         id: true,
         name: true,
