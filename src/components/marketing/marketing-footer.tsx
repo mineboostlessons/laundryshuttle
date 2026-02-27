@@ -35,6 +35,8 @@ export function MarketingFooter() {
             <h4 className="mb-3 text-sm font-semibold text-white">Company</h4>
             <ul className="space-y-2 text-sm text-white/60">
               <li><a href="#contact" className="hover:text-white">Contact</a></li>
+              <li><Link href="/terms" className="hover:text-white">Terms of Service</Link></li>
+              <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
               <li><Link href="/login" className="hover:text-white">Log In</Link></li>
             </ul>
           </div>

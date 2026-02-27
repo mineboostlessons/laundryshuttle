@@ -19,7 +19,7 @@ const PROTECTED_PATTERNS = [
 ];
 
 // Public routes that don't need auth
-const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/onboarding", "/staff/login"];
+const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/onboarding", "/staff/login", "/terms", "/privacy"];
 
 // Role-to-route access mapping
 const ROLE_ROUTE_MAP: Record<string, string[]> = {
