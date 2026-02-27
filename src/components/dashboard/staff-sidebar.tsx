@@ -70,6 +70,12 @@ const NAV_ITEMS: NavItem[] = [
     tourId: "nav-orders",
   },
   {
+    href: "/dashboard/services",
+    label: "Services",
+    icon: WashingMachine,
+    roles: ["owner"],
+  },
+  {
     href: "/settings/pages",
     label: "Website",
     icon: Layout,
@@ -215,6 +221,12 @@ const NAV_ITEMS: NavItem[] = [
     href: "/manager/orders",
     label: "Orders",
     icon: Package,
+    roles: ["manager"],
+  },
+  {
+    href: "/dashboard/services",
+    label: "Services",
+    icon: WashingMachine,
     roles: ["manager"],
   },
   {
