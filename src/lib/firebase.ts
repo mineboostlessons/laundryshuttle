@@ -68,7 +68,7 @@ export async function sendPushNotification(
         notification: {
           title: params.title,
           body: params.body,
-          icon: "/icons/icon-192x192.png",
+          icon: "/icons/icon-192.png",
           badge: "/icons/badge-72x72.png",
           ...(params.imageUrl && { image: params.imageUrl }),
         },
@@ -114,7 +114,7 @@ export async function sendPushToMultiple(
         notification: {
           title,
           body,
-          icon: "/icons/icon-192x192.png",
+          icon: "/icons/icon-192.png",
         },
       },
     };
@@ -156,7 +156,7 @@ export async function sendPushToTopic(
         notification: {
           title,
           body,
-          icon: "/icons/icon-192x192.png",
+          icon: "/icons/icon-192.png",
         },
       },
     };
