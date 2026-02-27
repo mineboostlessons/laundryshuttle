@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import prisma from "@/lib/prisma";
 import { getTenantBySlug, getTenantByDomain } from "@/lib/tenant";
 
-const mockPrisma = vi.mocked(prisma);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockPrisma = prisma as any;
 
 const MOCK_TENANT = {
   id: "tenant_1",

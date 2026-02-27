@@ -23,7 +23,7 @@ function getSesClient(): SESClient {
 
 export const ses = new Proxy({} as SESClient, {
   get(_target, prop) {
-    return (getSesClient() as Record<string | symbol, unknown>)[prop];
+    return (getSesClient() as unknown as Record<string | symbol, unknown>)[prop];
   },
 });
 

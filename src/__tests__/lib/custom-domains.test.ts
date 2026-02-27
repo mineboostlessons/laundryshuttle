@@ -7,7 +7,8 @@ import {
   getCustomDomainStatus,
 } from "@/lib/custom-domains";
 
-const mockPrisma = vi.mocked(prisma);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockPrisma = prisma as any;
 
 describe("validateDomainFormat", () => {
   it("accepts valid domain names", () => {

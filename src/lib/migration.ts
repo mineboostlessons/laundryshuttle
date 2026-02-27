@@ -243,7 +243,7 @@ export async function importCustomers(
       successCount,
       failedCount: errors.length,
       skippedCount,
-      errorLog: errors.length > 0 ? (errors as unknown as Record<string, unknown>[]) : undefined,
+      errorLog: errors.length > 0 ? JSON.parse(JSON.stringify(errors)) : undefined,
       completedAt: new Date(),
     },
   });
@@ -326,7 +326,7 @@ export async function importServices(
       status: finalStatus,
       successCount,
       failedCount: errors.length,
-      errorLog: errors.length > 0 ? (errors as unknown as Record<string, unknown>[]) : undefined,
+      errorLog: errors.length > 0 ? JSON.parse(JSON.stringify(errors)) : undefined,
       completedAt: new Date(),
     },
   });
@@ -444,7 +444,7 @@ export async function importOrders(
       successCount,
       failedCount: errors.length,
       skippedCount,
-      errorLog: errors.length > 0 ? (errors as unknown as Record<string, unknown>[]) : undefined,
+      errorLog: errors.length > 0 ? JSON.parse(JSON.stringify(errors)) : undefined,
       completedAt: new Date(),
     },
   });
@@ -541,7 +541,7 @@ export async function importPromoCodes(
       successCount,
       failedCount: errors.length,
       skippedCount,
-      errorLog: errors.length > 0 ? (errors as unknown as Record<string, unknown>[]) : undefined,
+      errorLog: errors.length > 0 ? JSON.parse(JSON.stringify(errors)) : undefined,
       completedAt: new Date(),
     },
   });

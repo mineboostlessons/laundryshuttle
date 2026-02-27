@@ -54,7 +54,7 @@ interface OrderDetailViewProps {
     deliveryTimeSlot: string | null;
     pickupNotes: string | null;
     specialInstructions: string | null;
-    preferencesSnapshot: Record<string, unknown> | null;
+    preferencesSnapshot: Record<string, unknown> | null | undefined;
     customer: {
       id: string;
       firstName: string | null;

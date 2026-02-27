@@ -98,7 +98,7 @@ async function deliverWebhook(params: {
       data: {
         endpointId: params.endpointId,
         event: params.payload.event,
-        payload: params.payload as Record<string, unknown>,
+        payload: JSON.parse(JSON.stringify(params.payload)),
         statusCode: response.status,
         responseBody: responseBody?.slice(0, 1000) ?? null,
         success,
@@ -132,7 +132,7 @@ async function deliverWebhook(params: {
       data: {
         endpointId: params.endpointId,
         event: params.payload.event,
-        payload: params.payload as Record<string, unknown>,
+        payload: JSON.parse(JSON.stringify(params.payload)),
         statusCode: null,
         responseBody: errorMessage,
         success: false,
@@ -234,7 +234,7 @@ export async function retryFailedWebhooks(): Promise<{
       endpointId: log.endpoint.id,
       url: log.endpoint.url,
       secret: log.endpoint.secret,
-      payload: log.payload as WebhookPayload,
+      payload: log.payload as unknown as WebhookPayload,
     });
 
     retried++;

@@ -14,7 +14,7 @@ export default async function TaxReportsPage() {
 
   return (
     <TaxReportsView
-      initialReport={report}
+      initialReport={report as Parameters<typeof TaxReportsView>[0]["initialReport"]}
       availableYears={years}
       currentYear={currentYear}
     />

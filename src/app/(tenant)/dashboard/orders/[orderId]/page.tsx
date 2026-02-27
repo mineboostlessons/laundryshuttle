@@ -32,7 +32,7 @@ export default async function OrderDetailPage({ params }: Props) {
         </div>
       </header>
       <div className="mx-auto max-w-4xl p-6">
-        <OrderDetailView order={order} />
+        <OrderDetailView order={order as Parameters<typeof OrderDetailView>[0]["order"]} />
       </div>
     </main>
   );

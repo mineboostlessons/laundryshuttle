@@ -257,7 +257,7 @@ export function SmsInboxView({
   );
 }
 
-function formatRelativeTime(dateStr: string): string {
+function formatRelativeTime(dateStr: string | Date): string {
   const now = Date.now();
   const then = new Date(dateStr).getTime();
   const diffMs = now - then;

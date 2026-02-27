@@ -13,7 +13,7 @@ export default async function WebhooksPage() {
 
   return (
     <WebhooksView
-      initialEndpoints={endpoints}
+      initialEndpoints={endpoints as Parameters<typeof WebhooksView>[0]["initialEndpoints"]}
       availableEvents={availableEvents}
     />
   );

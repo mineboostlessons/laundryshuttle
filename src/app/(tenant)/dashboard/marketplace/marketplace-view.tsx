@@ -42,7 +42,7 @@ interface MarketplaceApp {
     id: string;
     status: string;
     config: unknown;
-    lastSyncAt: string | null;
+    lastSyncAt: Date | string | null;
   } | null;
 }
 
