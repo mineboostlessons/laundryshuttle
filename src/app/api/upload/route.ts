@@ -79,9 +79,19 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, url });
   } catch (error) {
-    console.error("Upload error:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Upload error:", message, error);
+
+    // Check for common R2 configuration issues
+    if (!process.env.R2_ACCOUNT_ID || !process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
+      return NextResponse.json(
+        { success: false, error: "Storage not configured. Missing R2 credentials." },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
-      { success: false, error: "Upload failed" },
+      { success: false, error: `Upload failed: ${message}` },
       { status: 500 }
     );
   }
