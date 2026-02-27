@@ -4,9 +4,9 @@ import Link from "next/link";
 export function MarketingHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0D1B2A]/95 backdrop-blur supports-[backdrop-filter]:bg-[#0D1B2A]/80">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
         <Link href="/" className="flex items-center gap-2.5 text-xl font-bold text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-          <Image src="/icons/logo-48.png" alt="" width={32} height={32} className="h-8 w-8" />
+          <Image src="/icons/icon-192.png" alt="" width={64} height={64} className="h-16 w-16" />
           Laundry Shuttle
         </Link>
 
