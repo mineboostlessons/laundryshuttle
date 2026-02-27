@@ -179,17 +179,21 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="opacity-60">
-          <CardHeader>
-            <CardTitle className="text-lg">Business Info</CardTitle>
-            <CardDescription>
-              Update your business details and contact info
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <span className="text-xs text-muted-foreground">Coming soon</span>
-          </CardContent>
-        </Card>
+        <Link href="/settings/business-info">
+          <Card className="transition-shadow hover:shadow-md">
+            <CardHeader>
+              <CardTitle className="text-lg">Business Info</CardTitle>
+              <CardDescription>
+                Update your business details and contact info
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" size="sm">
+                Manage Business Info
+              </Button>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
     </div>
   );
