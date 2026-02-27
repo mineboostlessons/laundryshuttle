@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export function MarketingFooter() {
@@ -9,12 +10,15 @@ export function MarketingFooter() {
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div>
-            <h3
-              className="mb-3 text-lg font-bold text-white"
-              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-            >
-              Laundry Shuttle
-            </h3>
+            <div className="mb-3 flex items-center gap-2.5">
+              <Image src="/icons/logo-48.png" alt="" width={32} height={32} className="h-8 w-8" />
+              <h3
+                className="text-lg font-bold text-white"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              >
+                Laundry Shuttle
+              </h3>
+            </div>
             <p className="text-sm text-white/60">
               The all-in-one SaaS platform for laundry pickup & delivery businesses.
             </p>

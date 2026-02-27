@@ -13,6 +13,23 @@ export const metadata: Metadata = {
   title: "Laundry Shuttle",
   description: "Modern laundry pickup & delivery platform",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  openGraph: {
+    title: "Laundry Shuttle — Launch Your Laundry Pickup & Delivery Business",
+    description: "The all-in-one SaaS platform for laundry pickup & delivery businesses. Online ordering, driver dispatch, POS, payments, and more.",
+    images: [{ url: "/images/og-image.png", width: 1200, height: 630, alt: "Laundry Shuttle" }],
+    siteName: "Laundry Shuttle",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Laundry Shuttle — Launch Your Laundry Pickup & Delivery Business",
+    description: "The all-in-one SaaS platform for laundry pickup & delivery businesses.",
+    images: ["/images/og-image.png"],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -24,7 +41,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#3B82F6",
+  themeColor: "#0D1B2A",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -38,7 +55,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         {/* Skip to main content — accessibility */}
