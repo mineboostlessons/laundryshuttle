@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { cookies } from "next/headers";
 import { signIn } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { AuthError } from "next-auth";
@@ -171,6 +172,18 @@ export async function forgotPasswordAction(
   };
 }
 
-export async function oauthSignIn(provider: "google" | "facebook") {
+export async function oauthSignIn(provider: "google" | "facebook", tenantSlug?: string) {
+  // Persist tenant slug across the OAuth redirect round-trip via a short-lived cookie
+  if (tenantSlug && tenantSlug !== "__platform__") {
+    const cookieStore = await cookies();
+    cookieStore.set("__oauth_tenant_slug", tenantSlug, {
+      maxAge: 300, // 5 minutes — enough for OAuth round-trip
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+    });
+  }
+
   await signIn(provider, { redirectTo: "/" });
 }
