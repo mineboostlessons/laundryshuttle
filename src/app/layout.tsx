@@ -14,7 +14,10 @@ export const metadata: Metadata = {
   description: "Modern laundry pickup & delivery platform",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "32x32" },
+    ],
     apple: "/apple-touch-icon.png",
   },
   openGraph: {
