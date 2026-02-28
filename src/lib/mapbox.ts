@@ -169,6 +169,40 @@ export function isPointInServiceArea(
 }
 
 /**
+ * Find the zone (Feature) whose polygon contains a given point.
+ * Returns the matching Feature's properties (zoneName, driverId, featureId) or null.
+ */
+export function findZoneForPoint(
+  lat: number,
+  lng: number,
+  serviceAreaPolygons: GeoJSON.FeatureCollection | null | undefined
+): { zoneName?: string; driverId?: string; featureId?: string } | null {
+  if (!serviceAreaPolygons || !serviceAreaPolygons.features?.length) {
+    return null;
+  }
+
+  const point = turf.point([lng, lat]);
+
+  for (const feature of serviceAreaPolygons.features) {
+    if (
+      feature.geometry.type === "Polygon" ||
+      feature.geometry.type === "MultiPolygon"
+    ) {
+      if (turf.booleanPointInPolygon(point, feature as GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon>)) {
+        const props = (feature.properties ?? {}) as Record<string, unknown>;
+        return {
+          zoneName: props.zoneName as string | undefined,
+          driverId: props.driverId as string | undefined,
+          featureId: (feature.id as string) ?? undefined,
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
  * Calculate distance in miles between two points.
  */
 export function distanceMiles(

@@ -161,6 +161,7 @@ model Laundromat {
   orders                  Order[]
   driverRoutes            DriverRoute[]
   userAssignments         UserLaundromatAssignment[]
+  zoneDriverOverrides     ZoneDriverOverride[]
 
   @@index([tenantId])
   @@map("laundromats")
@@ -232,6 +233,7 @@ model User {
   customerSubscriptions  CustomerSubscription[]
   issuedReports          IssueReport[]     @relation("IssuedBy")
   resolvedReports        IssueReport[]     @relation("ResolvedBy")
+  zoneDriverOverrides    ZoneDriverOverride[] @relation("ZoneDriverOverrides")
 
   @@unique([email, tenantId])
   @@index([tenantId])
@@ -1269,6 +1271,26 @@ model ServiceAreaInterest {
 
   @@index([tenantId])
   @@map("service_area_interests")
+}
+
+// =============================================================================
+// ZONE DRIVER OVERRIDES (Temporary PTO/Sick Coverage)
+// =============================================================================
+
+model ZoneDriverOverride {
+  id              String     @id @default(cuid())
+  laundromatId    String
+  laundromat      Laundromat @relation(fields: [laundromatId], references: [id], onDelete: Cascade)
+  zoneFeatureId   String     // The GeoJSON feature ID of the polygon
+  driverId        String
+  driver          User       @relation("ZoneDriverOverrides", fields: [driverId], references: [id])
+  startDate       DateTime   @db.Date
+  endDate         DateTime   @db.Date
+  reason          String?    // "PTO", "Sick", etc.
+  createdAt       DateTime   @default(now())
+
+  @@index([laundromatId, zoneFeatureId])
+  @@map("zone_driver_overrides")
 }
 
 // =============================================================================

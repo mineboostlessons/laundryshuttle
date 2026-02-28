@@ -14,6 +14,7 @@ import {
   notifyDeliveryCompleted,
   sendNotification,
 } from "@/lib/notifications";
+import { findZoneForPoint } from "@/lib/mapbox";
 
 // =============================================================================
 // List Orders
@@ -52,8 +53,12 @@ export async function listOrders(params?: {
         paymentMethod: true,
         paidAt: true,
         createdAt: true,
+        driverId: true,
         customer: {
           select: { firstName: true, lastName: true, email: true },
+        },
+        driver: {
+          select: { id: true, firstName: true, lastName: true },
         },
       },
     }),
@@ -296,9 +301,15 @@ export async function updateOrderStatus(
       orderNumber: true,
       totalAmount: true,
       customerId: true,
+      driverId: true,
       status: true,
+      laundromatId: true,
+      pickupDate: true,
       customer: {
         select: { firstName: true, lastName: true },
+      },
+      pickupAddress: {
+        select: { lat: true, lng: true },
       },
     },
   });
@@ -307,11 +318,50 @@ export async function updateOrderStatus(
     return { success: false as const, error: "Order not found" };
   }
 
+  // Auto-assign driver when transitioning to "confirmed" if no driver assigned
+  let autoAssignDriverId: string | null = null;
+  if (status === "confirmed" && !order.driverId && order.pickupAddress?.lat && order.pickupAddress?.lng) {
+    const laundromat = await prisma.laundromat.findFirst({
+      where: { id: order.laundromatId },
+      select: { serviceAreaPolygons: true },
+    });
+
+    const polygons = laundromat?.serviceAreaPolygons as GeoJSON.FeatureCollection | null;
+    const zone = findZoneForPoint(order.pickupAddress.lat, order.pickupAddress.lng, polygons);
+
+    if (zone?.featureId) {
+      // Check for override
+      const override = order.pickupDate
+        ? await prisma.zoneDriverOverride.findFirst({
+            where: {
+              laundromatId: order.laundromatId,
+              zoneFeatureId: zone.featureId,
+              startDate: { lte: order.pickupDate },
+              endDate: { gte: order.pickupDate },
+            },
+            select: { driverId: true },
+            orderBy: { createdAt: "desc" },
+          })
+        : null;
+
+      if (override) {
+        autoAssignDriverId = override.driverId;
+      } else if (zone.driverId) {
+        const driver = await prisma.user.findFirst({
+          where: { id: zone.driverId, tenantId: tenant.id, role: "driver", isActive: true },
+          select: { id: true },
+        });
+        if (driver) autoAssignDriverId = driver.id;
+      }
+    }
+  }
+
   await prisma.$transaction([
     prisma.order.update({
       where: { id: orderId },
       data: {
         status,
+        ...(autoAssignDriverId ? { driverId: autoAssignDriverId } : {}),
         ...(status === "completed" && !order.customerId ? { paidAt: new Date() } : {}),
       },
     }),

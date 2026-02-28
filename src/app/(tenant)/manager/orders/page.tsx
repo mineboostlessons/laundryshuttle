@@ -1,6 +1,7 @@
 import { requireRole } from "@/lib/auth-helpers";
 import { UserRole } from "@/types";
 import { listOrders } from "@/app/(tenant)/dashboard/orders/actions";
+import { getAvailableDrivers } from "@/app/(tenant)/manager/actions";
 import { ManagerOrderList } from "./manager-order-list";
 
 export default async function ManagerOrdersPage({
@@ -11,10 +12,13 @@ export default async function ManagerOrdersPage({
   await requireRole(UserRole.OWNER, UserRole.MANAGER);
   const params = await searchParams;
 
-  const { orders, pagination } = await listOrders({
-    status: params.status,
-    page: params.page ? parseInt(params.page) : 1,
-  });
+  const [{ orders, pagination }, drivers] = await Promise.all([
+    listOrders({
+      status: params.status,
+      page: params.page ? parseInt(params.page) : 1,
+    }),
+    getAvailableDrivers(),
+  ]);
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
@@ -28,6 +32,7 @@ export default async function ManagerOrdersPage({
         orders={orders}
         pagination={pagination}
         currentStatus={params.status}
+        availableDrivers={drivers}
       />
     </div>
   );

@@ -1,11 +1,16 @@
 import { requireRole } from "@/lib/auth-helpers";
 import { UserRole } from "@/types";
-import { getServiceArea } from "./actions";
+import { getServiceArea, getZoneOverrides } from "./actions";
+import { getAvailableDrivers } from "@/app/(tenant)/manager/actions";
 import { ServiceAreaView } from "./service-area-view";
 
 export default async function ServiceAreaPage() {
-  await requireRole(UserRole.OWNER);
-  const data = await getServiceArea();
+  await requireRole(UserRole.OWNER, UserRole.MANAGER);
+  const [data, drivers, overrides] = await Promise.all([
+    getServiceArea(),
+    getAvailableDrivers(),
+    getServiceArea().then((d) => (d ? getZoneOverrides(d.id) : [])),
+  ]);
 
   if (!data) {
     return (
@@ -24,6 +29,8 @@ export default async function ServiceAreaPage() {
       laundromatName={data.name}
       center={[data.lng, data.lat]}
       initialPolygons={data.serviceAreaPolygons}
+      availableDrivers={drivers}
+      initialOverrides={overrides}
     />
   );
 }

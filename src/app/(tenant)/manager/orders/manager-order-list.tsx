@@ -1,7 +1,8 @@
 "use client";
 
+import { useTransition } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { assignDriverToOrder } from "@/app/(tenant)/manager/actions";
+
+interface Driver {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+}
 
 interface Order {
   id: string;
@@ -22,11 +30,13 @@ interface Order {
   paymentMethod: string | null;
   paidAt: Date | null;
   createdAt: Date;
+  driverId: string | null;
   customer: {
     firstName: string | null;
     lastName: string | null;
     email: string;
   } | null;
+  driver: Driver | null;
 }
 
 interface Pagination {
@@ -64,17 +74,28 @@ export function ManagerOrderList({
   orders,
   pagination,
   currentStatus,
+  availableDrivers = [],
 }: {
   orders: Order[];
   pagination: Pagination;
   currentStatus?: string;
+  availableDrivers?: Driver[];
 }) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   function setFilter(status?: string) {
     const params = new URLSearchParams();
     if (status) params.set("status", status);
     router.push(`/manager/orders?${params.toString()}`);
+  }
+
+  function handleDriverAssign(orderId: string, driverId: string) {
+    if (!driverId) return;
+    startTransition(async () => {
+      await assignDriverToOrder({ orderId, driverId });
+      router.refresh();
+    });
   }
 
   return (
@@ -110,18 +131,45 @@ export function ManagerOrderList({
                   ? `${order.customer.firstName ?? ""} ${order.customer.lastName ?? ""}`.trim() ||
                     order.customer.email
                   : "Walk-in";
+                const driverName = order.driver
+                  ? `${order.driver.firstName ?? ""} ${order.driver.lastName ?? ""}`.trim()
+                  : null;
+
                 return (
-                  <Link
+                  <div
                     key={order.id}
-                    href={`/manager/orders/${order.id}`}
-                    className="flex items-center justify-between py-3 hover:bg-muted/50 transition-colors px-2 rounded"
+                    className="flex items-center justify-between py-3 px-2 rounded gap-2"
                   >
-                    <div className="min-w-0">
+                    <Link
+                      href={`/manager/orders/${order.id}`}
+                      className="flex-1 min-w-0 hover:bg-muted/50 transition-colors rounded px-1"
+                    >
                       <p className="text-sm font-medium">{order.orderNumber}</p>
                       <p className="text-xs text-muted-foreground truncate">
                         {name} &middot; {new Date(order.createdAt).toLocaleDateString()}
                       </p>
-                    </div>
+                    </Link>
+
+                    {/* Inline Driver Assignment */}
+                    {availableDrivers.length > 0 && order.orderType === "delivery" && (
+                      <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <select
+                          value={order.driverId ?? ""}
+                          onChange={(e) => handleDriverAssign(order.id, e.target.value)}
+                          disabled={isPending}
+                          className="h-7 w-32 sm:w-36 rounded-md border border-input bg-background px-2 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          title={driverName ?? "Assign driver"}
+                        >
+                          <option value="">No driver</option>
+                          {availableDrivers.map((d) => (
+                            <option key={d.id} value={d.id}>
+                              {[d.firstName, d.lastName].filter(Boolean).join(" ") || "Unnamed"}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-sm font-medium">
                         {formatCurrency(order.totalAmount)}
@@ -130,7 +178,7 @@ export function ManagerOrderList({
                         {order.status.replace(/_/g, " ")}
                       </Badge>
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>

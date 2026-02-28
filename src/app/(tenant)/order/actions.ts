@@ -4,7 +4,7 @@ import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { requireTenant } from "@/lib/tenant";
 import { getSession } from "@/lib/auth-helpers";
-import { isPointInServiceArea } from "@/lib/mapbox";
+import { isPointInServiceArea, findZoneForPoint } from "@/lib/mapbox";
 import { generateOrderNumber } from "@/lib/utils";
 import { notifyOrderConfirmed } from "@/lib/notifications";
 import {
@@ -354,13 +354,47 @@ export async function createOrder(
     }
   }
 
-  // Create order
+  // Auto-assign driver based on zone mapping
+  const polygons = laundromat.serviceAreaPolygons as GeoJSON.FeatureCollection | null;
+  let assignedDriverId: string | null = null;
+
+  const zone = findZoneForPoint(data.address.lat, data.address.lng, polygons);
+  if (zone?.featureId) {
+    // Check for a temporary override first
+    const pickupDate = parseISO(data.pickupDate);
+    const override = await prisma.zoneDriverOverride.findFirst({
+      where: {
+        laundromatId: laundromat.id,
+        zoneFeatureId: zone.featureId,
+        startDate: { lte: pickupDate },
+        endDate: { gte: pickupDate },
+      },
+      select: { driverId: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (override) {
+      assignedDriverId = override.driverId;
+    } else if (zone.driverId) {
+      // Verify the default driver still exists and is active
+      const driver = await prisma.user.findFirst({
+        where: { id: zone.driverId, tenantId: tenant.id, role: "driver", isActive: true },
+        select: { id: true },
+      });
+      if (driver) {
+        assignedDriverId = driver.id;
+      }
+    }
+  }
+
+  // Create order — auto-confirmed
   const order = await prisma.order.create({
     data: {
       orderNumber,
       tenantId: tenant.id,
       laundromatId: laundromat.id,
       customerId: session?.user?.id ?? null,
+      driverId: assignedDriverId,
       orderType: "delivery",
       serviceType: data.serviceType,
       pickupAddressId: addressId ?? null,
@@ -375,15 +409,15 @@ export async function createOrder(
       taxRate,
       taxAmount,
       totalAmount,
-      status: "pending",
+      status: "confirmed",
       items: {
         create: orderItems,
       },
       statusHistory: {
         create: {
-          status: "pending",
+          status: "confirmed",
           changedByUserId: session?.user?.id ?? null,
-          notes: "Order placed",
+          notes: "Order placed and confirmed",
         },
       },
     },
