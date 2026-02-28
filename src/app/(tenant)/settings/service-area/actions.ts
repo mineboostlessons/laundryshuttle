@@ -56,7 +56,7 @@ const updateSchema = z.object({
 export async function updateServiceArea(data: {
   laundromatId: string;
   polygons: GeoJSON.FeatureCollection;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<{ success: boolean; error?: string; reassignedCount?: number }> {
   await requireRole(UserRole.OWNER, UserRole.MANAGER);
   const tenant = await requireTenant();
 
@@ -86,22 +86,28 @@ export async function updateServiceArea(data: {
     },
   });
 
-  // Reassign drivers on all active orders based on the new zone-driver mappings
+  // Reassign drivers on ALL active orders based on the new zone-driver mappings
   const activeOrders = await prisma.order.findMany({
     where: {
       tenantId: tenant.id,
       laundromatId: laundromat.id,
       status: { in: ["confirmed", "ready", "out_for_delivery"] },
-      // Only orders not yet in a route — routed orders shouldn't be reassigned mid-route
-      routeStops: { none: {} },
     },
     select: {
       id: true,
       driverId: true,
       pickupDate: true,
       pickupAddress: { select: { lat: true, lng: true } },
+      routeStops: {
+        select: {
+          id: true,
+          route: { select: { id: true, status: true, driverId: true } },
+        },
+      },
     },
   });
+
+  let reassignedCount = 0;
 
   if (activeOrders.length > 0) {
     const polygons = parsed.data.polygons as GeoJSON.FeatureCollection;
@@ -136,32 +142,45 @@ export async function updateServiceArea(data: {
       // Skip if driver hasn't changed
       if (assignDriverId === order.driverId) continue;
 
-      // If zone has no driver assigned, clear the driver
-      if (!assignDriverId) {
-        await prisma.order.update({
-          where: { id: order.id },
-          data: { driverId: null },
+      // Verify new driver is active (if assigning one)
+      if (assignDriverId) {
+        const driver = await prisma.user.findFirst({
+          where: { id: assignDriverId, tenantId: tenant.id, role: "driver", isActive: true },
+          select: { id: true },
         });
-        continue;
+        if (!driver) continue;
       }
 
-      // Verify driver is active
-      const driver = await prisma.user.findFirst({
-        where: { id: assignDriverId, tenantId: tenant.id, role: "driver", isActive: true },
-        select: { id: true },
+      // Update the order's driver
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { driverId: assignDriverId },
       });
+      reassignedCount++;
 
-      if (driver) {
-        await prisma.order.update({
-          where: { id: order.id },
-          data: { driverId: driver.id },
+      // Clean up route stops from planned routes (not in-progress/completed)
+      const plannedStops = order.routeStops.filter(
+        (rs) => rs.route.status === "planned"
+      );
+      if (plannedStops.length > 0) {
+        await prisma.routeStop.deleteMany({
+          where: { id: { in: plannedStops.map((s) => s.id) } },
         });
+
+        // Delete any planned routes that are now empty
+        const affectedRouteIds = [...new Set(plannedStops.map((s) => s.route.id))];
+        for (const routeId of affectedRouteIds) {
+          const remaining = await prisma.routeStop.count({ where: { routeId } });
+          if (remaining === 0) {
+            await prisma.driverRoute.delete({ where: { id: routeId } });
+          }
+        }
       }
     }
   }
 
   revalidatePath("/settings/service-area");
-  return { success: true };
+  return { success: true, reassignedCount };
 }
 
 // =============================================================================

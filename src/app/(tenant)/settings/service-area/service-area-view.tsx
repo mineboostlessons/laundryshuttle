@@ -77,7 +77,10 @@ export function ServiceAreaView({
     setSaving(false);
 
     if (result.success) {
-      setMessage({ type: "success", text: "Service area saved successfully" });
+      const countMsg = result.reassignedCount
+        ? ` ${result.reassignedCount} order${result.reassignedCount !== 1 ? "s" : ""} reassigned to updated drivers.`
+        : "";
+      setMessage({ type: "success", text: `Service area saved successfully.${countMsg}` });
     } else {
       setMessage({ type: "error", text: result.error ?? "Failed to save service area" });
     }
