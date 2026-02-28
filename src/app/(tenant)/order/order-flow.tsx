@@ -180,17 +180,18 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reo
     switch (step) {
       case 0: // Address
         return formData.address !== null && !areaError;
-      case 1: // Services (type + frequency + schedule)
+      case 1: // Services + Preferences
         return (
           formData.serviceType !== "" &&
-          formData.services.length > 0 &&
+          formData.services.length > 0
+        );
+      case 2: // Schedule
+        return (
           !!formData.pickupDate &&
           !!formData.pickupTimeSlot &&
           !!formData.deliveryDate &&
           !!formData.deliveryTimeSlot
         );
-      case 2: // Schedule (preferences) — optional, always can proceed
-        return true;
       default:
         return false;
     }
@@ -390,12 +391,9 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reo
               onServiceTypeChange={(serviceType) => updateForm({ serviceType })}
             />
             <div className="mt-8 border-t pt-8">
-              <ScheduleStep
-                timeSlots={timeSlots}
-                pickupDate={formData.pickupDate}
-                pickupTimeSlot={formData.pickupTimeSlot}
-                deliveryDate={formData.deliveryDate}
-                deliveryTimeSlot={formData.deliveryTimeSlot}
+              <PreferencesStep
+                preferences={formData.preferences}
+                specialInstructions={formData.specialInstructions}
                 onChange={(partial) => updateForm(partial)}
               />
             </div>
@@ -403,9 +401,12 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reo
         )}
 
         {step === 2 && (
-          <PreferencesStep
-            preferences={formData.preferences}
-            specialInstructions={formData.specialInstructions}
+          <ScheduleStep
+            timeSlots={timeSlots}
+            pickupDate={formData.pickupDate}
+            pickupTimeSlot={formData.pickupTimeSlot}
+            deliveryDate={formData.deliveryDate}
+            deliveryTimeSlot={formData.deliveryTimeSlot}
             onChange={(partial) => updateForm(partial)}
           />
         )}
