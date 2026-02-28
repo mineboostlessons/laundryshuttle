@@ -60,7 +60,7 @@ async function main() {
     : 0;
 
   const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
+  today.setUTCHours(12, 0, 0, 0); // noon UTC — displays correctly in any US timezone
 
   const timeSlots = [
     "8am-10am", "9am-11am", "10am-12pm", "11am-1pm",
