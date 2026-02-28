@@ -9,6 +9,7 @@ import {
   checkDomainVerification,
   removeCustomDomain,
 } from "@/lib/custom-domains";
+import { addDomainToVercel, removeDomainFromVercel } from "@/lib/vercel-domains";
 
 export type AdminDomainActionState = {
   error?: string;
@@ -64,6 +65,7 @@ export async function adminRemoveDomain(
 ): Promise<AdminDomainActionState> {
   await requireRole(UserRole.PLATFORM_ADMIN);
 
+  // removeCustomDomain already calls removeDomainFromVercel internally
   const result = await removeCustomDomain(tenantId, domain);
 
   revalidatePath("/admin/domains");
@@ -111,6 +113,14 @@ export async function adminForceAssignDomain(
         });
       }
     });
+
+    // Add domain to Vercel project for SSL provisioning
+    const vercelResult = await addDomainToVercel(domain);
+    if (!vercelResult.success) {
+      console.warn(
+        `[admin/domains] Force-assigned ${domain} but Vercel add failed: ${vercelResult.error}`
+      );
+    }
 
     revalidatePath("/admin/domains");
     revalidatePath(`/admin/tenants/${tenantId}`);

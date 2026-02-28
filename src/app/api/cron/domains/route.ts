@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifyDomainDns } from "@/lib/custom-domains";
+import { addDomainToVercel } from "@/lib/vercel-domains";
 
 /**
  * Cron job: Auto-verify pending custom domains.
@@ -57,6 +58,14 @@ export async function GET(request: Request) {
             data: { customDomain: verification.domain },
           });
         });
+
+        // Add domain to Vercel project for SSL provisioning
+        const vercelResult = await addDomainToVercel(verification.domain);
+        if (!vercelResult.success) {
+          console.warn(
+            `[cron/domains] Domain ${verification.domain} verified but Vercel add failed: ${vercelResult.error}`
+          );
+        }
 
         verified++;
       } else {

@@ -1,5 +1,6 @@
 import { nanoid } from "nanoid";
 import prisma from "./prisma";
+import { addDomainToVercel, removeDomainFromVercel } from "./vercel-domains";
 
 const PLATFORM_DOMAIN = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "laundryshuttle.com";
 const CNAME_TARGET = `domains.${PLATFORM_DOMAIN}`;
@@ -294,6 +295,14 @@ export async function checkDomainVerification(
       });
     });
 
+    // Add domain to Vercel project for SSL provisioning
+    const vercelResult = await addDomainToVercel(verification.domain);
+    if (!vercelResult.success) {
+      console.warn(
+        `[custom-domains] Domain ${verification.domain} verified but Vercel add failed: ${vercelResult.error}`
+      );
+    }
+
     return { success: true, status: "verified" };
   }
 
@@ -332,6 +341,14 @@ export async function removeCustomDomain(
 
     if (verification && verification.tenantId !== tenantId) {
       return { success: false, error: "Unauthorized" };
+    }
+
+    // Remove domain from Vercel project
+    const vercelResult = await removeDomainFromVercel(cleaned);
+    if (!vercelResult.success) {
+      console.warn(
+        `[custom-domains] Vercel domain removal failed for ${cleaned}: ${vercelResult.error}`
+      );
     }
 
     // Remove in transaction
