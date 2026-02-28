@@ -6,11 +6,16 @@ import { ServiceAreaView } from "./service-area-loader";
 
 export default async function ManagerServiceAreaPage() {
   await requireRole(UserRole.MANAGER, UserRole.OWNER);
-  const [data, drivers, overrides] = await Promise.all([
-    getServiceArea(),
-    getAvailableDrivers(),
-    getServiceArea().then((d) => (d ? getZoneOverrides(d.id).catch(() => []) : [])),
-  ]);
+
+  let data = null;
+  let drivers: { id: string; firstName: string | null; lastName: string | null }[] = [];
+  let overrides: unknown[] = [];
+
+  try {
+    data = await getServiceArea();
+  } catch {
+    // Laundromat query failed
+  }
 
   if (!data) {
     return (
@@ -23,6 +28,18 @@ export default async function ManagerServiceAreaPage() {
     );
   }
 
+  try {
+    drivers = await getAvailableDrivers();
+  } catch {
+    // Drivers query failed — continue with empty list
+  }
+
+  try {
+    overrides = await getZoneOverrides(data.id);
+  } catch {
+    // Zone overrides query failed — continue with empty list
+  }
+
   return (
     <ServiceAreaView
       laundromatId={data.id}
@@ -30,7 +47,7 @@ export default async function ManagerServiceAreaPage() {
       center={[data.lng, data.lat]}
       initialPolygons={data.serviceAreaPolygons}
       availableDrivers={drivers}
-      initialOverrides={overrides}
+      initialOverrides={overrides as never[]}
     />
   );
 }

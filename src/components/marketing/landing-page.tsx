@@ -252,7 +252,7 @@ export function MarketingLandingPage() {
                   {
                     name: "Sarah M.",
                     biz: "Fresh Fold NYC",
-                    text: "Laundry Shuttle transformed our business. We went from pen-and-paper to a fully automated pickup & delivery operation in just one week.",
+                    text: "Laundry Shuttle transformed our business. We went from pen-and-paper to a fully automated pickup and delivery operation in just one week.",
                   },
                   {
                     name: "James R.",
@@ -294,7 +294,7 @@ export function MarketingLandingPage() {
                 Ready to <span className="text-[#C9A96E]">Get Started?</span>
               </h2>
               <p className="mt-4 text-lg text-white/60">
-                Schedule a free demo and see how Laundry Shuttle can transform your business.
+                Schedule a free demo and see how Laundry <span className="text-[#C9A96E]">Shuttle</span> can transform your business.
               </p>
               <div className="mt-10">
                 <DemoRequestForm />

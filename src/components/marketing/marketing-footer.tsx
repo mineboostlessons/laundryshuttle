@@ -11,12 +11,12 @@ export function MarketingFooter() {
           {/* Brand */}
           <div>
             <div className="mb-3 flex items-center gap-2.5">
-              <Image src="/icons/logo-48.png" alt="" width={32} height={32} className="h-8 w-8" />
+              <Image src="/icons/logo-gold.png" alt="" width={32} height={32} className="h-8 w-8" />
               <h3
                 className="text-lg font-bold text-white"
                 style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
               >
-                Laundry Shuttle
+                Laundry <span className="text-[#C9A96E]">Shuttle</span>
               </h3>
             </div>
             <p className="text-sm text-white/60">
@@ -58,7 +58,7 @@ export function MarketingFooter() {
         </div>
 
         <div className="mt-12 border-t border-white/10 pt-6 text-center text-sm text-white/40">
-          &copy; {currentYear} Laundry Shuttle. All rights reserved.
+          &copy; {currentYear} Laundry <span className="text-[#C9A96E]">Shuttle</span>. All rights reserved.
         </div>
       </div>
     </footer>
