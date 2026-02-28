@@ -62,7 +62,7 @@ export function ServiceAreaView({
   // Get zone names from initial polygons
   const zoneOptions = (initialPolygons?.features ?? []).map((f) => ({
     featureId: f.id as string,
-    zoneName: ((f.properties as Record<string, unknown>)?.zoneName as string) || `Zone (${(f.id as string).slice(0, 8)})`,
+    zoneName: ((f.properties as Record<string, unknown>)?.zoneName as string) || `Zone (${String(f.id ?? "").slice(0, 8) || "unknown"})`,
   }));
 
   async function handleSave(polygons: GeoJSON.FeatureCollection) {
