@@ -17,10 +17,25 @@ const ALLOWED_UPLOAD_TYPES: Record<string, { roles: string[]; folder: string; co
  *   - type: "delivery_photo" | "signature" | "logo" | "block_image"
  */
 export async function POST(request: NextRequest) {
+  // Pre-flight: check R2 configuration before doing anything
+  const missingVars = [
+    !process.env.R2_ACCOUNT_ID && "R2_ACCOUNT_ID",
+    !process.env.R2_ACCESS_KEY_ID && "R2_ACCESS_KEY_ID",
+    !process.env.R2_SECRET_ACCESS_KEY && "R2_SECRET_ACCESS_KEY",
+    !process.env.R2_PUBLIC_URL && "R2_PUBLIC_URL",
+  ].filter(Boolean);
+
+  if (missingVars.length > 0) {
+    return NextResponse.json(
+      { success: false, error: `Storage not configured. Missing: ${missingVars.join(", ")}` },
+      { status: 500 }
+    );
+  }
+
   const session = await auth();
   if (!session?.user?.tenantId && session?.user?.role !== "platform_admin") {
     return NextResponse.json(
-      { success: false, error: "Unauthorized" },
+      { success: false, error: "Unauthorized — no session or tenant" },
       { status: 401 }
     );
   }
@@ -47,7 +62,7 @@ export async function POST(request: NextRequest) {
     const uploadConfig = ALLOWED_UPLOAD_TYPES[type];
     if (!uploadConfig.roles.includes(session.user.role)) {
       return NextResponse.json(
-        { success: false, error: "Forbidden" },
+        { success: false, error: `Forbidden — role "${session.user.role}" not allowed for "${type}"` },
         { status: 403 }
       );
     }
@@ -81,14 +96,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("Upload error:", message, error);
-
-    // Check for common R2 configuration issues
-    if (!process.env.R2_ACCOUNT_ID || !process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
-      return NextResponse.json(
-        { success: false, error: "Storage not configured. Missing R2 credentials." },
-        { status: 500 }
-      );
-    }
 
     return NextResponse.json(
       { success: false, error: `Upload failed: ${message}` },
