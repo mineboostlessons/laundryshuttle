@@ -6,6 +6,7 @@ import { requireTenant } from "@/lib/tenant";
 import { requireRole } from "@/lib/auth-helpers";
 import { UserRole } from "@/types";
 import { revalidatePath } from "next/cache";
+import { geocodeAddress } from "@/lib/mapbox";
 
 // =============================================================================
 // Get Business Info
@@ -112,6 +113,10 @@ export async function updateBusinessInfo(input: UpdateBusinessInfoInput) {
   });
 
   if (laundromat) {
+    // Geocode the address to update lat/lng for the service area map
+    const fullAddress = `${data.address}, ${data.city}, ${data.state} ${data.zip}`;
+    const geocoded = await geocodeAddress(fullAddress);
+
     await prisma.laundromat.update({
       where: { id: laundromat.id },
       data: {
@@ -124,6 +129,7 @@ export async function updateBusinessInfo(input: UpdateBusinessInfoInput) {
         phone: data.locationPhone || null,
         email: data.locationEmail || null,
         timezone: data.timezone,
+        ...(geocoded ? { lat: geocoded.lat, lng: geocoded.lng } : {}),
       },
     });
   }
