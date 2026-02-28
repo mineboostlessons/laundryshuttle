@@ -265,6 +265,8 @@ export async function checkDomainVerification(
   }
 
   if (verification.status === "verified") {
+    // Ensure domain is registered on Vercel (idempotent)
+    await addDomainToVercel(verification.domain);
     return { success: true, status: "verified" };
   }
 
