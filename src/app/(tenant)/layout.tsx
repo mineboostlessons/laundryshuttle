@@ -7,8 +7,9 @@ import { ThemeProvider } from "@/components/theme/theme-provider";
 export async function generateMetadata(): Promise<Metadata> {
   const headersList = await headers();
   const tenantSlug = headersList.get("x-tenant-slug");
+  const customDomain = headersList.get("x-custom-domain");
 
-  if (!tenantSlug || tenantSlug === "__platform__") return {};
+  if (!customDomain && (!tenantSlug || tenantSlug === "__platform__")) return {};
 
   const tenant = await getCurrentTenant();
   if (!tenant) return {};
@@ -36,9 +37,10 @@ export default async function TenantLayout({
 }) {
   const headersList = await headers();
   const tenantSlug = headersList.get("x-tenant-slug");
+  const customDomain = headersList.get("x-custom-domain");
 
   // Platform context — render children directly (marketing pages handle their own layout)
-  if (!tenantSlug || tenantSlug === "__platform__") {
+  if (!customDomain && (!tenantSlug || tenantSlug === "__platform__")) {
     return <>{children}</>;
   }
 
