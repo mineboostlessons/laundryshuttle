@@ -129,7 +129,7 @@ export default auth((request) => {
       }
     } else {
       // Custom domain — set header for server-side resolution
-      apiHeaders.set("x-custom-domain", hostname);
+      apiHeaders.set("x-custom-domain", hostname.replace(/^www\./, ""));
     }
     return NextResponse.next({ request: { headers: apiHeaders } });
   }
@@ -163,7 +163,9 @@ export default auth((request) => {
     }
   } else {
     // Custom domain — set header for server-side resolution
-    headers.set("x-custom-domain", hostname);
+    // Normalize by stripping www. prefix so both www and root resolve the same
+    const customHost = hostname.replace(/^www\./, "");
+    headers.set("x-custom-domain", customHost);
   }
 
   // --- Auth checks ---

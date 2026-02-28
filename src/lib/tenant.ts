@@ -55,16 +55,27 @@ export async function getTenantBySlug(slug: string): Promise<TenantInfo | null> 
 }
 
 /**
- * Look up tenant by custom domain
+ * Look up tenant by custom domain.
+ * Tries exact match first, then with/without www. prefix for flexibility.
  */
 export async function getTenantByDomain(domain: string): Promise<TenantInfo | null> {
   const tenant = await prisma.tenant.findUnique({
     where: { customDomain: domain },
   });
 
-  if (!tenant || !tenant.isActive) return null;
+  if (tenant && tenant.isActive) return tenant as unknown as TenantInfo;
 
-  return tenant as unknown as TenantInfo;
+  // Try alternate form: if input has no www., try with it; if it has www., try without
+  const alternate = domain.startsWith("www.")
+    ? domain.slice(4)
+    : `www.${domain}`;
+  const altTenant = await prisma.tenant.findUnique({
+    where: { customDomain: alternate },
+  });
+
+  if (!altTenant || !altTenant.isActive) return null;
+
+  return altTenant as unknown as TenantInfo;
 }
 
 /**

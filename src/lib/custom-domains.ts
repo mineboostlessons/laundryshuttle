@@ -177,7 +177,7 @@ export async function initiateCustomDomain(
   tenantId: string,
   domain: string
 ): Promise<{ success: boolean; data?: DomainSetupInfo; error?: string }> {
-  const cleaned = domain.toLowerCase().trim();
+  const cleaned = domain.toLowerCase().trim().replace(/^www\./, "");
 
   // Validate format
   const validation = validateDomainFormat(cleaned);
