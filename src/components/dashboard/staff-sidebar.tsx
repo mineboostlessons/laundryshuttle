@@ -323,6 +323,7 @@ interface StaffSidebarProps {
   userEmail: string;
   userRole: UserRole;
   businessName: string;
+  logoUrl?: string | null;
 }
 
 export function StaffSidebar({
@@ -330,6 +331,7 @@ export function StaffSidebar({
   userEmail,
   userRole,
   businessName,
+  logoUrl,
 }: StaffSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -391,7 +393,12 @@ export function StaffSidebar({
         )}
       >
         <div className="p-6">
-          <p className="font-semibold text-sm text-primary">{businessName}</p>
+          <div className="flex items-center gap-2">
+            {logoUrl && (
+              <img src={logoUrl} alt={businessName} className="h-8 w-8 object-contain rounded" />
+            )}
+            <p className="font-semibold text-sm text-primary">{businessName}</p>
+          </div>
           <p className="text-xs text-muted-foreground mt-1">
             {roleLabels[userRole] ?? userRole}
           </p>

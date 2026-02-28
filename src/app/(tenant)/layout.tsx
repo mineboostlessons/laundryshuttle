@@ -14,14 +14,18 @@ export async function generateMetadata(): Promise<Metadata> {
   if (!tenant) return {};
 
   const logoUrl = tenant.themeConfig?.logoUrl;
-  if (!logoUrl) return {};
 
-  // Use the uploaded logo as favicon and apple touch icon for this tenant
   return {
-    icons: {
-      icon: [{ url: logoUrl }],
-      apple: logoUrl,
+    title: {
+      default: tenant.businessName,
+      template: `%s | ${tenant.businessName}`,
     },
+    ...(logoUrl && {
+      icons: {
+        icon: [{ url: logoUrl }],
+        apple: logoUrl,
+      },
+    }),
   };
 }
 

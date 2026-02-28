@@ -19,6 +19,7 @@ export default async function ManagerDashboardLayout({
           userEmail={session.user.email}
           userRole={session.user.role as typeof UserRole.MANAGER}
           businessName={tenant.businessName}
+          logoUrl={tenant.themeConfig?.logoUrl ?? null}
         />
         <main className="flex-1 min-w-0">{children}</main>
       </div>

@@ -23,6 +23,7 @@ export default async function AttendantLayout({
           userEmail={session.user.email}
           userRole={session.user.role as typeof UserRole.ATTENDANT}
           businessName={tenant.businessName}
+          logoUrl={tenant.themeConfig?.logoUrl ?? null}
         />
         <main className="flex-1 min-w-0">{children}</main>
       </div>

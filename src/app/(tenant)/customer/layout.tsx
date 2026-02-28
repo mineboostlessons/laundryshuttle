@@ -18,6 +18,7 @@ export default async function CustomerLayout({
           userName={session.user.name ?? session.user.email}
           userEmail={session.user.email}
           businessName={tenant.businessName}
+          logoUrl={tenant.themeConfig?.logoUrl ?? null}
         />
         <main className="flex-1 min-w-0">{children}</main>
       </div>

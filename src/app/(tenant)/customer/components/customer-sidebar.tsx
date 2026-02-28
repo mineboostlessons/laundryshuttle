@@ -30,12 +30,14 @@ interface CustomerSidebarProps {
   userName: string;
   userEmail: string;
   businessName: string;
+  logoUrl?: string | null;
 }
 
 export function CustomerSidebar({
   userName,
   userEmail,
   businessName,
+  logoUrl,
 }: CustomerSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -73,7 +75,12 @@ export function CustomerSidebar({
         )}
       >
         <div className="p-6">
-          <p className="font-semibold text-sm text-primary">{businessName}</p>
+          <div className="flex items-center gap-2">
+            {logoUrl && (
+              <img src={logoUrl} alt={businessName} className="h-8 w-8 object-contain rounded" />
+            )}
+            <p className="font-semibold text-sm text-primary">{businessName}</p>
+          </div>
           <p className="text-sm font-medium mt-1 truncate">{userName}</p>
           <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
         </div>
