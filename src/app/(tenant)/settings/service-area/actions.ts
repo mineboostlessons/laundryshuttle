@@ -86,33 +86,37 @@ export async function updateServiceArea(data: {
     },
   });
 
-  // Retroactively assign drivers to unassigned confirmed orders based on new zone mappings
-  const unassignedOrders = await prisma.order.findMany({
+  // Reassign drivers on all active orders based on the new zone-driver mappings
+  const activeOrders = await prisma.order.findMany({
     where: {
       tenantId: tenant.id,
       laundromatId: laundromat.id,
-      driverId: null,
       status: { in: ["confirmed", "ready", "out_for_delivery"] },
+      // Only orders not yet in a route — routed orders shouldn't be reassigned mid-route
+      routeStops: { none: {} },
     },
     select: {
       id: true,
+      driverId: true,
       pickupDate: true,
       pickupAddress: { select: { lat: true, lng: true } },
     },
   });
 
-  if (unassignedOrders.length > 0) {
+  if (activeOrders.length > 0) {
     const polygons = parsed.data.polygons as GeoJSON.FeatureCollection;
-    const now = new Date();
 
-    for (const order of unassignedOrders) {
+    for (const order of activeOrders) {
       if (!order.pickupAddress?.lat || !order.pickupAddress?.lng) continue;
 
       const zone = findZoneForPoint(order.pickupAddress.lat, order.pickupAddress.lng, polygons);
-      if (!zone?.driverId) continue;
+      // If order falls outside all zones, leave it as-is
+      if (!zone) continue;
+
+      // Determine the correct driver for this zone
+      let assignDriverId = zone.driverId || null;
 
       // Check for temporal override
-      let assignDriverId = zone.driverId;
       if (zone.featureId && order.pickupDate) {
         const override = await prisma.zoneDriverOverride.findFirst({
           where: {
@@ -127,6 +131,18 @@ export async function updateServiceArea(data: {
         if (override) {
           assignDriverId = override.driverId;
         }
+      }
+
+      // Skip if driver hasn't changed
+      if (assignDriverId === order.driverId) continue;
+
+      // If zone has no driver assigned, clear the driver
+      if (!assignDriverId) {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { driverId: null },
+        });
+        continue;
       }
 
       // Verify driver is active
