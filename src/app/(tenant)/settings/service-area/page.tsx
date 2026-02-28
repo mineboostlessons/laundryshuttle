@@ -9,7 +9,7 @@ export default async function ServiceAreaPage() {
   const [data, drivers, overrides] = await Promise.all([
     getServiceArea(),
     getAvailableDrivers(),
-    getServiceArea().then((d) => (d ? getZoneOverrides(d.id) : [])),
+    getServiceArea().then((d) => (d ? getZoneOverrides(d.id).catch(() => []) : [])),
   ]);
 
   if (!data) {
