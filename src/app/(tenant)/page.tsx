@@ -70,9 +70,10 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function TenantHomePage() {
   const headersList = await headers();
   const tenantSlug = headersList.get("x-tenant-slug");
+  const customDomain = headersList.get("x-custom-domain");
 
-  // Platform context — render marketing landing page
-  if (!tenantSlug || tenantSlug === "__platform__") {
+  // Platform context — render marketing landing page (but not for custom domains)
+  if (!customDomain && (!tenantSlug || tenantSlug === "__platform__")) {
     return <MarketingLandingPage />;
   }
 
