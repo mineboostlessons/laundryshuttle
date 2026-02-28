@@ -16,6 +16,7 @@ import {
   startRoute,
   optimizeDriverRoute,
   buildTodaysRoute,
+  removeRoute,
 } from "./actions";
 import {
   MapPin,
@@ -31,6 +32,7 @@ import {
   AlertCircle,
   Navigation,
   ArrowDownUp,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -55,6 +57,7 @@ export function DriverDashboardView({
   const [useCustomDepot, setUseCustomDepot] = useState(false);
   const [buildingRoute, setBuildingRoute] = useState(false);
   const [buildError, setBuildError] = useState<string | null>(null);
+  const [removingRouteId, setRemovingRouteId] = useState<string | null>(null);
 
   const { routes, stats, upcomingOrders, depot } = data;
 
@@ -128,6 +131,20 @@ export function DriverDashboardView({
       setBuildError("Failed to build route. Please try again.");
     } finally {
       setBuildingRoute(false);
+    }
+  }
+
+  async function handleRemoveRoute(routeId: string) {
+    setRemovingRouteId(routeId);
+    try {
+      const result = await removeRoute(routeId);
+      if (result.success) {
+        startTransition(() => {
+          router.refresh();
+        });
+      }
+    } finally {
+      setRemovingRouteId(null);
     }
   }
 
@@ -318,7 +335,7 @@ export function DriverDashboardView({
           <CardContent className="space-y-3">
             {/* Route actions */}
             {activeRoute.status === "planned" && (
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
                   onClick={() => handleStartRoute(activeRoute.id)}
@@ -350,11 +367,25 @@ export function DriverDashboardView({
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Link>
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => handleRemoveRoute(activeRoute.id)}
+                  disabled={removingRouteId === activeRoute.id}
+                >
+                  {removingRouteId === activeRoute.id ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 mr-1" />
+                  )}
+                  Remove Route
+                </Button>
               </div>
             )}
 
             {activeRoute.status === "in_progress" && (
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -373,6 +404,20 @@ export function DriverDashboardView({
                     View Map
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => handleRemoveRoute(activeRoute.id)}
+                  disabled={removingRouteId === activeRoute.id}
+                >
+                  {removingRouteId === activeRoute.id ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 mr-1" />
+                  )}
+                  Remove Route
                 </Button>
               </div>
             )}

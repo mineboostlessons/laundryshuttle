@@ -310,6 +310,40 @@ export async function buildTodaysRoute(
 }
 
 // =============================================================================
+// Remove Route
+// =============================================================================
+
+export async function removeRoute(
+  routeId: string
+): Promise<{ success: boolean; error?: string }> {
+  const session = await requireRole(UserRole.DRIVER);
+
+  const route = await prisma.driverRoute.findFirst({
+    where: {
+      id: routeId,
+      driverId: session.user.id,
+    },
+    select: { id: true, status: true },
+  });
+
+  if (!route) {
+    return { success: false, error: "Route not found" };
+  }
+
+  if (route.status === "completed") {
+    return { success: false, error: "Cannot remove a completed route" };
+  }
+
+  // Delete stops first, then the route
+  await prisma.$transaction([
+    prisma.routeStop.deleteMany({ where: { routeId: route.id } }),
+    prisma.driverRoute.delete({ where: { id: route.id } }),
+  ]);
+
+  return { success: true };
+}
+
+// =============================================================================
 // Get Route Detail
 // =============================================================================
 
