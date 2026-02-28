@@ -45,6 +45,7 @@ export function ServiceAreaEditor({
   const [selectedCount, setSelectedCount] = useState(0);
   const [zones, setZones] = useState<ZoneInfo[]>([]);
   const [selectedFeatureId, setSelectedFeatureId] = useState<string | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const ZONE_COLORS = ["#7c3aed", "#059669", "#dc2626", "#d97706", "#2563eb", "#db2777", "#0891b2", "#65a30d"];
 
@@ -111,12 +112,13 @@ export function ServiceAreaEditor({
     });
   }, [updateZoneMarkers]);
 
-  const updateCounts = useCallback(() => {
+  const updateCounts = useCallback((markDirty = false) => {
     if (!draw.current) return;
     syncZones();
     const selected = draw.current.getSelectedIds();
     setSelectedCount(selected.length);
     setSelectedFeatureId(selected.length === 1 ? selected[0] : null);
+    if (markDirty) setHasUnsavedChanges(true);
   }, [syncZones]);
 
   useEffect(() => {
@@ -192,10 +194,10 @@ export function ServiceAreaEditor({
     });
 
     // Track feature/selection changes
-    m.on("draw.create", updateCounts);
-    m.on("draw.delete", updateCounts);
-    m.on("draw.selectionchange", updateCounts);
-    m.on("draw.update", updateCounts);
+    m.on("draw.create", () => updateCounts(true));
+    m.on("draw.delete", () => updateCounts(true));
+    m.on("draw.selectionchange", () => updateCounts(false));
+    m.on("draw.update", () => updateCounts(true));
 
     return () => {
       m.remove();
@@ -221,12 +223,14 @@ export function ServiceAreaEditor({
     setZones((prev) =>
       prev.map((z) => (z.featureId === featureId ? { ...z, zoneName: name } : z))
     );
+    setHasUnsavedChanges(true);
   }, []);
 
   const handleDriverChange = useCallback((featureId: string, driverId: string) => {
     setZones((prev) =>
       prev.map((z) => (z.featureId === featureId ? { ...z, driverId } : z))
     );
+    setHasUnsavedChanges(true);
   }, []);
 
   const handleSelectZone = useCallback((featureId: string) => {
@@ -272,6 +276,7 @@ export function ServiceAreaEditor({
     };
 
     onSave(polygonFeatures);
+    setHasUnsavedChanges(false);
   }, [onSave, zones]);
 
   return (
@@ -305,9 +310,14 @@ export function ServiceAreaEditor({
             {featureCount} polygon{featureCount !== 1 ? "s" : ""}
           </span>
         </div>
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? "Saving..." : "Save Service Area"}
-        </Button>
+        <div className="flex items-center gap-3">
+          {hasUnsavedChanges && (
+            <span className="text-sm font-medium text-amber-600">Unsaved changes</span>
+          )}
+          <Button onClick={handleSave} disabled={saving} variant={hasUnsavedChanges ? "default" : "outline"}>
+            {saving ? "Saving..." : "Save Service Area"}
+          </Button>
+        </div>
       </div>
 
       {/* Zone Configuration Panel */}
