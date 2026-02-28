@@ -459,6 +459,8 @@ model Order {
   binNumber                String?
   washerNumber             Int?
   dryerNumber              Int?
+  washerNumberUsed         Int?
+  dryerNumberUsed          Int?
 
   // Delivery Proof
   deliveryPhotoUrl         String?

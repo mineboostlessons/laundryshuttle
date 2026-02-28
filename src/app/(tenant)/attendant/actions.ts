@@ -254,13 +254,62 @@ export async function updateEquipmentAssignment(
     return { success: false, error: "Order not found or not processing" };
   }
 
+  // Duplicate machine check
+  if (washerNumber !== undefined) {
+    const conflict = await prisma.order.findFirst({
+      where: {
+        tenantId: tenant.id,
+        status: "processing",
+        washerNumber,
+        id: { not: orderId },
+      },
+      select: { orderNumber: true },
+    });
+    if (conflict) {
+      return { success: false, error: `Washer ${washerNumber} is already in use by order ${conflict.orderNumber}` };
+    }
+  }
+
+  if (dryerNumber !== undefined) {
+    const conflict = await prisma.order.findFirst({
+      where: {
+        tenantId: tenant.id,
+        status: "processing",
+        dryerNumber,
+        id: { not: orderId },
+      },
+      select: { orderNumber: true },
+    });
+    if (conflict) {
+      return { success: false, error: `Dryer ${dryerNumber} is already in use by order ${conflict.orderNumber}` };
+    }
+  }
+
+  // When dryer is assigned, free up the washer but record it for reference
+  const updateData: Record<string, unknown> = {};
+  if (washerNumber !== undefined) {
+    updateData.washerNumber = washerNumber;
+    updateData.washerNumberUsed = washerNumber;
+  }
+  if (dryerNumber !== undefined) {
+    updateData.dryerNumber = dryerNumber;
+    updateData.dryerNumberUsed = dryerNumber;
+    // Free up the washer when moving to dryer
+    if (order.washerNumber) {
+      updateData.washerNumber = null;
+      // Preserve washerNumberUsed if not already set
+      if (!order.washerNumberUsed) {
+        updateData.washerNumberUsed = order.washerNumber;
+      }
+    }
+  }
+  if (binNumber !== undefined) {
+    updateData.binNumber = binNumber;
+  }
+
   await prisma.order.update({
     where: { id: orderId },
-    data: {
-      ...(washerNumber !== undefined && { washerNumber }),
-      ...(dryerNumber !== undefined && { dryerNumber }),
-      ...(binNumber !== undefined && { binNumber }),
-    },
+    data: updateData,
   });
 
   return { success: true };
@@ -293,6 +342,8 @@ export async function markOrderReady(orderId: string) {
         status: "ready",
         washerNumber: null,
         dryerNumber: null,
+        ...(order.washerNumber && !order.washerNumberUsed && { washerNumberUsed: order.washerNumber }),
+        ...(order.dryerNumber && !order.dryerNumberUsed && { dryerNumberUsed: order.dryerNumber }),
       },
     }),
     prisma.orderStatusHistory.create({
@@ -650,6 +701,8 @@ export async function markOrderReadyAndCharge(orderId: string) {
         status: "ready",
         washerNumber: null,
         dryerNumber: null,
+        ...(order.washerNumber && !order.washerNumberUsed && { washerNumberUsed: order.washerNumber }),
+        ...(order.dryerNumber && !order.dryerNumberUsed && { dryerNumberUsed: order.dryerNumber }),
       },
     }),
     prisma.orderStatusHistory.create({

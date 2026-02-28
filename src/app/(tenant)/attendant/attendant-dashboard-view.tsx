@@ -111,6 +111,7 @@ export function AttendantDashboardView({ data }: { data: AttendantData }) {
   const [numBags, setNumBags] = useState("");
 
   // Assign dialog form state
+  const [assignError, setAssignError] = useState("");
   const [assignWasher, setAssignWasher] = useState("");
   const [assignDryer, setAssignDryer] = useState("");
 
@@ -140,12 +141,17 @@ export function AttendantDashboardView({ data }: { data: AttendantData }) {
 
   function handleUpdateEquipment() {
     if (!assignDialog) return;
+    setAssignError("");
     startTransition(async () => {
-      await updateEquipmentAssignment({
+      const result = await updateEquipmentAssignment({
         orderId: assignDialog.id,
         washerNumber: assignWasher ? parseInt(assignWasher) : undefined,
         dryerNumber: assignDryer ? parseInt(assignDryer) : undefined,
       });
+      if (!result.success) {
+        setAssignError(result.error || "Failed to update equipment");
+        return;
+      }
       setAssignDialog(null);
       setAssignWasher("");
       setAssignDryer("");
@@ -555,7 +561,7 @@ export function AttendantDashboardView({ data }: { data: AttendantData }) {
       {/* Assign Equipment Dialog */}
       <Dialog
         open={!!assignDialog}
-        onOpenChange={(open) => !open && setAssignDialog(null)}
+        onOpenChange={(open) => { if (!open) { setAssignDialog(null); setAssignError(""); } }}
       >
         <DialogContent>
           <DialogHeader>
@@ -586,6 +592,9 @@ export function AttendantDashboardView({ data }: { data: AttendantData }) {
               />
             </div>
           </div>
+          {assignError && (
+            <p className="text-sm text-destructive">{assignError}</p>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setAssignDialog(null)}>
               Cancel
