@@ -69,6 +69,7 @@ export interface SavedAddress {
 
 export interface ReorderData {
   services: SelectedService[];
+  serviceType: string;
   address: AddressValue | null;
   addressLine2: string;
   pickupNotes: string;
@@ -102,7 +103,7 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reo
     if (reorderData) {
       return {
         services: reorderData.services,
-        serviceType: "",
+        serviceType: reorderData.serviceType,
         address: reorderData.address,
         addressLine2: reorderData.addressLine2,
         pickupNotes: reorderData.pickupNotes,

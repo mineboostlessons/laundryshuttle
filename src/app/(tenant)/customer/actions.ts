@@ -250,6 +250,7 @@ export async function getOrderForReorder(orderId: string) {
 
   return {
     services,
+    serviceType: order.serviceType ?? "laundry_only",
     address,
     addressLine2: order.pickupAddress?.addressLine2 ?? "",
     pickupNotes: order.pickupAddress?.pickupNotes ?? "",
