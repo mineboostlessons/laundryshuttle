@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { AddressAutocomplete, type AddressValue } from "@/components/maps/address-autocomplete";
 import { updateBusinessInfo, type UpdateBusinessInfoInput } from "./actions";
 
 const BUSINESS_TYPES = [
@@ -35,6 +36,32 @@ export function BusinessInfoForm({ initialData }: BusinessInfoFormProps) {
 
   const update = (partial: Partial<UpdateBusinessInfoInput>) => {
     setFormData((prev) => ({ ...prev, ...partial }));
+  };
+
+  const addressValue = useMemo<AddressValue | null>(() => {
+    if (!formData.address) return null;
+    return {
+      addressLine1: formData.address,
+      city: formData.city,
+      state: formData.state,
+      zip: formData.zip,
+      lat: 0,
+      lng: 0,
+      placeName: "",
+    };
+  }, [formData.address, formData.city, formData.state, formData.zip]);
+
+  const handleAddressChange = (addr: AddressValue | null) => {
+    if (addr) {
+      update({
+        address: addr.addressLine1,
+        city: addr.city,
+        state: addr.state,
+        zip: addr.zip,
+      });
+    } else {
+      update({ address: "" });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -152,16 +179,13 @@ export function BusinessInfoForm({ initialData }: BusinessInfoFormProps) {
               </select>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="address">Street Address</Label>
-            <Input
-              id="address"
-              value={formData.address}
-              onChange={(e) => update({ address: e.target.value })}
-              required
-              placeholder="123 Main Street"
-            />
-          </div>
+          <AddressAutocomplete
+            value={addressValue}
+            onChange={handleAddressChange}
+            label="Street Address"
+            placeholder="Start typing your address..."
+            required
+          />
           <div className="space-y-2">
             <Label htmlFor="addressLine2">Address Line 2</Label>
             <Input
