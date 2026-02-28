@@ -8,11 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { StopCard } from "@/components/driver/stop-card";
+import { AddressAutocomplete, type AddressValue } from "@/components/maps/address-autocomplete";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   updateStopStatus,
   completeDelivery,
   startRoute,
   optimizeDriverRoute,
+  buildTodaysRoute,
 } from "./actions";
 import {
   MapPin,
@@ -26,6 +29,8 @@ import {
   ChevronRight,
   Package,
   AlertCircle,
+  Navigation,
+  ArrowDownUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -46,8 +51,12 @@ export function DriverDashboardView({
   const [isPending, startTransition] = useTransition();
   const [optimizingRouteId, setOptimizingRouteId] = useState<string | null>(null);
   const [startingRouteId, setStartingRouteId] = useState<string | null>(null);
+  const [customDepot, setCustomDepot] = useState<AddressValue | null>(null);
+  const [useCustomDepot, setUseCustomDepot] = useState(false);
+  const [buildingRoute, setBuildingRoute] = useState(false);
+  const [buildError, setBuildError] = useState<string | null>(null);
 
-  const { routes, stats, upcomingOrders } = data;
+  const { routes, stats, upcomingOrders, depot } = data;
 
   // Find the active/first route for today
   const activeRoute =
@@ -100,6 +109,32 @@ export function DriverDashboardView({
     }
   }
 
+  async function handleBuildRoute() {
+    setBuildingRoute(true);
+    setBuildError(null);
+    try {
+      const input = useCustomDepot && customDepot
+        ? { depotLat: customDepot.lat, depotLng: customDepot.lng }
+        : {};
+      const result = await buildTodaysRoute(input);
+      if (result.success) {
+        startTransition(() => {
+          router.refresh();
+        });
+      } else {
+        setBuildError(result.error);
+      }
+    } catch {
+      setBuildError("Failed to build route. Please try again.");
+    } finally {
+      setBuildingRoute(false);
+    }
+  }
+
+  // Compute order breakdown for route builder
+  const pickupCount = upcomingOrders.filter((o) => o.status === "confirmed").length;
+  const deliveryCount = upcomingOrders.length - pickupCount;
+
   return (
     <div className="space-y-6">
       {/* Greeting */}
@@ -144,8 +179,90 @@ export function DriverDashboardView({
         />
       </div>
 
-      {/* No routes message */}
-      {routes.length === 0 && (
+      {/* No routes — show route builder or empty state */}
+      {routes.length === 0 && upcomingOrders.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Navigation className="h-5 w-5" />
+              Build Today&apos;s Route
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Depot info */}
+            {depot && (
+              <div className="text-sm">
+                <p className="text-muted-foreground mb-1">Starting from:</p>
+                <p className="font-medium">{depot.name}</p>
+                <p className="text-muted-foreground text-xs">{depot.address}</p>
+              </div>
+            )}
+
+            {/* Custom depot toggle */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="custom-depot"
+                  checked={useCustomDepot}
+                  onCheckedChange={(checked) => {
+                    setUseCustomDepot(checked === true);
+                    if (!checked) setCustomDepot(null);
+                  }}
+                />
+                <label htmlFor="custom-depot" className="text-sm cursor-pointer">
+                  Start from a different location
+                </label>
+              </div>
+              {useCustomDepot && (
+                <AddressAutocomplete
+                  value={customDepot}
+                  onChange={setCustomDepot}
+                  label="Custom starting location"
+                  placeholder="Enter your starting address..."
+                />
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Order breakdown */}
+            <div className="flex items-center gap-3 text-sm">
+              <span className="font-medium">
+                {upcomingOrders.length} order{upcomingOrders.length !== 1 ? "s" : ""}
+              </span>
+              {pickupCount > 0 && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                  {pickupCount} pickup{pickupCount !== 1 ? "s" : ""}
+                </Badge>
+              )}
+              {deliveryCount > 0 && (
+                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                  {deliveryCount} deliver{deliveryCount !== 1 ? "ies" : "y"}
+                </Badge>
+              )}
+            </div>
+
+            {buildError && (
+              <p className="text-sm text-destructive">{buildError}</p>
+            )}
+
+            <Button
+              onClick={handleBuildRoute}
+              disabled={buildingRoute || (useCustomDepot && !customDepot)}
+              className="w-full"
+            >
+              {buildingRoute ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <ArrowDownUp className="h-4 w-4 mr-2" />
+              )}
+              Build Today&apos;s Route
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {routes.length === 0 && upcomingOrders.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Route className="h-12 w-12 text-muted-foreground mb-4" />
@@ -330,51 +447,68 @@ export function DriverDashboardView({
         </div>
       )}
 
-      {/* Unassigned orders awaiting route */}
+      {/* Unrouted orders list */}
       {upcomingOrders.length > 0 && (
         <div>
           <h3 className="font-semibold mb-3 flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-amber-500" />
-            Orders Awaiting Route
+            {routes.length > 0 ? "Unrouted Orders" : "Orders Awaiting Route"}
           </h3>
           <div className="space-y-2">
-            {upcomingOrders.map((order) => (
-              <Card key={order.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium text-sm">
-                          {order.orderNumber}
-                        </span>
-                        <Badge variant="secondary">
-                          {order.status === "ready"
-                            ? "Ready"
-                            : "Out for Delivery"}
-                        </Badge>
+            {upcomingOrders.map((order) => {
+              const isPickup = order.status === "confirmed";
+              return (
+                <Card key={order.id}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Package className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium text-sm">
+                            {order.orderNumber}
+                          </span>
+                          <Badge
+                            variant="secondary"
+                            className={cn(
+                              order.status === "confirmed"
+                                ? "bg-blue-100 text-blue-700"
+                                : order.status === "ready"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-amber-100 text-amber-700"
+                            )}
+                          >
+                            {order.status === "confirmed"
+                              ? "Awaiting Pickup"
+                              : order.status === "ready"
+                              ? "Ready for Delivery"
+                              : "Out for Delivery"}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground font-medium">
+                            {isPickup ? "Pickup" : "Delivery"}
+                          </span>
+                        </div>
+                        {order.customer && (
+                          <p className="text-xs text-muted-foreground">
+                            {order.customer.firstName} {order.customer.lastName}
+                          </p>
+                        )}
+                        {order.pickupAddress && (
+                          <p className="text-xs text-muted-foreground">
+                            {order.pickupAddress.addressLine1},{" "}
+                            {order.pickupAddress.city}
+                          </p>
+                        )}
                       </div>
-                      {order.customer && (
-                        <p className="text-xs text-muted-foreground">
-                          {order.customer.firstName} {order.customer.lastName}
-                        </p>
-                      )}
-                      {order.pickupAddress && (
-                        <p className="text-xs text-muted-foreground">
-                          {order.pickupAddress.addressLine1},{" "}
-                          {order.pickupAddress.city}
-                        </p>
-                      )}
-                    </div>
-                    {order.deliveryTimeSlot && (
                       <span className="text-xs text-muted-foreground">
-                        {order.deliveryTimeSlot}
+                        {isPickup
+                          ? order.pickupTimeSlot
+                          : order.deliveryTimeSlot}
                       </span>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       )}

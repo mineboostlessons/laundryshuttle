@@ -21,7 +21,7 @@ export async function getDriverDashboardData() {
   const todayEnd = new Date(todayStart);
   todayEnd.setDate(todayEnd.getDate() + 1);
 
-  const [todaysRoutes, todayStats, upcomingOrders] = await Promise.all([
+  const [todaysRoutes, todayStats, upcomingOrders, laundromat] = await Promise.all([
     // Today's routes for this driver
     prisma.driverRoute.findMany({
       where: {
@@ -72,12 +72,18 @@ export async function getDriverDashboardData() {
       _count: { id: true },
     }),
 
-    // Orders assigned to this driver that need pickup/delivery today
+    // Orders assigned to this driver for today, excluding already-routed
     prisma.order.findMany({
       where: {
         tenantId: tenant.id,
         driverId: session.user.id,
         status: { in: ["confirmed", "ready", "out_for_delivery"] },
+        OR: [
+          { pickupDate: { gte: todayStart, lt: todayEnd } },
+          { deliveryDate: { gte: todayStart, lt: todayEnd } },
+          { pickupDate: null, deliveryDate: null },
+        ],
+        routeStops: { none: {} },
       },
       orderBy: { deliveryDate: "asc" },
       select: {
@@ -103,6 +109,12 @@ export async function getDriverDashboardData() {
         },
       },
     }),
+
+    // Laundromat depot info
+    prisma.laundromat.findFirst({
+      where: { tenantId: tenant.id },
+      select: { id: true, name: true, address: true, city: true, state: true, zip: true, lat: true, lng: true },
+    }),
   ]);
 
   const statsMap: Record<string, number> = {};
@@ -125,7 +137,176 @@ export async function getDriverDashboardData() {
       skipped: statsMap["skipped"] ?? 0,
     },
     upcomingOrders,
+    depot: laundromat
+      ? {
+          laundromatId: laundromat.id,
+          name: laundromat.name,
+          address: `${laundromat.address}, ${laundromat.city}, ${laundromat.state} ${laundromat.zip}`,
+          lat: laundromat.lat,
+          lng: laundromat.lng,
+        }
+      : null,
   };
+}
+
+// =============================================================================
+// Build Today's Route
+// =============================================================================
+
+const buildRouteSchema = z.object({
+  depotLat: z.number().optional(),
+  depotLng: z.number().optional(),
+});
+
+export async function buildTodaysRoute(
+  input?: z.infer<typeof buildRouteSchema>
+) {
+  const session = await requireRole(UserRole.DRIVER);
+  const tenant = await requireTenant();
+
+  const parsed = buildRouteSchema.safeParse(input ?? {});
+  if (!parsed.success) {
+    return { success: false as const, error: parsed.error.errors[0].message };
+  }
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayEnd = new Date(todayStart);
+  todayEnd.setDate(todayEnd.getDate() + 1);
+
+  // Get laundromat for depot + laundromatId
+  const laundromat = await prisma.laundromat.findFirst({
+    where: { tenantId: tenant.id },
+    select: { id: true, lat: true, lng: true },
+  });
+
+  if (!laundromat) {
+    return { success: false as const, error: "No laundromat found for this tenant" };
+  }
+
+  // Prevent duplicate routes for today
+  const existingRoute = await prisma.driverRoute.findFirst({
+    where: {
+      driverId: session.user.id,
+      date: { gte: todayStart, lt: todayEnd },
+    },
+  });
+
+  if (existingRoute) {
+    return { success: false as const, error: "You already have a route for today" };
+  }
+
+  // Get today's unrouted orders
+  const orders = await prisma.order.findMany({
+    where: {
+      tenantId: tenant.id,
+      driverId: session.user.id,
+      status: { in: ["confirmed", "ready", "out_for_delivery"] },
+      OR: [
+        { pickupDate: { gte: todayStart, lt: todayEnd } },
+        { deliveryDate: { gte: todayStart, lt: todayEnd } },
+        { pickupDate: null, deliveryDate: null },
+      ],
+      routeStops: { none: {} },
+    },
+    select: {
+      id: true,
+      status: true,
+      pickupAddress: {
+        select: { addressLine1: true, city: true, state: true, zip: true, lat: true, lng: true },
+      },
+    },
+  });
+
+  if (orders.length === 0) {
+    return { success: false as const, error: "No orders available for today's route" };
+  }
+
+  // Determine stop type per order and route type
+  const stops = orders
+    .filter((o) => o.pickupAddress)
+    .map((o, idx) => {
+      const stopType = o.status === "confirmed" ? "pickup" : "delivery";
+      return {
+        orderId: o.id,
+        stopType,
+        sequence: idx + 1,
+        address: `${o.pickupAddress!.addressLine1}, ${o.pickupAddress!.city}, ${o.pickupAddress!.state} ${o.pickupAddress!.zip}`,
+        lat: o.pickupAddress!.lat,
+        lng: o.pickupAddress!.lng,
+      };
+    });
+
+  if (stops.length === 0) {
+    return { success: false as const, error: "No orders have valid addresses" };
+  }
+
+  const hasPickups = stops.some((s) => s.stopType === "pickup");
+  const hasDeliveries = stops.some((s) => s.stopType === "delivery");
+  const routeType = hasPickups && hasDeliveries ? "mixed" : hasPickups ? "pickup" : "delivery";
+
+  // Use custom depot or laundromat
+  const depotLat = parsed.data.depotLat ?? laundromat.lat;
+  const depotLng = parsed.data.depotLng ?? laundromat.lng;
+
+  // Create route + stops in a transaction
+  const route = await prisma.$transaction(async (tx) => {
+    const newRoute = await tx.driverRoute.create({
+      data: {
+        laundromatId: laundromat.id,
+        driverId: session.user.id,
+        date: todayStart,
+        routeType,
+        status: "planned",
+        stops: {
+          create: stops.map((s) => ({
+            orderId: s.orderId,
+            stopType: s.stopType,
+            sequence: s.sequence,
+            address: s.address,
+            lat: s.lat,
+            lng: s.lng,
+          })),
+        },
+      },
+      include: { stops: true },
+    });
+    return newRoute;
+  });
+
+  // Auto-optimize if more than 1 stop (max 12 for Mapbox)
+  if (route.stops.length > 1 && route.stops.length <= 12) {
+    try {
+      const depot = { lat: depotLat, lng: depotLng };
+      const waypoints = route.stops.map((s) => ({
+        id: s.id,
+        lat: s.lat,
+        lng: s.lng,
+      }));
+
+      const result = await optimizeRoute(depot, waypoints);
+      if (result) {
+        const updates = result.orderedStopIds.map((stopId, index) =>
+          prisma.routeStop.update({
+            where: { id: stopId },
+            data: { sequence: index + 1 },
+          })
+        );
+        await prisma.$transaction([
+          ...updates,
+          prisma.driverRoute.update({
+            where: { id: route.id },
+            data: { optimizedOrder: result.orderedStopIds },
+          }),
+        ]);
+      }
+    } catch (err) {
+      // Route optimization is best-effort — don't fail the whole build
+      console.error("Route optimization failed:", err);
+    }
+  }
+
+  return { success: true as const, routeId: route.id, stopCount: route.stops.length };
 }
 
 // =============================================================================
