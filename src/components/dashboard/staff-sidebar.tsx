@@ -278,6 +278,12 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["manager"],
   },
   {
+    href: "/manager/service-area",
+    label: "Service Area",
+    icon: Map,
+    roles: ["manager"],
+  },
+  {
     href: "/manager/interest",
     label: "Service Interests",
     icon: MapPin,
