@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Loader2, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, CheckCircle2, CreditCard, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import type { AddressValue } from "@/components/maps/address-autocomplete";
 import type { TimeSlotData, SameDayAvailability } from "./actions";
@@ -83,9 +83,11 @@ interface OrderFlowProps {
   tenantSlug: string;
   savedAddresses: SavedAddress[];
   reorderData?: ReorderData | null;
+  hasPaymentMethod: boolean;
+  isLoggedIn: boolean;
 }
 
-export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reorderData }: OrderFlowProps) {
+export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reorderData, hasPaymentMethod, isLoggedIn }: OrderFlowProps) {
   const searchParams = useSearchParams();
   const [step, setStep] = useState(reorderData ? 1 : 0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -186,8 +188,10 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reo
           formData.serviceType !== "" &&
           formData.services.length > 0
         );
-      case 2: // Schedule
+      case 2: // Schedule — requires payment method on file
         return (
+          isLoggedIn &&
+          hasPaymentMethod &&
           !!formData.pickupDate &&
           !!formData.pickupTimeSlot &&
           !!formData.deliveryDate &&
@@ -410,15 +414,62 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reo
         )}
 
         {step === 2 && (
-          <ScheduleStep
-            timeSlots={timeSlots}
-            pickupDate={formData.pickupDate}
-            pickupTimeSlot={formData.pickupTimeSlot}
-            deliveryDate={formData.deliveryDate}
-            deliveryTimeSlot={formData.deliveryTimeSlot}
-            sameDayAvailability={sameDayAvailability}
-            onChange={(partial) => updateForm(partial)}
-          />
+          <>
+            <ScheduleStep
+              timeSlots={timeSlots}
+              pickupDate={formData.pickupDate}
+              pickupTimeSlot={formData.pickupTimeSlot}
+              deliveryDate={formData.deliveryDate}
+              deliveryTimeSlot={formData.deliveryTimeSlot}
+              sameDayAvailability={sameDayAvailability}
+              onChange={(partial) => updateForm(partial)}
+            />
+
+            {/* Payment method notice */}
+            {isLoggedIn && !hasPaymentMethod && (
+              <div className="mt-6 flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                <div className="text-amber-800">
+                  <p className="font-medium">Payment method required</p>
+                  <p className="mt-1">
+                    Please add a credit card before scheduling a pickup. Your card will not be charged now &mdash;
+                    it will only be charged after your laundry is processed and ready for delivery.
+                  </p>
+                  <Link
+                    href="/customer/payment-methods"
+                    className="mt-2 inline-flex items-center gap-1.5 font-medium text-amber-700 underline underline-offset-2 hover:text-amber-900"
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    Add a payment method
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {!isLoggedIn && (
+              <div className="mt-6 flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                <div className="text-amber-800">
+                  <p className="font-medium">Account required</p>
+                  <p className="mt-1">
+                    Please <Link href="/login" className="font-medium underline underline-offset-2 hover:text-amber-900">sign in</Link> or{" "}
+                    <Link href="/register" className="font-medium underline underline-offset-2 hover:text-amber-900">create an account</Link>{" "}
+                    and add a payment method before scheduling a pickup.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Billing info */}
+            {isLoggedIn && hasPaymentMethod && (
+              <div className="mt-6 flex items-start gap-3 rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm">
+                <CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+                <p className="text-blue-800">
+                  Your card on file will <strong>not</strong> be charged now. Payment is only collected after your laundry is processed and ready for delivery.
+                </p>
+              </div>
+            )}
+          </>
         )}
 
         {/* Error message */}

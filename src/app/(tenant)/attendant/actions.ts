@@ -689,8 +689,14 @@ export async function markOrderReadyAndCharge(orderId: string) {
           error: "Payment failed. Please collect payment manually before marking ready.",
         };
       }
+    } else if (!defaultPm) {
+      // No payment method on file — block marking ready
+      return {
+        success: false as const,
+        error: "No payment method on file. Please collect payment manually before marking ready.",
+      };
     }
-    // If no stored card or no Stripe connect, skip payment silently (walk-in / cash)
+    // If no Stripe connect, skip payment silently (walk-in / cash)
   }
 
   // Update status to ready

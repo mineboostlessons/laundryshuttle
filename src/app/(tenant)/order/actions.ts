@@ -382,6 +382,22 @@ export async function createOrder(
 
   const data = parsed.data;
 
+  // Require logged-in user with a payment method on file
+  if (!session?.user?.id) {
+    return { success: false, error: "Please sign in to place an order" };
+  }
+
+  const paymentMethodCount = await prisma.customerPaymentMethod.count({
+    where: { userId: session.user.id },
+  });
+
+  if (paymentMethodCount === 0) {
+    return {
+      success: false,
+      error: "Please add a payment method before scheduling a pickup",
+    };
+  }
+
   // Find active laundromat
   const laundromat = await prisma.laundromat.findFirst({
     where: { tenantId: tenant.id, isActive: true },

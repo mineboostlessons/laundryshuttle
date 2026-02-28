@@ -51,7 +51,7 @@ export default async function OrderPage({
     getAvailableTimeSlots(),
   ]);
 
-  // Fetch saved addresses for logged-in customers
+  // Fetch saved addresses and payment methods for logged-in customers
   let savedAddresses: {
     id: string;
     label: string | null;
@@ -65,25 +65,33 @@ export default async function OrderPage({
     isDefault: boolean;
     pickupNotes: string | null;
   }[] = [];
+  let hasPaymentMethod = false;
 
   if (session?.user?.id) {
-    const allAddresses = await prisma.customerAddress.findMany({
-      where: { userId: session.user.id },
-      orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
-      select: {
-        id: true,
-        label: true,
-        addressLine1: true,
-        addressLine2: true,
-        city: true,
-        state: true,
-        zip: true,
-        lat: true,
-        lng: true,
-        isDefault: true,
-        pickupNotes: true,
-      },
-    });
+    const [allAddresses, pmCount] = await Promise.all([
+      prisma.customerAddress.findMany({
+        where: { userId: session.user.id },
+        orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+        select: {
+          id: true,
+          label: true,
+          addressLine1: true,
+          addressLine2: true,
+          city: true,
+          state: true,
+          zip: true,
+          lat: true,
+          lng: true,
+          isDefault: true,
+          pickupNotes: true,
+        },
+      }),
+      prisma.customerPaymentMethod.count({
+        where: { userId: session.user.id },
+      }),
+    ]);
+
+    hasPaymentMethod = pmCount > 0;
 
     // Deduplicate by addressLine1
     const seen = new Set<string>();
@@ -113,6 +121,8 @@ export default async function OrderPage({
               tenantSlug={tenant.slug}
               savedAddresses={savedAddresses}
               reorderData={reorderData}
+              hasPaymentMethod={hasPaymentMethod}
+              isLoggedIn={!!session?.user?.id}
             />
           </div>
         </div>
