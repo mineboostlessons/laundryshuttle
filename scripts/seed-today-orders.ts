@@ -30,6 +30,15 @@ async function main() {
     process.exit(1);
   }
 
+  // Find demo driver
+  const driver = await prisma.user.findFirst({
+    where: { tenantId: tenant.id, role: "driver" },
+  });
+  if (!driver) {
+    console.error("Demo driver not found");
+    process.exit(1);
+  }
+
   // Find customer address
   const address = await prisma.customerAddress.findFirst({
     where: { userId: customer.id },
@@ -51,7 +60,7 @@ async function main() {
     : 0;
 
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  today.setUTCHours(0, 0, 0, 0);
 
   const timeSlots = [
     "8am-10am", "9am-11am", "10am-12pm", "11am-1pm",
@@ -80,6 +89,7 @@ async function main() {
         tenantId: tenant.id,
         laundromatId: laundromat.id,
         customerId: customer.id,
+        driverId: driver.id,
         orderType: "delivery",
         status: "confirmed",
         subtotal,
