@@ -86,6 +86,64 @@ export async function updateServiceArea(data: {
     },
   });
 
+  // Retroactively assign drivers to unassigned confirmed orders based on new zone mappings
+  const unassignedOrders = await prisma.order.findMany({
+    where: {
+      tenantId: tenant.id,
+      laundromatId: laundromat.id,
+      driverId: null,
+      status: { in: ["confirmed", "ready", "out_for_delivery"] },
+    },
+    select: {
+      id: true,
+      pickupDate: true,
+      pickupAddress: { select: { lat: true, lng: true } },
+    },
+  });
+
+  if (unassignedOrders.length > 0) {
+    const polygons = parsed.data.polygons as GeoJSON.FeatureCollection;
+    const now = new Date();
+
+    for (const order of unassignedOrders) {
+      if (!order.pickupAddress?.lat || !order.pickupAddress?.lng) continue;
+
+      const zone = findZoneForPoint(order.pickupAddress.lat, order.pickupAddress.lng, polygons);
+      if (!zone?.driverId) continue;
+
+      // Check for temporal override
+      let assignDriverId = zone.driverId;
+      if (zone.featureId && order.pickupDate) {
+        const override = await prisma.zoneDriverOverride.findFirst({
+          where: {
+            laundromatId: laundromat.id,
+            zoneFeatureId: zone.featureId,
+            startDate: { lte: order.pickupDate },
+            endDate: { gte: order.pickupDate },
+          },
+          select: { driverId: true },
+          orderBy: { createdAt: "desc" },
+        });
+        if (override) {
+          assignDriverId = override.driverId;
+        }
+      }
+
+      // Verify driver is active
+      const driver = await prisma.user.findFirst({
+        where: { id: assignDriverId, tenantId: tenant.id, role: "driver", isActive: true },
+        select: { id: true },
+      });
+
+      if (driver) {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { driverId: driver.id },
+        });
+      }
+    }
+  }
+
   revalidatePath("/settings/service-area");
   return { success: true };
 }
