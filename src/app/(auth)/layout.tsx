@@ -9,9 +9,10 @@ export default async function AuthLayout({
 }) {
   const headersList = await headers();
   const tenantSlug = headersList.get("x-tenant-slug");
+  const customDomain = headersList.get("x-custom-domain");
 
   let useTenantTheme = false;
-  if (tenantSlug && tenantSlug !== "__platform__") {
+  if (customDomain || (tenantSlug && tenantSlug !== "__platform__")) {
     const tenant = await getCurrentTenant();
     if (tenant) useTenantTheme = true;
   }
