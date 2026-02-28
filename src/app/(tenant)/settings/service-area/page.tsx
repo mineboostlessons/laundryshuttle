@@ -2,7 +2,7 @@ import { requireRole } from "@/lib/auth-helpers";
 import { UserRole } from "@/types";
 import { getServiceArea, getZoneOverrides } from "./actions";
 import { getAvailableDrivers } from "@/app/(tenant)/manager/actions";
-import { ServiceAreaView } from "./service-area-view";
+import { ServiceAreaView } from "./service-area-loader";
 
 export default async function ServiceAreaPage() {
   await requireRole(UserRole.OWNER, UserRole.MANAGER);

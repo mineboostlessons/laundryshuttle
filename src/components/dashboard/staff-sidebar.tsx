@@ -224,7 +224,7 @@ const NAV_ITEMS: NavItem[] = [
     roles: ["manager"],
   },
   {
-    href: "/dashboard/services",
+    href: "/manager/services",
     label: "Services",
     icon: WashingMachine,
     roles: ["manager"],
