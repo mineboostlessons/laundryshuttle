@@ -7,6 +7,7 @@ import { requireTenant } from "@/lib/tenant";
 import { UserRole } from "@/types";
 import { prisma } from "@/lib/prisma";
 import { findZoneForPoint } from "@/lib/mapbox";
+import { notifyDriverZoneChange } from "@/lib/notifications";
 import type { Prisma } from "@prisma/client";
 
 export async function getServiceArea() {
@@ -65,19 +66,21 @@ export async function updateServiceArea(data: {
     return { success: false, error: "Invalid polygon data" };
   }
 
-  // Verify the laundromat belongs to this tenant
+  // Verify the laundromat belongs to this tenant and load old polygons
   const laundromat = await prisma.laundromat.findFirst({
     where: {
       id: parsed.data.laundromatId,
       tenantId: tenant.id,
       isActive: true,
     },
-    select: { id: true },
+    select: { id: true, serviceAreaPolygons: true },
   });
 
   if (!laundromat) {
     return { success: false, error: "Laundromat not found" };
   }
+
+  const oldPolygons = laundromat.serviceAreaPolygons as GeoJSON.FeatureCollection | null;
 
   await prisma.laundromat.update({
     where: { id: laundromat.id },
@@ -176,6 +179,56 @@ export async function updateServiceArea(data: {
           }
         }
       }
+    }
+  }
+
+  // Notify drivers about zone assignment changes (fire-and-forget)
+  const newPolygons = parsed.data.polygons as GeoJSON.FeatureCollection;
+  const oldDriverMap = new Map<string, string | null>();
+  const newDriverMap = new Map<string, string | null>();
+
+  if (oldPolygons?.features) {
+    for (const f of oldPolygons.features) {
+      const fId = String(f.id ?? "");
+      if (fId) {
+        oldDriverMap.set(fId, (f.properties?.driverId as string) ?? null);
+      }
+    }
+  }
+  for (const f of newPolygons.features) {
+    const fId = String(f.id ?? "");
+    if (fId) {
+      newDriverMap.set(fId, (f.properties?.driverId as string) ?? null);
+    }
+  }
+
+  // Compare old vs new zone driver assignments
+  const allZoneIds = new Set([...oldDriverMap.keys(), ...newDriverMap.keys()]);
+  for (const zoneId of allZoneIds) {
+    const oldDriver = oldDriverMap.get(zoneId) ?? null;
+    const newDriver = newDriverMap.get(zoneId) ?? null;
+    if (oldDriver === newDriver) continue;
+
+    const zoneName =
+      newPolygons.features.find((f) => String(f.id ?? "") === zoneId)?.properties?.name ??
+      oldPolygons?.features.find((f) => String(f.id ?? "") === zoneId)?.properties?.name ??
+      `Zone ${zoneId}`;
+
+    if (oldDriver) {
+      notifyDriverZoneChange({
+        tenantId: tenant.id,
+        driverId: oldDriver,
+        zoneName: zoneName as string,
+        assigned: false,
+      }).catch((err) => console.error("Failed to notify driver zone unassign:", err));
+    }
+    if (newDriver) {
+      notifyDriverZoneChange({
+        tenantId: tenant.id,
+        driverId: newDriver,
+        zoneName: zoneName as string,
+        assigned: true,
+      }).catch((err) => console.error("Failed to notify driver zone assign:", err));
     }
   }
 

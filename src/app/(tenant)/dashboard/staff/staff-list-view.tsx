@@ -43,6 +43,7 @@ interface StaffMember {
   isActive: boolean;
   lastLoginAt: Date | null;
   createdAt: Date;
+  shiftEndTime: string | null;
 }
 
 const ROLE_VARIANT: Record<string, "default" | "secondary" | "outline"> = {
@@ -200,6 +201,7 @@ function EditStaffDialog({ member }: { member: StaffMember }) {
       lastName: form.get("lastName") as string,
       phone: (form.get("phone") as string) || undefined,
       role: form.get("role") as string,
+      shiftEndTime: (form.get("shiftEndTime") as string) || undefined,
     };
 
     startTransition(async () => {
@@ -275,6 +277,21 @@ function EditStaffDialog({ member }: { member: StaffMember }) {
               ))}
             </select>
           </div>
+          {member.role === "driver" && (
+            <div className="space-y-2">
+              <Label htmlFor={`edit-shiftEndTime-${member.id}`}>Shift End Time</Label>
+              <Input
+                id={`edit-shiftEndTime-${member.id}`}
+                name="shiftEndTime"
+                type="time"
+                defaultValue={member.shiftEndTime ?? ""}
+                className="w-40"
+              />
+              <p className="text-xs text-muted-foreground">
+                Used to calculate same-day pickup cutoff for this driver&apos;s zones
+              </p>
+            </div>
+          )}
           {error && (
             <p className="text-sm text-destructive">{error}</p>
           )}

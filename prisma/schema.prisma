@@ -143,6 +143,8 @@ model Laundromat {
   deliveryTimeSlots       Json?     // ["9am-12pm", "12pm-3pm", "3pm-6pm"]
   sameDayPickupEnabled    Boolean   @default(false)
   sameDayPickupCutoff     String?   // "12:00"
+  sameDayPickupFee        Float     @default(0)    // surcharge for same-day pickup
+  sameDayCutoffHours      Int       @default(3)    // hours before driver shift end as cutoff
   minHoursBeforeDelivery  Int       @default(24)
   blockedDates            Json?     // [{ date, reason }]
 
@@ -206,6 +208,7 @@ model User {
 
   // Driver-specific
   vehicleInfo            Json?     // { make, model, year, color, licensePlate }
+  shiftEndTime           String?   // e.g. "18:00", driver's daily shift end
 
   // Status
   isActive               Boolean   @default(true)
@@ -466,6 +469,7 @@ model Order {
   taxRate                  Float     @default(0)
   taxAmount                Float     @default(0)
   deliveryFee              Float     @default(0)
+  sameDayFee               Float     @default(0)  // surcharge for same-day pickup
   discountAmount           Float     @default(0)
   tipAmount                Float     @default(0)
   totalAmount              Float     @default(0)

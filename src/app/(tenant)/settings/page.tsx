@@ -168,6 +168,22 @@ export default async function SettingsPage() {
           </Card>
         </Link>
 
+        <Link href="/settings/scheduling">
+          <Card className="transition-shadow hover:shadow-md">
+            <CardHeader>
+              <CardTitle className="text-lg">Scheduling</CardTitle>
+              <CardDescription>
+                Same-day pickup settings and cutoff times
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" size="sm">
+                Manage Scheduling
+              </Button>
+            </CardContent>
+          </Card>
+        </Link>
+
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Staff Permissions</CardTitle>

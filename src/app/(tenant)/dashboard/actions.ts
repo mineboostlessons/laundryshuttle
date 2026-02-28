@@ -233,6 +233,7 @@ export async function getStaffList() {
       isActive: true,
       lastLoginAt: true,
       createdAt: true,
+      shiftEndTime: true,
     },
     orderBy: [{ role: "asc" }, { firstName: "asc" }],
   });
@@ -359,6 +360,7 @@ const updateStaffSchema = z.object({
   lastName: z.string().min(1, "Last name is required").max(100),
   phone: z.string().max(20).optional().or(z.literal("")),
   role: z.enum(["manager", "attendant", "driver"]),
+  shiftEndTime: z.string().max(5).optional().or(z.literal("")),
 });
 
 export async function updateStaffMember(data: {
@@ -367,6 +369,7 @@ export async function updateStaffMember(data: {
   lastName: string;
   phone?: string;
   role: string;
+  shiftEndTime?: string;
 }): Promise<{ success: true } | { success: false; error: string }> {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
@@ -376,7 +379,7 @@ export async function updateStaffMember(data: {
     return { success: false, error: parsed.error.errors[0].message };
   }
 
-  const { staffId, firstName, lastName, phone, role } = parsed.data;
+  const { staffId, firstName, lastName, phone, role, shiftEndTime } = parsed.data;
 
   // Ensure staff belongs to this tenant
   const existing = await prisma.user.findFirst({
@@ -388,7 +391,13 @@ export async function updateStaffMember(data: {
 
   await prisma.user.update({
     where: { id: staffId },
-    data: { firstName, lastName, phone: phone || null, role },
+    data: {
+      firstName,
+      lastName,
+      phone: phone || null,
+      role,
+      shiftEndTime: role === "driver" && shiftEndTime ? shiftEndTime : null,
+    },
   });
 
   return { success: true };

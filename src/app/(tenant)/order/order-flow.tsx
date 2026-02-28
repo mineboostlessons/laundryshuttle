@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Loader2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import type { AddressValue } from "@/components/maps/address-autocomplete";
-import type { TimeSlotData } from "./actions";
-import { createOrder, validateServiceArea, getAvailableDates } from "./actions";
+import type { TimeSlotData, SameDayAvailability } from "./actions";
+import { createOrder, validateServiceArea, getAvailableDates, getSameDayAvailability } from "./actions";
 import { ServiceSelection } from "./components/service-selection";
 import { AddressStep } from "./components/address-step";
 import { ScheduleStep } from "./components/schedule-step";
@@ -91,6 +91,7 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reo
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [areaError, setAreaError] = useState<string | null>(null);
   const [orderConfirmed, setOrderConfirmed] = useState(false);
+  const [sameDayAvailability, setSameDayAvailability] = useState<SameDayAvailability | null>(null);
   const [submitResult, setSubmitResult] = useState<{
     success: boolean;
     orderNumber?: string;
@@ -198,7 +199,7 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reo
   };
 
   const handleNext = async () => {
-    // After address step (step 0), validate service area
+    // After address step (step 0), validate service area + fetch same-day availability
     if (step === 0 && formData.address) {
       setAreaError(null);
       const result = await validateServiceArea(
@@ -210,6 +211,14 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reo
           "Sorry, your address is outside our service area. Please try a different address."
         );
         return;
+      }
+      // Fetch same-day availability if enabled
+      if (timeSlots.sameDayPickupEnabled) {
+        const sameDayResult = await getSameDayAvailability(
+          formData.address.lat,
+          formData.address.lng
+        );
+        setSameDayAvailability(sameDayResult);
       }
     }
 
@@ -407,6 +416,7 @@ export function OrderFlow({ services, timeSlots, tenantSlug, savedAddresses, reo
             pickupTimeSlot={formData.pickupTimeSlot}
             deliveryDate={formData.deliveryDate}
             deliveryTimeSlot={formData.deliveryTimeSlot}
+            sameDayAvailability={sameDayAvailability}
             onChange={(partial) => updateForm(partial)}
           />
         )}

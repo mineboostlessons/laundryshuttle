@@ -2,8 +2,8 @@
 
 import { useMemo } from "react";
 import { format, parseISO, addDays } from "date-fns";
-import { CalendarDays, Clock } from "lucide-react";
-import type { TimeSlotData } from "../actions";
+import { CalendarDays, Clock, Zap } from "lucide-react";
+import type { TimeSlotData, SameDayAvailability } from "../actions";
 
 const DAY_NAMES = [
   "sunday",
@@ -52,6 +52,7 @@ interface ScheduleStepProps {
   pickupTimeSlot: string;
   deliveryDate: string;
   deliveryTimeSlot: string;
+  sameDayAvailability?: SameDayAvailability | null;
   onChange: (partial: {
     pickupDate?: string;
     pickupTimeSlot?: string;
@@ -66,17 +67,47 @@ export function ScheduleStep({
   pickupTimeSlot,
   deliveryDate,
   deliveryTimeSlot,
+  sameDayAvailability,
   onChange,
 }: ScheduleStepProps) {
-  const pickupDates = useMemo(
-    () =>
-      getAvailableDatesClient(
-        timeSlots.pickupDays,
-        timeSlots.blockedDates,
-        new Date()
-      ),
-    [timeSlots.pickupDays, timeSlots.blockedDates]
-  );
+  const todayStr = useMemo(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  }, []);
+
+  const isTodaySelected = pickupDate === todayStr;
+
+  const pickupDates = useMemo(() => {
+    const dates = getAvailableDatesClient(
+      timeSlots.pickupDays,
+      timeSlots.blockedDates,
+      new Date()
+    );
+
+    // Include today if same-day is available
+    if (sameDayAvailability?.available && !dates.includes(todayStr)) {
+      // Check if today is an allowed pickup day
+      const todayDayName = DAY_NAMES[new Date().getDay()];
+      if (timeSlots.pickupDays.includes(todayDayName)) {
+        dates.unshift(todayStr);
+      }
+    }
+
+    // Remove today if same-day is not available
+    if (!sameDayAvailability?.available) {
+      return dates.filter((d) => d !== todayStr);
+    }
+
+    return dates;
+  }, [timeSlots.pickupDays, timeSlots.blockedDates, sameDayAvailability, todayStr]);
+
+  // When today is selected, only show same-day available time slots
+  const effectivePickupSlots = useMemo(() => {
+    if (isTodaySelected && sameDayAvailability?.available) {
+      return sameDayAvailability.availableTimeSlots;
+    }
+    return timeSlots.pickupTimeSlots;
+  }, [isTodaySelected, sameDayAvailability, timeSlots.pickupTimeSlots]);
 
   const deliveryDates = useMemo(() => {
     if (!pickupDate) return [];
@@ -133,19 +164,38 @@ export function ScheduleStep({
                 key={d}
                 type="button"
                 onClick={() => {
-                  onChange({ pickupDate: d, deliveryDate: "", deliveryTimeSlot: "" });
+                  onChange({ pickupDate: d, pickupTimeSlot: "", deliveryDate: "", deliveryTimeSlot: "" });
                 }}
                 className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
                   pickupDate === d
                     ? "border-primary bg-primary/10 font-medium text-primary"
                     : "hover:border-muted-foreground/40"
-                }`}
+                } ${d === todayStr ? "ring-1 ring-amber-400" : ""}`}
               >
                 {formatDateLabel(d)}
+                {d === todayStr && (
+                  <span className="ml-1 inline-flex items-center text-xs text-amber-600">
+                    <Zap className="mr-0.5 h-3 w-3" />
+                    Same-Day
+                  </span>
+                )}
               </button>
             ))}
           </div>
         </div>
+
+        {/* Same-Day Fee Badge */}
+        {isTodaySelected && sameDayAvailability?.available && sameDayAvailability.fee > 0 && (
+          <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
+            <Zap className="h-4 w-4 text-amber-600" />
+            <span className="text-amber-800">
+              Same-Day Fee: <strong>${sameDayAvailability.fee.toFixed(2)}</strong>
+              {sameDayAvailability.cutoffTime && (
+                <> &middot; Available until {sameDayAvailability.cutoffTime}</>
+              )}
+            </span>
+          </div>
+        )}
 
         {/* Pickup Time Slot */}
         {pickupDate && (
@@ -155,7 +205,7 @@ export function ScheduleStep({
               <h3 className="font-medium text-foreground">Pickup Time</h3>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              {timeSlots.pickupTimeSlots.map((slot) => (
+              {effectivePickupSlots.map((slot) => (
                 <button
                   key={slot}
                   type="button"
@@ -169,6 +219,11 @@ export function ScheduleStep({
                   {slot}
                 </button>
               ))}
+              {effectivePickupSlots.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No time slots available for today.
+                </p>
+              )}
             </div>
           </div>
         )}

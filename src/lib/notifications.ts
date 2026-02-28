@@ -24,7 +24,9 @@ export type NotificationEvent =
   | "invoice_created"
   | "invoice_sent"
   | "invoice_paid"
-  | "invoice_overdue";
+  | "invoice_overdue"
+  | "driver_zone_assigned"
+  | "driver_zone_unassigned";
 
 export interface NotificationSettings {
   emailEnabled: boolean;
@@ -346,6 +348,8 @@ function getDefaultSubject(event: NotificationEvent): string {
     invoice_sent: "Invoice sent",
     invoice_paid: "Invoice payment received",
     invoice_overdue: "Invoice overdue",
+    driver_zone_assigned: "You've been assigned to a zone",
+    driver_zone_unassigned: "You've been unassigned from a zone",
   };
   return subjects[event] ?? "Notification";
 }
@@ -423,6 +427,16 @@ ${vars.totalAmount ? `<p>Amount: <strong>${vars.totalAmount}</strong></p>` : ""}
 <p>Invoice <strong>${vars.invoiceNumber}</strong> for <strong>${vars.totalAmount}</strong> from <strong>${vars.companyName}</strong> is now overdue.</p>
 <p>Original due date: <strong>${vars.dueDate}</strong>.</p>`;
 
+    case "driver_zone_assigned":
+      return `<p>Hi ${vars.driverName ?? "there"},</p>
+<p>You've been assigned to the zone <strong>${vars.zoneName}</strong> at ${vars.businessName}.</p>
+<p>You will now receive orders from this area.</p>`;
+
+    case "driver_zone_unassigned":
+      return `<p>Hi ${vars.driverName ?? "there"},</p>
+<p>You've been unassigned from the zone <strong>${vars.zoneName}</strong> at ${vars.businessName}.</p>
+<p>You will no longer receive orders from this area.</p>`;
+
     default:
       return `<p>You have a new notification from ${vars.businessName}.</p>`;
   }
@@ -477,6 +491,12 @@ function getDefaultSmsBody(
 
     case "invoice_overdue":
       return `${biz}: Invoice ${vars.invoiceNumber} from ${vars.companyName} is overdue.`;
+
+    case "driver_zone_assigned":
+      return `${biz}: You've been assigned to zone "${vars.zoneName}".`;
+
+    case "driver_zone_unassigned":
+      return `${biz}: You've been unassigned from zone "${vars.zoneName}".`;
 
     default:
       return `${biz}: You have a new notification.`;
@@ -587,6 +607,26 @@ export async function notifyDeliveryCompleted(params: {
     event: "delivery_completed",
     variables: {
       orderNumber: params.orderNumber,
+    },
+  });
+}
+
+/**
+ * Notify a driver about a zone assignment change.
+ */
+export async function notifyDriverZoneChange(params: {
+  tenantId: string;
+  driverId: string;
+  zoneName: string;
+  assigned: boolean;
+}): Promise<NotificationResult> {
+  return sendNotification({
+    tenantId: params.tenantId,
+    userId: params.driverId,
+    event: params.assigned ? "driver_zone_assigned" : "driver_zone_unassigned",
+    variables: {
+      zoneName: params.zoneName,
+      driverName: "",
     },
   });
 }

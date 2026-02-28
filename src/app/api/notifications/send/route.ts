@@ -17,6 +17,8 @@ const VALID_EVENTS: NotificationEvent[] = [
   "pickup_reminder",
   "subscription_renewal",
   "promo_available",
+  "driver_zone_assigned",
+  "driver_zone_unassigned",
 ];
 
 const sendNotificationSchema = z.object({
