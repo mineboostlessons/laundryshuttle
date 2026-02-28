@@ -77,7 +77,7 @@ export async function getDriverDashboardData() {
       where: {
         tenantId: tenant.id,
         driverId: session.user.id,
-        status: { in: ["ready", "out_for_delivery"] },
+        status: { in: ["confirmed", "ready", "out_for_delivery"] },
       },
       orderBy: { deliveryDate: "asc" },
       select: {

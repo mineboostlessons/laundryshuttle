@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth-helpers";
 import { UserRole } from "@/types";
 import { getOrderDetail } from "../actions";
+import { getAvailableDrivers } from "@/app/(tenant)/manager/actions";
 import { OrderDetailView } from "./order-detail-view";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -13,7 +14,10 @@ interface Props {
 export default async function OrderDetailPage({ params }: Props) {
   await requireRole(UserRole.OWNER, UserRole.MANAGER);
   const { orderId } = await params;
-  const order = await getOrderDetail(orderId);
+  const [order, drivers] = await Promise.all([
+    getOrderDetail(orderId),
+    getAvailableDrivers(),
+  ]);
 
   if (!order) notFound();
 
@@ -32,7 +36,10 @@ export default async function OrderDetailPage({ params }: Props) {
         </div>
       </header>
       <div className="mx-auto max-w-4xl p-6">
-        <OrderDetailView order={order as Parameters<typeof OrderDetailView>[0]["order"]} />
+        <OrderDetailView
+          order={order as Parameters<typeof OrderDetailView>[0]["order"]}
+          availableDrivers={drivers}
+        />
       </div>
     </main>
   );

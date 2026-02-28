@@ -88,6 +88,15 @@ export async function getOrderDetail(orderId: string) {
           walletBalance: true,
         },
       },
+      driver: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          phone: true,
+        },
+      },
       pickupAddress: {
         select: {
           addressLine1: true,

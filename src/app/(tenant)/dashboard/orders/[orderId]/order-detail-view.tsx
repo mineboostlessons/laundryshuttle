@@ -14,8 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, RotateCcw, ArrowRight } from "lucide-react";
+import { Loader2, RotateCcw, ArrowRight, Truck } from "lucide-react";
 import { processRefund, updateOrderStatus } from "../actions";
+import { assignDriverToOrder } from "@/app/(tenant)/manager/actions";
 import { formatCurrency } from "@/lib/utils";
 
 const PREF_LABELS: Record<string, string> = {
@@ -85,12 +86,26 @@ interface OrderDetailViewProps {
       notes: string | null;
       createdAt: Date;
     }>;
+    driver: {
+      id: string;
+      firstName: string | null;
+      lastName: string | null;
+      email: string;
+      phone: string | null;
+    } | null;
     promoCode: {
       code: string;
       discountType: string;
       discountValue: number;
     } | null;
   };
+  availableDrivers?: Array<{
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+    phone: string | null;
+  }>;
 }
 
 const STATUS_COLORS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -106,7 +121,7 @@ const STATUS_COLORS: Record<string, "default" | "secondary" | "destructive" | "o
   partially_refunded: "outline",
 };
 
-export function OrderDetailView({ order }: OrderDetailViewProps) {
+export function OrderDetailView({ order, availableDrivers }: OrderDetailViewProps) {
   const [showRefund, setShowRefund] = useState(false);
   const [refundAmount, setRefundAmount] = useState("");
   const [refundReason, setRefundReason] = useState<string>("requested_by_customer");
@@ -121,6 +136,9 @@ export function OrderDetailView({ order }: OrderDetailViewProps) {
 
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [nextStatus, setNextStatus] = useState<string>("");
+
+  const [assigningDriver, setAssigningDriver] = useState(false);
+  const [driverError, setDriverError] = useState<string | null>(null);
 
   const canRefund =
     order.paidAt && !["refunded", "cancelled"].includes(order.status);
@@ -230,6 +248,67 @@ export function OrderDetailView({ order }: OrderDetailViewProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Assign Driver */}
+      {availableDrivers && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Assigned Driver</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {order.driver && (
+              <div className="flex items-center gap-3 text-sm">
+                <Truck className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="font-medium">
+                    {order.driver.firstName} {order.driver.lastName}
+                  </p>
+                  <p className="text-muted-foreground">{order.driver.email}</p>
+                  {order.driver.phone && (
+                    <p className="text-muted-foreground">{order.driver.phone}</p>
+                  )}
+                </div>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <Select
+                defaultValue={order.driver?.id ?? ""}
+                onValueChange={async (driverId) => {
+                  setAssigningDriver(true);
+                  setDriverError(null);
+                  const result = await assignDriverToOrder({
+                    orderId: order.id,
+                    driverId,
+                  });
+                  setAssigningDriver(false);
+                  if (result.success) {
+                    window.location.reload();
+                  } else {
+                    setDriverError(result.error ?? "Failed to assign driver");
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full" disabled={assigningDriver}>
+                  <SelectValue placeholder="Select a driver..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableDrivers.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.firstName} {d.lastName} ({d.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {assigningDriver && (
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              )}
+            </div>
+            {driverError && (
+              <p className="text-sm text-destructive">{driverError}</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Pickup Address */}
       {order.pickupAddress && (

@@ -198,17 +198,7 @@ export default async function SettingsPage() {
       </div>
 
       {/* Change Password */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Change Password</CardTitle>
-          <CardDescription>
-            Update your account password
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ChangePasswordForm />
-        </CardContent>
-      </Card>
+      <ChangePasswordForm />
     </div>
   );
 }

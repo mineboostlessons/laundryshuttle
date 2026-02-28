@@ -95,14 +95,7 @@ export default async function ProfilePage() {
       </div>
 
       {/* Change Password */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Change Password</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ChangePasswordForm />
-        </CardContent>
-      </Card>
+      <ChangePasswordForm />
     </div>
   );
 }
