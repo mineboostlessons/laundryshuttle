@@ -371,6 +371,22 @@ export function ServiceAreaEditor({
         </div>
       )}
 
+      {zones.length > 0 && (
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-sm text-muted-foreground">
+            Saving will update driver assignments on all active orders based on zone mappings.
+          </p>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {hasUnsavedChanges && (
+              <span className="text-sm font-medium text-amber-600">Unsaved changes</span>
+            )}
+            <Button onClick={handleSave} disabled={saving} variant={hasUnsavedChanges ? "default" : "outline"}>
+              {saving ? "Saving..." : "Save Service Area"}
+            </Button>
+          </div>
+        </div>
+      )}
+
       <p className="text-sm text-muted-foreground">
         Use the polygon tool to draw your service area. Click to add points, double-click to finish.
         Select a polygon and click &quot;Delete Selected&quot; to remove it.
