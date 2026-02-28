@@ -127,6 +127,9 @@ export default auth((request) => {
       if (tenantSlug && tenantSlug !== "www") {
         apiHeaders.set("x-tenant-slug", tenantSlug);
       }
+    } else {
+      // Custom domain — set header for server-side resolution
+      apiHeaders.set("x-custom-domain", hostname);
     }
     return NextResponse.next({ request: { headers: apiHeaders } });
   }
