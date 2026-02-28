@@ -15,17 +15,9 @@ function getSesClient(): SESClient {
       secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY!,
     },
   });
-  if (process.env.NODE_ENV !== "production") {
-    globalForSes.ses = client;
-  }
+  globalForSes.ses = client;
   return client;
 }
-
-export const ses = new Proxy({} as SESClient, {
-  get(_target, prop) {
-    return (getSesClient() as unknown as Record<string | symbol, unknown>)[prop];
-  },
-});
 
 const DEFAULT_FROM = process.env.AWS_SES_FROM_EMAIL ?? "noreply@laundryshuttle.com";
 
@@ -82,7 +74,8 @@ export async function sendEmail(params: SendEmailParams): Promise<{
       }),
     });
 
-    const result = await ses.send(command);
+    const client = getSesClient();
+    const result = await client.send(command);
 
     return {
       success: true,

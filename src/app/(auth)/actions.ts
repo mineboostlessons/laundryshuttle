@@ -2,10 +2,12 @@
 
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { cookies } from "next/headers";
 import { signIn } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { AuthError } from "next-auth";
+import { sendEmail, wrapInEmailLayout } from "@/lib/ses";
 
 const registerSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -164,12 +166,76 @@ export async function forgotPasswordAction(
     return { error: parsed.error.errors[0].message };
   }
 
-  // Always return success to prevent email enumeration
-  // In a full implementation, this would send a reset email via SES
-  return {
-    success: true,
-    message: "If an account exists with that email, we've sent a password reset link.",
-  };
+  const { email } = parsed.data;
+
+  // Always return the same message to prevent email enumeration
+  const successMessage = "If an account exists with that email, we've sent a password reset link.";
+
+  try {
+    const user = await prisma.user.findFirst({
+      where: { email: email.toLowerCase() },
+      select: { id: true, firstName: true, tenantId: true },
+    });
+
+    if (!user) {
+      return { success: true, message: successMessage };
+    }
+
+    // Generate a temporary password
+    const tempPassword = crypto.randomBytes(6).toString("base64url");
+    const hashedPassword = await bcrypt.hash(tempPassword, 12);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: hashedPassword, forcePasswordChange: true },
+    });
+
+    // Resolve tenant for login URL
+    let loginUrl = "https://laundryshuttle.com/login";
+    if (user.tenantId) {
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: user.tenantId },
+        select: { slug: true, businessName: true },
+      });
+      if (tenant) {
+        loginUrl = `https://${tenant.slug}.laundryshuttle.com/login`;
+      }
+    }
+
+    await sendEmail({
+      to: email.toLowerCase(),
+      subject: "Password Reset — Laundry Shuttle",
+      html: wrapInEmailLayout({
+        businessName: "Laundry Shuttle",
+        preheader: "Your temporary password",
+        body: `
+          <h2 style="margin:0 0 16px;font-size:20px;color:#1a1a1a;">Password Reset</h2>
+          <p style="margin:0 0 12px;color:#333;font-size:14px;line-height:1.6;">
+            Hi ${user.firstName ?? "there"}, we received a password reset request for your account.
+          </p>
+          <p style="margin:0 0 12px;color:#333;font-size:14px;line-height:1.6;">
+            Here is your temporary password:
+          </p>
+          <div style="background:#f5f5f5;padding:16px;border-radius:6px;margin:16px 0;">
+            <p style="margin:0;font-size:16px;font-weight:bold;letter-spacing:1px;">${tempPassword}</p>
+          </div>
+          <p style="margin:0 0 16px;color:#666;font-size:13px;">
+            You will be asked to set a new password when you log in.
+          </p>
+          <a href="${loginUrl}" style="display:inline-block;background:#1a1a1a;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:500;">
+            Log In Now
+          </a>
+          <p style="margin:16px 0 0;color:#999;font-size:12px;">
+            If you didn't request this reset, please ignore this email.
+          </p>
+        `,
+      }),
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+  }
+
+  return { success: true, message: successMessage };
 }
 
 export async function oauthSignIn(provider: "google" | "facebook", tenantSlug?: string) {
