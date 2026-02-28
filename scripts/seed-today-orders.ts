@@ -103,7 +103,7 @@ async function main() {
         pickupAddressId: address?.id ?? null,
         pickupNotes: i % 3 === 0 ? "Please ring doorbell" : null,
         paymentMethod: i % 2 === 0 ? "card" : "stored_card",
-        createdAt: new Date(today.getTime() - (10 - i) * 60 * 60 * 1000), // stagger creation times
+        createdAt: today,
       },
     });
 
