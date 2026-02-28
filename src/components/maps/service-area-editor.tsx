@@ -40,10 +40,51 @@ export function ServiceAreaEditor({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const draw = useRef<MapboxDraw | null>(null);
+  const zoneMarkers = useRef<mapboxgl.Marker[]>([]);
   const [featureCount, setFeatureCount] = useState(0);
   const [selectedCount, setSelectedCount] = useState(0);
   const [zones, setZones] = useState<ZoneInfo[]>([]);
   const [selectedFeatureId, setSelectedFeatureId] = useState<string | null>(null);
+
+  const ZONE_COLORS = ["#7c3aed", "#059669", "#dc2626", "#d97706", "#2563eb", "#db2777", "#0891b2", "#65a30d"];
+
+  // Compute centroid of a polygon's coordinates
+  const getPolygonCentroid = useCallback((feature: GeoJSON.Feature): [number, number] | null => {
+    let coords: number[][] = [];
+    if (feature.geometry.type === "Polygon") {
+      coords = (feature.geometry as GeoJSON.Polygon).coordinates[0];
+    } else if (feature.geometry.type === "MultiPolygon") {
+      coords = (feature.geometry as GeoJSON.MultiPolygon).coordinates[0]?.[0] ?? [];
+    }
+    if (coords.length === 0) return null;
+    let sumLng = 0, sumLat = 0;
+    for (const c of coords) {
+      sumLng += c[0];
+      sumLat += c[1];
+    }
+    return [sumLng / coords.length, sumLat / coords.length];
+  }, []);
+
+  // Update numbered markers on the map
+  const updateZoneMarkers = useCallback((polygons: GeoJSON.Feature[]) => {
+    if (!map.current) return;
+    // Remove old markers
+    for (const m of zoneMarkers.current) m.remove();
+    zoneMarkers.current = [];
+
+    polygons.forEach((feature, idx) => {
+      const centroid = getPolygonCentroid(feature);
+      if (!centroid) return;
+      const color = ZONE_COLORS[idx % ZONE_COLORS.length];
+      const el = document.createElement("div");
+      el.style.cssText = `width:28px;height:28px;background:${color};border:2px solid white;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;font-family:system-ui,sans-serif;pointer-events:none;`;
+      el.textContent = String(idx + 1);
+      const marker = new mapboxgl.Marker({ element: el })
+        .setLngLat(centroid)
+        .addTo(map.current!);
+      zoneMarkers.current.push(marker);
+    });
+  }, [getPolygonCentroid]);
 
   const syncZones = useCallback(() => {
     if (!draw.current) return;
@@ -52,6 +93,7 @@ export function ServiceAreaEditor({
       (f) => f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon"
     );
     setFeatureCount(polygons.length);
+    updateZoneMarkers(polygons);
 
     setZones((prev) => {
       const newZones: ZoneInfo[] = [];
@@ -67,7 +109,7 @@ export function ServiceAreaEditor({
       }
       return newZones;
     });
-  }, []);
+  }, [updateZoneMarkers]);
 
   const updateCounts = useCallback(() => {
     if (!draw.current) return;
@@ -281,11 +323,13 @@ export function ServiceAreaEditor({
                 }`}
                 onClick={() => handleSelectZone(zone.featureId)}
               >
-                <div className="flex items-center gap-2 sm:w-8 flex-shrink-0">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground font-mono">
+                <div className="flex items-center gap-2 sm:w-10 flex-shrink-0">
+                  <div
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white flex-shrink-0"
+                    style={{ backgroundColor: ZONE_COLORS[idx % ZONE_COLORS.length] }}
+                  >
                     {idx + 1}
-                  </span>
+                  </div>
                 </div>
                 <div className="flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
                   <Label className="text-xs text-muted-foreground">Zone Name</Label>
