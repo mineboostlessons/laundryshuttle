@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 import { StaffPermissionToggle } from "./staff-permission-toggle";
+import { ChangePasswordForm } from "@/components/ui/change-password-form";
 
 export default async function SettingsPage() {
   await requireRole(UserRole.OWNER);
@@ -195,6 +196,19 @@ export default async function SettingsPage() {
           </Card>
         </Link>
       </div>
+
+      {/* Change Password */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Change Password</CardTitle>
+          <CardDescription>
+            Update your account password
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChangePasswordForm />
+        </CardContent>
+      </Card>
     </div>
   );
 }

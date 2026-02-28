@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Wallet } from "lucide-react";
 import { ProfileForm } from "./profile-form";
 import { PreferencesForm } from "./preferences-form";
+import { ChangePasswordForm } from "@/components/ui/change-password-form";
 
 export default async function ProfilePage() {
   const profile = await getCustomerProfile();
@@ -92,6 +93,16 @@ export default async function ProfilePage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Change Password */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Change Password</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ChangePasswordForm />
+        </CardContent>
+      </Card>
     </div>
   );
 }

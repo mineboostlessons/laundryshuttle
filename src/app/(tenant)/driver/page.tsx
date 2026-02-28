@@ -5,6 +5,8 @@ import { DriverDashboardView } from "./driver-dashboard-view";
 import { DriverHeader } from "./driver-header";
 import { TourTrigger } from "@/components/ui/tour-trigger";
 import { TOUR_DEFINITIONS } from "@/lib/tours";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChangePasswordForm } from "@/components/ui/change-password-form";
 
 export default async function DriverDashboardPage() {
   const session = await requireRole(UserRole.DRIVER);
@@ -23,6 +25,16 @@ export default async function DriverDashboardPage() {
           userName={session.user.name?.split(" ")[0] ?? "Driver"}
         />
       </div>
+      <div className="mx-auto max-w-2xl px-4 sm:px-6 pb-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Change Password</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChangePasswordForm />
+            </CardContent>
+          </Card>
+        </div>
       {tour && (
         <TourTrigger
           tourSlug={tour.slug}
