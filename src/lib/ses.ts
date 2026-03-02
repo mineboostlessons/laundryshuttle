@@ -15,7 +15,9 @@ function getSesClient(): SESClient {
       secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY!,
     },
   });
-  globalForSes.ses = client;
+  if (process.env.NODE_ENV !== "production") {
+    globalForSes.ses = client;
+  }
   return client;
 }
 

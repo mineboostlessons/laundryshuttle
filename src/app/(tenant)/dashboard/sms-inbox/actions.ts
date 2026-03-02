@@ -16,13 +16,14 @@ export async function getSmsConversations() {
   await requireRole(UserRole.OWNER, UserRole.MANAGER);
   const tenant = await requireTenant();
 
-  // Get all SMS messages from order messages, grouped by customer
+  // Get SMS messages from order messages, grouped by customer (limit to recent 500)
   const messages = await prisma.orderMessage.findMany({
     where: {
       channel: "sms",
       order: { tenantId: tenant.id },
     },
     orderBy: { createdAt: "desc" },
+    take: 500,
     include: {
       order: {
         select: {
@@ -117,7 +118,11 @@ const replySchema = z.object({
 export async function sendSmsReply(data: z.infer<typeof replySchema>) {
   const session = await requireRole(UserRole.OWNER, UserRole.MANAGER);
   const tenant = await requireTenant();
-  const parsed = replySchema.parse(data);
+  const validation = replySchema.safeParse(data);
+  if (!validation.success) {
+    throw new Error(validation.error.errors[0].message);
+  }
+  const parsed = validation.data;
 
   // Get customer phone
   const customer = await prisma.user.findFirst({

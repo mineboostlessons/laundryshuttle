@@ -207,10 +207,32 @@ export async function checkSlugAvailability(slug: string): Promise<boolean> {
   return !existing;
 }
 
+// Rate limiting for onboarding submissions (prevent abuse)
+const onboardingAttempts = new Map<string, { count: number; resetAt: number }>();
+
+function checkOnboardingRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000; // 15 minutes
+  const maxAttempts = 5;
+
+  const entry = onboardingAttempts.get(ip);
+  if (!entry || entry.resetAt < now) {
+    onboardingAttempts.set(ip, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  entry.count++;
+  return entry.count <= maxAttempts;
+}
+
 export async function submitOnboarding(
   _prevState: OnboardingState,
   formData: FormData
 ): Promise<OnboardingState> {
+  // Rate limit by email to prevent abuse
+  const email = formData.get("ownerEmail") as string | null;
+  if (email && !checkOnboardingRateLimit(email.toLowerCase())) {
+    return { error: "Too many attempts. Please try again later." };
+  }
   const raw = Object.fromEntries(formData.entries());
   const parsed = onboardingSchema.safeParse(raw);
 

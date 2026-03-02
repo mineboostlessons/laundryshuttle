@@ -26,7 +26,8 @@ export type NotificationEvent =
   | "invoice_paid"
   | "invoice_overdue"
   | "driver_zone_assigned"
-  | "driver_zone_unassigned";
+  | "driver_zone_unassigned"
+  | "low_rating_alert";
 
 export interface NotificationSettings {
   emailEnabled: boolean;
@@ -350,6 +351,7 @@ function getDefaultSubject(event: NotificationEvent): string {
     invoice_overdue: "Invoice overdue",
     driver_zone_assigned: "You've been assigned to a zone",
     driver_zone_unassigned: "You've been unassigned from a zone",
+    low_rating_alert: "Low rating alert",
   };
   return subjects[event] ?? "Notification";
 }
@@ -437,6 +439,14 @@ ${vars.totalAmount ? `<p>Amount: <strong>${vars.totalAmount}</strong></p>` : ""}
 <p>You've been unassigned from the zone <strong>${vars.zoneName}</strong> at ${vars.businessName}.</p>
 <p>You will no longer receive orders from this area.</p>`;
 
+    case "low_rating_alert":
+      return `<p>Hi there,</p>
+<p>A low rating has been submitted for order <strong>${vars.orderNumber}</strong>.</p>
+<p><strong>Customer:</strong> ${vars.customerName}</p>
+<p><strong>Rating:</strong> ${vars.rating}/5</p>
+<p><strong>Comment:</strong> ${vars.reviewText ?? "No comment"}</p>
+<p>Please review and follow up if needed.</p>`;
+
     default:
       return `<p>You have a new notification from ${vars.businessName}.</p>`;
   }
@@ -497,6 +507,9 @@ function getDefaultSmsBody(
 
     case "driver_zone_unassigned":
       return `${biz}: You've been unassigned from zone "${vars.zoneName}".`;
+
+    case "low_rating_alert":
+      return `${biz}: Low rating (${vars.rating}/5) on order ${vars.orderNumber} from ${vars.customerName}.`;
 
     default:
       return `${biz}: You have a new notification.`;

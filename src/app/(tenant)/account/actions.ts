@@ -22,7 +22,11 @@ export async function changePassword(data: {
   confirmPassword: string;
 }) {
   const session = await requireAuth();
-  const parsed = changePasswordSchema.parse(data);
+  const result = changePasswordSchema.safeParse(data);
+  if (!result.success) {
+    throw new Error(result.error.errors[0].message);
+  }
+  const parsed = result.data;
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },

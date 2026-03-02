@@ -39,7 +39,11 @@ export async function createCommercialAccount(data: z.infer<typeof createAccount
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
 
-  const validated = createAccountSchema.parse(data);
+  const result = createAccountSchema.safeParse(data);
+  if (!result.success) {
+    throw new Error(result.error.errors[0].message);
+  }
+  const validated = result.data;
 
   // Create Stripe customer on connected account if tenant has Stripe
   let stripeCustomerId: string | undefined;

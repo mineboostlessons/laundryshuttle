@@ -31,9 +31,12 @@ export async function POST(req: NextRequest) {
 
     const { orderId, promoCode } = parsed.data;
 
-    // Fetch order with tenant info
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
+    // Fetch order with tenant info — verify customer ownership
+    const order = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+        customerId: session.user.id,
+      },
       include: {
         tenant: {
           select: {
@@ -49,13 +52,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Order not found" },
         { status: 404 }
-      );
-    }
-
-    if (order.customerId !== session.user.id) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 403 }
       );
     }
 

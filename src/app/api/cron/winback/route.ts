@@ -30,18 +30,31 @@ export async function GET(request: Request) {
       urgent: { created: number; sent: number };
     }> = [];
 
-    for (const tenant of tenants) {
-      const mild = await executeWinBackCampaign(tenant.id, "mild");
-      const moderate = await executeWinBackCampaign(tenant.id, "moderate");
-      const urgent = await executeWinBackCampaign(tenant.id, "urgent");
-
-      results.push({
-        tenantId: tenant.id,
-        businessName: tenant.businessName,
-        mild: { created: mild.created, sent: mild.sent },
-        moderate: { created: moderate.created, sent: moderate.sent },
-        urgent: { created: urgent.created, sent: urgent.sent },
-      });
+    // Process tenants in parallel batches of 5 for better performance
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < tenants.length; i += BATCH_SIZE) {
+      const batch = tenants.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.allSettled(
+        batch.map(async (tenant) => {
+          const [mild, moderate, urgent] = await Promise.all([
+            executeWinBackCampaign(tenant.id, "mild"),
+            executeWinBackCampaign(tenant.id, "moderate"),
+            executeWinBackCampaign(tenant.id, "urgent"),
+          ]);
+          return {
+            tenantId: tenant.id,
+            businessName: tenant.businessName,
+            mild: { created: mild.created, sent: mild.sent },
+            moderate: { created: moderate.created, sent: moderate.sent },
+            urgent: { created: urgent.created, sent: urgent.sent },
+          };
+        })
+      );
+      for (const outcome of batchResults) {
+        if (outcome.status === "fulfilled") {
+          results.push(outcome.value);
+        }
+      }
     }
 
     return NextResponse.json({

@@ -59,8 +59,9 @@ model Tenant {
   refundPolicy   String? @db.Text
   privacyPolicy  String? @db.Text
 
-  // Order numbering (atomic counter to prevent race conditions)
-  orderCounter Int @default(0)
+  // Atomic counters (prevent race conditions)
+  orderCounter   Int @default(0)
+  invoiceCounter Int @default(0)
 
   // Tax
   taxMode          String @default("manual") // manual, stripe_tax
@@ -218,6 +219,10 @@ model User {
   // Driver-specific
   vehicleInfo  Json? // { make, model, year, color, licensePlate }
   shiftEndTime String? // e.g. "18:00", driver's daily shift end
+
+  // Password Reset
+  resetToken          String?   // Hashed reset token
+  resetTokenExpiresAt DateTime? // Token expiry
 
   // Status
   isActive            Boolean   @default(true)

@@ -276,13 +276,14 @@ export async function generateWinBackPromos(
   let created = 0;
 
   for (const customer of targetCustomers) {
-    // Check if they already have an active win-back promo
+    // Check if this customer already has an active win-back promo
     const existing = await prisma.promoCode.findFirst({
       where: {
         tenantId,
         campaignType: config.campaign,
         isActive: true,
         validUntil: { gte: new Date() },
+        description: { contains: customer.email },
       },
     });
 
@@ -355,13 +356,14 @@ export async function executeWinBackCampaign(
   const errors: string[] = [];
 
   for (const customer of targetCustomers) {
-    // Check if they already have an active win-back promo
+    // Check if this customer already has an active win-back promo
     const existing = await prisma.promoCode.findFirst({
       where: {
         tenantId,
         campaignType: config.campaign,
         isActive: true,
         validUntil: { gte: new Date() },
+        description: { contains: customer.email },
       },
     });
 

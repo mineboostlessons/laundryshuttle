@@ -174,33 +174,14 @@ export async function processRefund(input: z.infer<typeof refundSchema>) {
 
   // Refund to wallet (credit balance instead of Stripe refund)
   if (refundToWallet && order.customerId) {
-    const user = await prisma.user.findUnique({
-      where: { id: order.customerId },
-      select: { walletBalance: true },
-    });
-
-    if (!user) {
-      return { success: false, error: "Customer not found" };
-    }
-
-    const newBalance = user.walletBalance + refundAmount;
     const isFullRefund = refundAmount >= order.totalAmount;
 
-    await prisma.$transaction([
+    // Use atomic increment to avoid read-then-write race condition
+    const [updatedUser] = await prisma.$transaction([
       prisma.user.update({
         where: { id: order.customerId },
-        data: { walletBalance: newBalance },
-      }),
-      prisma.walletTransaction.create({
-        data: {
-          userId: order.customerId,
-          tenantId: tenant.id,
-          type: "refund_credit",
-          amount: refundAmount,
-          balanceAfter: newBalance,
-          description: `Refund for order ${order.orderNumber}`,
-          orderId: order.id,
-        },
+        data: { walletBalance: { increment: refundAmount } },
+        select: { walletBalance: true },
       }),
       prisma.order.update({
         where: { id: orderId },
@@ -217,6 +198,19 @@ export async function processRefund(input: z.infer<typeof refundSchema>) {
         },
       }),
     ]);
+
+    // Create wallet transaction with the new balance after the atomic update
+    await prisma.walletTransaction.create({
+      data: {
+        userId: order.customerId,
+        tenantId: tenant.id,
+        type: "refund_credit",
+        amount: refundAmount,
+        balanceAfter: updatedUser.walletBalance,
+        description: `Refund for order ${order.orderNumber}`,
+        orderId: order.id,
+      },
+    });
 
     return { success: true, refundType: "wallet", refundAmount };
   }
@@ -381,60 +375,55 @@ export async function updateOrderStatus(
       .filter(Boolean)
       .join(" ");
 
-    try {
-      switch (status) {
-        case "confirmed":
-          notifyOrderConfirmed({
-            tenantId: tenant.id,
-            userId: order.customerId,
+    switch (status) {
+      case "confirmed":
+        notifyOrderConfirmed({
+          tenantId: tenant.id,
+          userId: order.customerId,
+          orderNumber: order.orderNumber,
+          total: order.totalAmount,
+          customerName,
+        }).catch((err) => console.error("Failed to send confirmed notification:", err));
+        break;
+
+      case "out_for_delivery":
+        notifyDriverEnRoute({
+          tenantId: tenant.id,
+          userId: order.customerId,
+          orderNumber: order.orderNumber,
+        }).catch((err) => console.error("Failed to send en-route notification:", err));
+        break;
+
+      case "delivered":
+        notifyDeliveryCompleted({
+          tenantId: tenant.id,
+          userId: order.customerId,
+          orderNumber: order.orderNumber,
+        }).catch((err) => console.error("Failed to send delivery notification:", err));
+        break;
+
+      case "completed":
+        notifyOrderCompleted({
+          tenantId: tenant.id,
+          userId: order.customerId,
+          orderNumber: order.orderNumber,
+          total: order.totalAmount,
+          customerName,
+        }).catch((err) => console.error("Failed to send completed notification:", err));
+        break;
+
+      case "cancelled":
+        sendNotification({
+          tenantId: tenant.id,
+          userId: order.customerId,
+          event: "order_cancelled",
+          variables: {
             orderNumber: order.orderNumber,
-            total: order.totalAmount,
             customerName,
-          });
-          break;
-
-        case "out_for_delivery":
-          notifyDriverEnRoute({
-            tenantId: tenant.id,
-            userId: order.customerId,
-            orderNumber: order.orderNumber,
-          });
-          break;
-
-        case "delivered":
-          notifyDeliveryCompleted({
-            tenantId: tenant.id,
-            userId: order.customerId,
-            orderNumber: order.orderNumber,
-          });
-          break;
-
-        case "completed":
-          notifyOrderCompleted({
-            tenantId: tenant.id,
-            userId: order.customerId,
-            orderNumber: order.orderNumber,
-            total: order.totalAmount,
-            customerName,
-          });
-          break;
-
-        case "cancelled":
-          sendNotification({
-            tenantId: tenant.id,
-            userId: order.customerId,
-            event: "order_cancelled",
-            variables: {
-              orderNumber: order.orderNumber,
-              customerName,
-              reason: notes ?? "",
-            },
-          });
-          break;
-      }
-    } catch (err) {
-      // Non-blocking — don't fail the status update if notification fails
-      console.error("Failed to send status notification:", err);
+            reason: notes ?? "",
+          },
+        }).catch((err) => console.error("Failed to send cancellation notification:", err));
+        break;
     }
   }
 

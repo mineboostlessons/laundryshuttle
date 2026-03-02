@@ -72,7 +72,11 @@ export async function createInvoice(data: z.infer<typeof createInvoiceSchema>) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
 
-  const validated = createInvoiceSchema.parse(data);
+  const result = createInvoiceSchema.safeParse(data);
+  if (!result.success) {
+    throw new Error(result.error.errors[0].message);
+  }
+  const validated = result.data;
 
   // Verify account belongs to this tenant
   const account = await prisma.commercialAccount.findFirst({
@@ -89,14 +93,14 @@ export async function createInvoice(data: z.infer<typeof createInvoiceSchema>) {
   const taxAmount = subtotal * taxRate;
   const totalAmount = subtotal + taxAmount;
 
-  // Generate invoice number
-  const invoiceCount = await prisma.invoice.count({
-    where: {
-      commercialAccount: { tenantId: tenant.id },
-    },
+  // Generate invoice number using atomic counter
+  const updatedTenant = await prisma.tenant.update({
+    where: { id: tenant.id },
+    data: { invoiceCounter: { increment: 1 } },
+    select: { invoiceCounter: true, slug: true },
   });
-  const prefix = tenant.slug.substring(0, 3).toUpperCase();
-  const invoiceNumber = `INV-${prefix}-${new Date().getFullYear()}-${String(invoiceCount + 1).padStart(5, "0")}`;
+  const prefix = updatedTenant.slug.substring(0, 3).toUpperCase();
+  const invoiceNumber = `INV-${prefix}-${new Date().getFullYear()}-${String(updatedTenant.invoiceCounter).padStart(5, "0")}`;
 
   // Determine due date from payment terms
   const daysMap: Record<string, number> = { net_7: 7, net_15: 15, net_30: 30 };

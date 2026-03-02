@@ -185,8 +185,22 @@ export async function forgotPasswordAction(
   const successMessage = "If an account exists with that email, we've sent a password reset link.";
 
   try {
+    // Scope to tenant if tenantSlug provided
+    const tenantSlug = formData.get("tenantSlug") as string | null;
+    let tenantId: string | undefined;
+    if (tenantSlug) {
+      const tenant = await prisma.tenant.findUnique({
+        where: { slug: tenantSlug },
+        select: { id: true },
+      });
+      tenantId = tenant?.id;
+    }
+
     const user = await prisma.user.findFirst({
-      where: { email: email.toLowerCase() },
+      where: {
+        email: email.toLowerCase(),
+        ...(tenantId ? { tenantId } : {}),
+      },
       select: { id: true, firstName: true, tenantId: true },
     });
 
@@ -194,52 +208,53 @@ export async function forgotPasswordAction(
       return { success: true, message: successMessage };
     }
 
-    // Generate a temporary password
-    const tempPassword = crypto.randomBytes(6).toString("base64url");
-    const hashedPassword = await bcrypt.hash(tempPassword, 12);
+    // Generate a secure reset token (not a temp password)
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour expiry
 
+    // Store the hashed token — do NOT overwrite the user's password
     await prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash: hashedPassword, forcePasswordChange: true },
+      data: {
+        resetToken: hashedToken,
+        resetTokenExpiresAt: expiresAt,
+      },
     });
 
-    // Resolve tenant for login URL
-    let loginUrl = "https://laundryshuttle.com/login";
+    // Resolve tenant for reset URL
+    let baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://laundryshuttle.com";
     if (user.tenantId) {
       const tenant = await prisma.tenant.findUnique({
         where: { id: user.tenantId },
-        select: { slug: true, businessName: true },
+        select: { slug: true },
       });
       if (tenant) {
-        loginUrl = `https://${tenant.slug}.laundryshuttle.com/login`;
+        baseUrl = `https://${tenant.slug}.laundryshuttle.com`;
       }
     }
+
+    const resetUrl = `${baseUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(email.toLowerCase())}`;
 
     await sendEmail({
       to: email.toLowerCase(),
       subject: "Password Reset — Laundry Shuttle",
       html: wrapInEmailLayout({
         businessName: "Laundry Shuttle",
-        preheader: "Your temporary password",
+        preheader: "Reset your password",
         body: `
           <h2 style="margin:0 0 16px;font-size:20px;color:#1a1a1a;">Password Reset</h2>
           <p style="margin:0 0 12px;color:#333;font-size:14px;line-height:1.6;">
             Hi ${user.firstName ?? "there"}, we received a password reset request for your account.
           </p>
           <p style="margin:0 0 12px;color:#333;font-size:14px;line-height:1.6;">
-            Here is your temporary password:
+            Click the link below to set a new password. This link expires in 1 hour.
           </p>
-          <div style="background:#f5f5f5;padding:16px;border-radius:6px;margin:16px 0;">
-            <p style="margin:0;font-size:16px;font-weight:bold;letter-spacing:1px;">${tempPassword}</p>
-          </div>
-          <p style="margin:0 0 16px;color:#666;font-size:13px;">
-            You will be asked to set a new password when you log in.
-          </p>
-          <a href="${loginUrl}" style="display:inline-block;background:#1a1a1a;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:500;">
-            Log In Now
+          <a href="${resetUrl}" style="display:inline-block;background:#1a1a1a;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:500;">
+            Reset Password
           </a>
           <p style="margin:16px 0 0;color:#999;font-size:12px;">
-            If you didn't request this reset, please ignore this email.
+            If you didn't request this reset, please ignore this email. Your password has not been changed.
           </p>
         `,
       }),
@@ -249,6 +264,62 @@ export async function forgotPasswordAction(
   }
 
   return { success: true, message: successMessage };
+}
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  email: z.string().email(),
+  newPassword: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+export async function resetPasswordWithToken(
+  _prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
+  const raw = {
+    token: formData.get("token"),
+    email: formData.get("email"),
+    newPassword: formData.get("newPassword"),
+  };
+
+  const parsed = resetPasswordSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { error: parsed.error.errors[0].message };
+  }
+
+  const { token, email, newPassword } = parsed.data;
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        email: email.toLowerCase(),
+        resetToken: hashedToken,
+        resetTokenExpiresAt: { gte: new Date() },
+      },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return { error: "Invalid or expired reset link. Please request a new one." };
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        resetToken: null,
+        resetTokenExpiresAt: null,
+        forcePasswordChange: false,
+      },
+    });
+
+    return { success: true, message: "Password reset successfully. You can now sign in." };
+  } catch {
+    return { error: "Something went wrong. Please try again." };
+  }
 }
 
 export async function oauthSignIn(provider: "google" | "facebook", tenantSlug?: string) {

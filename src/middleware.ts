@@ -66,9 +66,19 @@ function getDefaultRedirect(role: string): string {
 
 // In-memory rate limiting (lightweight, no external deps)
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+let lastEviction = Date.now();
 
 function checkRateLimit(key: string, limit: number, windowMs: number): boolean {
   const now = Date.now();
+
+  // Evict expired entries every 60 seconds to prevent memory leak
+  if (now - lastEviction > 60_000) {
+    lastEviction = now;
+    for (const [k, v] of rateLimitStore) {
+      if (v.resetAt < now) rateLimitStore.delete(k);
+    }
+  }
+
   const entry = rateLimitStore.get(key);
 
   if (!entry || entry.resetAt < now) {

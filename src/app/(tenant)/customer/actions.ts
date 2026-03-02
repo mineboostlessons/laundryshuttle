@@ -311,8 +311,8 @@ export async function getCustomerAddresses() {
         id: { in: duplicateIds },
         orders: { none: {} },
       },
-    }).catch(() => {
-      // Silently ignore — duplicates linked to orders are kept
+    }).catch((err) => {
+      console.error("Failed to clean up duplicate addresses:", err);
     });
   }
 
@@ -610,13 +610,14 @@ export async function submitReview(data: z.infer<typeof reviewSchema>) {
       sendNotification({
         tenantId: tenant.id,
         userId: manager.id,
-        event: "order_completed",
+        event: "low_rating_alert",
         channels: ["email"],
         recipientEmail: manager.email,
         variables: {
           customerName: session.user.name ?? "A customer",
           orderNumber: order.orderNumber,
-          total: `Rating: ${parsed.rating}/5 — ${parsed.text ?? "No comment"}`,
+          rating: `${parsed.rating}`,
+          reviewText: parsed.text ?? "No comment",
         },
       }).catch(console.error);
     }
@@ -676,7 +677,8 @@ export async function submitTip(data: z.infer<typeof tipSchema>) {
 
   if (existingTip) throw new Error("Tip already submitted for this order");
 
-  let stripeTransferId: string | null = null;
+  let stripePaymentIntentId: string | null = null;
+  let clientSecret: string | null = null;
 
   // Process tip payment via Stripe if connected account exists
   if (order.tenant.stripeConnectAccountId) {
@@ -684,7 +686,12 @@ export async function submitTip(data: z.infer<typeof tipSchema>) {
       const { stripe } = await import("@/lib/stripe");
       const amountInCents = Math.round(parsed.amount * 100);
 
-      // Create a payment intent for the tip (no platform fee on tips)
+      // Get customer's default payment method for off-session charge
+      const customer = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { stripeCustomerId: true },
+      });
+
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amountInCents,
         currency: "usd",
@@ -696,9 +703,15 @@ export async function submitTip(data: z.infer<typeof tipSchema>) {
           orderId: order.id,
           driverId: order.driverId ?? "",
         },
+        ...(customer?.stripeCustomerId
+          ? {
+              customer: customer.stripeCustomerId,
+              payment_method_types: ["card"],
+            }
+          : { payment_method_types: ["card"] }),
       });
-
-      stripeTransferId = paymentIntent.id;
+      stripePaymentIntentId = paymentIntent.id;
+      clientSecret = paymentIntent.client_secret;
     } catch (error) {
       console.error("Stripe tip payment error:", error);
       // Still save the tip record even if Stripe fails
@@ -712,7 +725,7 @@ export async function submitTip(data: z.infer<typeof tipSchema>) {
         userId: session.user.id,
         driverId: order.driverId,
         amount: parsed.amount,
-        stripeTransferId,
+        stripeTransferId: stripePaymentIntentId,
       },
     }),
     prisma.order.update({
@@ -725,5 +738,5 @@ export async function submitTip(data: z.infer<typeof tipSchema>) {
   ]);
 
   revalidatePath(`/customer/orders/${parsed.orderId}`);
-  return { success: true, tip };
+  return { success: true, tip, clientSecret };
 }
