@@ -74,7 +74,7 @@ export async function createInvoice(data: z.infer<typeof createInvoiceSchema>) {
 
   const result = createInvoiceSchema.safeParse(data);
   if (!result.success) {
-    throw new Error(result.error.errors[0].message);
+    return { success: false as const, error: result.error.errors[0].message };
   }
   const validated = result.data;
 
@@ -84,7 +84,7 @@ export async function createInvoice(data: z.infer<typeof createInvoiceSchema>) {
   });
 
   if (!account) {
-    throw new Error("Commercial account not found");
+    return { success: false as const, error: "Commercial account not found" };
   }
 
   // Calculate totals
@@ -178,8 +178,12 @@ export async function sendInvoice(invoiceId: string) {
     include: { commercialAccount: true },
   });
 
-  if (!invoice) throw new Error("Invoice not found");
-  if (invoice.status !== "draft") throw new Error("Only draft invoices can be sent");
+  if (!invoice) {
+    return { success: false as const, error: "Invoice not found" };
+  }
+  if (invoice.status !== "draft") {
+    return { success: false as const, error: "Only draft invoices can be sent" };
+  }
 
   // Send via Stripe if available
   if (tenant.stripeConnectAccountId && invoice.stripeInvoiceId) {
@@ -226,7 +230,9 @@ export async function markInvoicePaid(invoiceId: string) {
     include: { commercialAccount: true },
   });
 
-  if (!invoice) throw new Error("Invoice not found or cannot be marked as paid");
+  if (!invoice) {
+    return { success: false as const, error: "Invoice not found or cannot be marked as paid" };
+  }
 
   // Mark paid in Stripe if available
   if (tenant.stripeConnectAccountId && invoice.stripeInvoiceId) {
@@ -282,7 +288,9 @@ export async function voidInvoice(invoiceId: string) {
     },
   });
 
-  if (!invoice) throw new Error("Invoice not found or cannot be voided");
+  if (!invoice) {
+    return { success: false as const, error: "Invoice not found or cannot be voided" };
+  }
 
   if (tenant.stripeConnectAccountId && invoice.stripeInvoiceId && invoice.status !== "draft") {
     await voidStripeInvoice({

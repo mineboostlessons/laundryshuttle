@@ -24,7 +24,7 @@ export async function changePassword(data: {
   const session = await requireAuth();
   const result = changePasswordSchema.safeParse(data);
   if (!result.success) {
-    throw new Error(result.error.errors[0].message);
+    return { success: false as const, error: result.error.errors[0].message };
   }
   const parsed = result.data;
 
@@ -34,14 +34,15 @@ export async function changePassword(data: {
   });
 
   if (!user?.passwordHash) {
-    throw new Error(
-      "No password set on this account. You may have signed up with a social provider."
-    );
+    return {
+      success: false as const,
+      error: "No password set on this account. You may have signed up with a social provider.",
+    };
   }
 
   const valid = await bcrypt.compare(parsed.currentPassword, user.passwordHash);
   if (!valid) {
-    throw new Error("Current password is incorrect.");
+    return { success: false as const, error: "Current password is incorrect." };
   }
 
   const hash = await bcrypt.hash(parsed.newPassword, 12);

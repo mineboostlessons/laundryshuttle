@@ -70,6 +70,26 @@ export async function POST(request: Request) {
 
     const { amount, orderId } = parsed.data;
 
+    // Verify amount matches order total when orderId is provided
+    if (orderId) {
+      const order = await prisma.order.findFirst({
+        where: { id: orderId, tenantId: session.user.tenantId },
+        select: { totalAmount: true },
+      });
+      if (!order) {
+        return NextResponse.json(
+          { success: false, error: "Order not found" },
+          { status: 404 }
+        );
+      }
+      if (Math.abs(order.totalAmount - amount) > 0.01) {
+        return NextResponse.json(
+          { success: false, error: "Amount does not match order total" },
+          { status: 400 }
+        );
+      }
+    }
+
     const paymentIntent = await createTerminalPaymentIntent({
       amount,
       connectedAccountId: tenant.stripeConnectAccountId,

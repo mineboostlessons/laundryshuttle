@@ -86,6 +86,20 @@ export async function POST(request: Request) {
     const data = parsed.data;
     const tenantId = session.user.tenantId;
 
+    // Verify userId belongs to tenant to prevent cross-tenant notifications
+    if (data.userId) {
+      const targetUser = await prisma.user.findFirst({
+        where: { id: data.userId, tenantId },
+        select: { id: true },
+      });
+      if (!targetUser) {
+        return NextResponse.json(
+          { success: false, error: "User not found" },
+          { status: 404 }
+        );
+      }
+    }
+
     const result = await sendNotification({
       tenantId,
       userId: data.userId,

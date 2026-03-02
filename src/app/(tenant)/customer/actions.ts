@@ -381,7 +381,9 @@ export async function updateAddress(
   const existing = await prisma.customerAddress.findFirst({
     where: { id: addressId, userId: session.user.id },
   });
-  if (!existing) throw new Error("Address not found");
+  if (!existing) {
+    return { success: false as const, error: "Address not found" };
+  }
 
   // Geocode if lat/lng not provided
   let lat = parsed.lat ?? null;
@@ -428,7 +430,9 @@ export async function deleteAddress(addressId: string) {
   const existing = await prisma.customerAddress.findFirst({
     where: { id: addressId, userId: session.user.id },
   });
-  if (!existing) throw new Error("Address not found");
+  if (!existing) {
+    return { success: false as const, error: "Address not found" };
+  }
 
   // Prevent deleting addresses used in active orders
   const activeOrders = await prisma.order.count({
@@ -438,7 +442,7 @@ export async function deleteAddress(addressId: string) {
     },
   });
   if (activeOrders > 0) {
-    throw new Error("Cannot delete address used in active orders");
+    return { success: false as const, error: "Cannot delete address used in active orders" };
   }
 
   await prisma.customerAddress.delete({ where: { id: addressId } });
@@ -452,7 +456,9 @@ export async function setDefaultAddress(addressId: string) {
   const existing = await prisma.customerAddress.findFirst({
     where: { id: addressId, userId: session.user.id },
   });
-  if (!existing) throw new Error("Address not found");
+  if (!existing) {
+    return { success: false as const, error: "Address not found" };
+  }
 
   await prisma.customerAddress.updateMany({
     where: { userId: session.user.id },
@@ -576,8 +582,12 @@ export async function submitReview(data: z.infer<typeof reviewSchema>) {
     include: { review: true },
   });
 
-  if (!order) throw new Error("Order not found or not eligible for review");
-  if (order.review) throw new Error("Review already submitted for this order");
+  if (!order) {
+    return { success: false as const, error: "Order not found or not eligible for review" };
+  }
+  if (order.review) {
+    return { success: false as const, error: "Review already submitted for this order" };
+  }
 
   const shouldRouteToGoogle = parsed.rating >= 4;
   const shouldAlertManager = parsed.rating <= 3;
@@ -679,14 +689,18 @@ export async function submitTip(data: z.infer<typeof tipSchema>) {
     },
   });
 
-  if (!order) throw new Error("Order not found or not eligible for tipping");
+  if (!order) {
+    return { success: false as const, error: "Order not found or not eligible for tipping" };
+  }
 
   // Check if tip already exists for this order from this user
   const existingTip = await prisma.tip.findFirst({
     where: { orderId: parsed.orderId, userId: session.user.id },
   });
 
-  if (existingTip) throw new Error("Tip already submitted for this order");
+  if (existingTip) {
+    return { success: false as const, error: "Tip already submitted for this order" };
+  }
 
   let stripePaymentIntentId: string | null = null;
   let clientSecret: string | null = null;

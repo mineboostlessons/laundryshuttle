@@ -120,7 +120,7 @@ export async function sendSmsReply(data: z.infer<typeof replySchema>) {
   const tenant = await requireTenant();
   const validation = replySchema.safeParse(data);
   if (!validation.success) {
-    throw new Error(validation.error.errors[0].message);
+    return { success: false as const, error: validation.error.errors[0].message };
   }
   const parsed = validation.data;
 
@@ -134,7 +134,9 @@ export async function sendSmsReply(data: z.infer<typeof replySchema>) {
     select: { phone: true, id: true },
   });
 
-  if (!customer?.phone) throw new Error("Customer phone number not found");
+  if (!customer?.phone) {
+    return { success: false as const, error: "Customer phone number not found" };
+  }
 
   // Find the customer's most recent order to link the message
   const recentOrder = await prisma.order.findFirst({
@@ -146,7 +148,9 @@ export async function sendSmsReply(data: z.infer<typeof replySchema>) {
     select: { id: true },
   });
 
-  if (!recentOrder) throw new Error("No order found for this customer");
+  if (!recentOrder) {
+    return { success: false as const, error: "No order found for this customer" };
+  }
 
   // Send SMS
   const result = await sendSms({
@@ -155,7 +159,7 @@ export async function sendSmsReply(data: z.infer<typeof replySchema>) {
   });
 
   if (!result.success) {
-    throw new Error(result.error ?? "Failed to send SMS");
+    return { success: false as const, error: result.error ?? "Failed to send SMS" };
   }
 
   // Save the message as an order message

@@ -59,19 +59,27 @@ const subscribeSchema = z.object({
 export async function subscribeToPlan(data: z.infer<typeof subscribeSchema>) {
   const session = await requireRole(UserRole.CUSTOMER);
   const tenant = await requireTenant();
-  const parsed = subscribeSchema.parse(data);
+  const result = subscribeSchema.safeParse(data);
+  if (!result.success) {
+    return { success: false as const, error: result.error.errors[0].message };
+  }
+  const parsed = result.data;
 
   // Verify plan exists and belongs to tenant
   const plan = await prisma.subscriptionPlan.findFirst({
     where: { id: parsed.planId, tenantId: tenant.id, isActive: true },
   });
-  if (!plan) throw new Error("Plan not found");
+  if (!plan) {
+    return { success: false as const, error: "Plan not found" };
+  }
 
   // Check if customer already has an active subscription
   const existing = await prisma.customerSubscription.findFirst({
     where: { userId: session.user.id, status: { in: ["active", "paused"] } },
   });
-  if (existing) throw new Error("You already have an active subscription. Cancel it first.");
+  if (existing) {
+    return { success: false as const, error: "You already have an active subscription. Cancel it first." };
+  }
 
   // Calculate next pickup date
   const nextPickup = getNextPickupDate(parsed.preferredDay);
@@ -102,7 +110,9 @@ export async function pauseSubscription() {
   const sub = await prisma.customerSubscription.findFirst({
     where: { userId: session.user.id, status: "active" },
   });
-  if (!sub) throw new Error("No active subscription found");
+  if (!sub) {
+    return { success: false as const, error: "No active subscription found" };
+  }
 
   await prisma.customerSubscription.update({
     where: { id: sub.id },
@@ -124,7 +134,9 @@ export async function resumeSubscription() {
   const sub = await prisma.customerSubscription.findFirst({
     where: { userId: session.user.id, status: "paused" },
   });
-  if (!sub) throw new Error("No paused subscription found");
+  if (!sub) {
+    return { success: false as const, error: "No paused subscription found" };
+  }
 
   const nextPickup = sub.preferredDay
     ? getNextPickupDate(sub.preferredDay)
@@ -150,7 +162,9 @@ export async function cancelSubscription() {
   const sub = await prisma.customerSubscription.findFirst({
     where: { userId: session.user.id, status: { in: ["active", "paused"] } },
   });
-  if (!sub) throw new Error("No subscription found");
+  if (!sub) {
+    return { success: false as const, error: "No subscription found" };
+  }
 
   await prisma.customerSubscription.update({
     where: { id: sub.id },
@@ -177,12 +191,18 @@ export async function updateSubscriptionPreferences(
   data: z.infer<typeof updatePrefsSchema>
 ) {
   const session = await requireRole(UserRole.CUSTOMER);
-  const parsed = updatePrefsSchema.parse(data);
+  const result = updatePrefsSchema.safeParse(data);
+  if (!result.success) {
+    return { success: false as const, error: result.error.errors[0].message };
+  }
+  const parsed = result.data;
 
   const sub = await prisma.customerSubscription.findFirst({
     where: { userId: session.user.id, status: { in: ["active", "paused"] } },
   });
-  if (!sub) throw new Error("No subscription found");
+  if (!sub) {
+    return { success: false as const, error: "No subscription found" };
+  }
 
   const nextPickup = getNextPickupDate(parsed.preferredDay);
 

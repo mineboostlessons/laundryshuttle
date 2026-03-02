@@ -99,13 +99,8 @@ export async function POST() {
   } catch (error) {
     console.error("Setup intent error:", error);
 
-    let message = "Failed to create setup intent";
-    if (error instanceof Error) {
-      message = error.message;
-    }
-
     return NextResponse.json(
-      { success: false, error: message },
+      { success: false, error: "Failed to create setup intent" },
       { status: 500 }
     );
   }

@@ -73,7 +73,9 @@ export async function toggleReviewVisibility(reviewId: string) {
     where: { id: reviewId, order: { tenantId: tenant.id } },
   });
 
-  if (!review) throw new Error("Review not found");
+  if (!review) {
+    return { success: false as const, error: "Review not found" };
+  }
 
   await prisma.review.update({
     where: { id: reviewId },

@@ -52,7 +52,7 @@ export async function installApp(data: z.infer<typeof installSchema>) {
 
   const parsed = installSchema.safeParse(data);
   if (!parsed.success) {
-    throw new Error(parsed.error.errors[0].message);
+    return { success: false as const, error: parsed.error.errors[0].message };
   }
   const validated = parsed.data;
 
@@ -61,7 +61,9 @@ export async function installApp(data: z.infer<typeof installSchema>) {
     where: { id: validated.appId, isActive: true },
   });
 
-  if (!app) throw new Error("App not found");
+  if (!app) {
+    return { success: false as const, error: "App not found" };
+  }
 
   // Check if already installed
   const existing = await prisma.tenantAppInstallation.findUnique({
@@ -70,7 +72,9 @@ export async function installApp(data: z.infer<typeof installSchema>) {
     },
   });
 
-  if (existing) throw new Error("App already installed");
+  if (existing) {
+    return { success: false as const, error: "App already installed" };
+  }
 
   return prisma.tenantAppInstallation.create({
     data: {

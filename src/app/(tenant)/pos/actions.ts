@@ -332,11 +332,19 @@ export async function openShift(input: z.infer<typeof openShiftSchema>) {
     UserRole.MANAGER,
     UserRole.ATTENDANT
   );
-  await requireTenant();
+  const tenant = await requireTenant();
 
   const parsed = openShiftSchema.safeParse(input);
   if (!parsed.success) {
     return { success: false as const, error: parsed.error.errors[0].message };
+  }
+
+  // Verify laundromat belongs to tenant
+  const laundromat = await prisma.laundromat.findFirst({
+    where: { id: parsed.data.laundromatId, tenantId: tenant.id, isActive: true },
+  });
+  if (!laundromat) {
+    return { success: false as const, error: "Laundromat not found" };
   }
 
   // Check for existing open shift

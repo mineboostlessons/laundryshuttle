@@ -31,7 +31,7 @@ export async function createWebhookEndpoint(data: z.infer<typeof createEndpointS
 
   const result = createEndpointSchema.safeParse(data);
   if (!result.success) {
-    throw new Error(result.error.errors[0].message);
+    return { success: false as const, error: result.error.errors[0].message };
   }
   const validated = result.data;
   const secret = generateWebhookSecret();
@@ -65,7 +65,7 @@ export async function updateWebhookEndpoint(
 
   const result = updateEndpointSchema.safeParse(data);
   if (!result.success) {
-    throw new Error(result.error.errors[0].message);
+    return { success: false as const, error: result.error.errors[0].message };
   }
   const validated = result.data;
 
@@ -99,7 +99,9 @@ export async function testWebhookEndpoint(endpointId: string) {
     where: { id: endpointId, tenantId: tenant.id },
   });
 
-  if (!endpoint) throw new Error("Endpoint not found");
+  if (!endpoint) {
+    throw new Error("Endpoint not found");
+  }
 
   return sendTestWebhook({
     endpointId: endpoint.id,
@@ -118,7 +120,9 @@ export async function getDeliveryLogs(endpointId: string) {
     where: { id: endpointId, tenantId: tenant.id },
   });
 
-  if (!endpoint) throw new Error("Endpoint not found");
+  if (!endpoint) {
+    return [];
+  }
 
   return prisma.webhookDeliveryLog.findMany({
     where: { endpointId },

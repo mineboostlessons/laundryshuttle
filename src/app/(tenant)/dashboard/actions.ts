@@ -6,6 +6,7 @@ import { requireRole } from "@/lib/auth-helpers";
 import { UserRole } from "@/types";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { sendEmail, wrapInEmailLayout } from "@/lib/ses";
 
 // =============================================================================
@@ -256,8 +257,9 @@ const createStaffSchema = z.object({
 function generateTempPassword(): string {
   const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$";
   let password = "";
+  const randomBytes = crypto.randomBytes(12);
   for (let i = 0; i < 12; i++) {
-    password += chars[Math.floor(Math.random() * chars.length)];
+    password += chars[randomBytes[i] % chars.length];
   }
   return password;
 }

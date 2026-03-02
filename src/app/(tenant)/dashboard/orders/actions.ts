@@ -29,7 +29,7 @@ export async function listOrders(params?: {
   const tenant = await requireTenant();
 
   const page = params?.page ?? 1;
-  const limit = params?.limit ?? 20;
+  const limit = Math.min(params?.limit ?? 20, 100);
   const skip = (page - 1) * limit;
 
   const where = {
@@ -310,6 +310,27 @@ export async function updateOrderStatus(
 
   if (!order) {
     return { success: false as const, error: "Order not found" };
+  }
+
+  // Validate status transition
+  const VALID_TRANSITIONS: Record<string, readonly string[]> = {
+    pending: ["confirmed", "cancelled"],
+    confirmed: ["picked_up", "processing", "cancelled"],
+    picked_up: ["processing", "cancelled"],
+    processing: ["ready", "cancelled"],
+    ready: ["out_for_delivery", "completed", "cancelled"],
+    out_for_delivery: ["delivered", "cancelled"],
+    delivered: ["completed"],
+    completed: [],
+    cancelled: [],
+  };
+
+  const allowed = VALID_TRANSITIONS[order.status];
+  if (allowed && !allowed.includes(status)) {
+    return {
+      success: false as const,
+      error: `Cannot transition from "${order.status}" to "${status}"`,
+    };
   }
 
   // Auto-assign driver when transitioning to "confirmed" if no driver assigned

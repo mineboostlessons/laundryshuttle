@@ -33,7 +33,7 @@ export async function createMarketplaceApp(data: z.infer<typeof createAppSchema>
 
   const parsed = createAppSchema.safeParse(data);
   if (!parsed.success) {
-    throw new Error(parsed.error.errors[0].message);
+    return { success: false as const, error: parsed.error.errors[0].message };
   }
   const validated = parsed.data;
 

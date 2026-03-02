@@ -65,14 +65,21 @@ export async function exportInterestsCsv() {
       orderBy: { createdAt: "desc" },
     });
 
+    // Escape CSV values to prevent formula injection
+    const esc = (v: string) => {
+      let safe = v.replace(/"/g, '""');
+      if (/^[=+\-@\t\r]/.test(safe)) safe = "'" + safe;
+      return `"${safe}"`;
+    };
+
     const header = "Email,Address,City,State,ZIP,Date";
     const rows = interests.map((i) =>
       [
-        i.email,
-        `"${i.addressLine1}"`,
-        i.city,
-        i.state,
-        i.zip,
+        esc(i.email),
+        esc(i.addressLine1),
+        esc(i.city),
+        esc(i.state),
+        esc(i.zip),
         i.createdAt.toISOString().split("T")[0],
       ].join(",")
     );

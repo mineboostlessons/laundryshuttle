@@ -61,7 +61,9 @@ export async function getPlanSubscribers(planId: string) {
   const plan = await prisma.subscriptionPlan.findFirst({
     where: { id: planId, tenantId: tenant.id },
   });
-  if (!plan) throw new Error("Plan not found");
+  if (!plan) {
+    return [];
+  }
 
   return prisma.customerSubscription.findMany({
     where: { planId },
@@ -155,14 +157,16 @@ export async function updateSubscriptionPlan(
   const tenant = await requireTenant();
   const result = planSchema.safeParse(data);
   if (!result.success) {
-    throw new Error(result.error.errors[0].message);
+    return { success: false as const, error: result.error.errors[0].message };
   }
   const parsed = result.data;
 
   const existing = await prisma.subscriptionPlan.findFirst({
     where: { id: planId, tenantId: tenant.id },
   });
-  if (!existing) throw new Error("Plan not found");
+  if (!existing) {
+    return { success: false as const, error: "Plan not found" };
+  }
 
   const plan = await prisma.subscriptionPlan.update({
     where: { id: planId },
@@ -189,7 +193,9 @@ export async function togglePlanActive(planId: string) {
   const existing = await prisma.subscriptionPlan.findFirst({
     where: { id: planId, tenantId: tenant.id },
   });
-  if (!existing) throw new Error("Plan not found");
+  if (!existing) {
+    return { success: false as const, error: "Plan not found" };
+  }
 
   await prisma.subscriptionPlan.update({
     where: { id: planId },

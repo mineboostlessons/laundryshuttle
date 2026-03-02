@@ -41,7 +41,7 @@ export async function createCommercialAccount(data: z.infer<typeof createAccount
 
   const result = createAccountSchema.safeParse(data);
   if (!result.success) {
-    throw new Error(result.error.errors[0].message);
+    return { success: false as const, error: result.error.errors[0].message };
   }
   const validated = result.data;
 
@@ -88,7 +88,7 @@ export async function updateCommercialAccount(
 
   const parsed = updateAccountSchema.safeParse(data);
   if (!parsed.success) {
-    throw new Error(parsed.error.errors[0].message);
+    return { success: false as const, error: parsed.error.errors[0].message };
   }
 
   const validated = parsed.data;
