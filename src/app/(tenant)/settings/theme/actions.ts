@@ -28,6 +28,19 @@ export async function updateTenantLogo(logoUrl: string | null) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
 
+  // Validate logo URL is from our R2 storage or null (clearing logo)
+  if (logoUrl !== null) {
+    try {
+      new URL(logoUrl);
+    } catch {
+      return { success: false, error: "Invalid URL format" };
+    }
+    const r2Domain = process.env.R2_PUBLIC_URL;
+    if (r2Domain && !logoUrl.startsWith(r2Domain)) {
+      return { success: false, error: "Logo must be uploaded through the app" };
+    }
+  }
+
   const fullTenant = await prisma.tenant.findUnique({
     where: { id: tenant.id },
     select: { themeConfig: true },

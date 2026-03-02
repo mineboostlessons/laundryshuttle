@@ -17,11 +17,16 @@ import { loginAction, type AuthState } from "../../actions";
 
 const initialState: AuthState = {};
 
+function isSafeRedirect(url: string): boolean {
+  return url.startsWith("/") && !url.startsWith("//") && !url.startsWith("/\\");
+}
+
 export function StaffLoginForm({ tenantSlug }: { tenantSlug?: string }) {
   const [state, formAction, isPending] = useActionState(loginAction, initialState);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const rawCallback = searchParams.get("callbackUrl");
+  const callbackUrl = rawCallback && isSafeRedirect(rawCallback) ? rawCallback : "/dashboard";
   const error = searchParams.get("error");
 
   useEffect(() => {

@@ -111,7 +111,7 @@ export async function getCustomerOrders(params: {
   const tenant = await requireTenant();
 
   const page = params.page ?? 1;
-  const limit = params.limit ?? 10;
+  const limit = Math.min(params.limit ?? 10, 100);
   const skip = (page - 1) * limit;
 
   const where: Record<string, unknown> = {
@@ -132,7 +132,8 @@ export async function getCustomerOrders(params: {
   }
 
   if (params.search) {
-    where.orderNumber = { contains: params.search, mode: "insensitive" };
+    const search = params.search.substring(0, 100);
+    where.orderNumber = { contains: search, mode: "insensitive" };
   }
 
   const [orders, total] = await Promise.all([
@@ -739,7 +740,7 @@ export async function submitTip(data: z.infer<typeof tipSchema>) {
       clientSecret = paymentIntent.client_secret;
     } catch (error) {
       console.error("Stripe tip payment error:", error);
-      // Still save the tip record even if Stripe fails
+      return { success: false as const, error: "Tip payment failed. Please try again." };
     }
   }
 

@@ -41,6 +41,32 @@ export async function POST(req: NextRequest) {
 
     const { action, tenantId, returnUrl, refreshUrl } = parsed.data;
 
+    // Validate returnUrl/refreshUrl are on allowed origins (prevent SSRF)
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appHostname = new URL(appUrl).hostname;
+    for (const url of [returnUrl, refreshUrl]) {
+      if (url) {
+        try {
+          const parsed = new URL(url);
+          const isAllowed =
+            parsed.hostname === appHostname ||
+            parsed.hostname.endsWith(`.${appHostname}`) ||
+            parsed.hostname === "localhost";
+          if (!isAllowed) {
+            return NextResponse.json(
+              { success: false, error: "Return URL must be on the platform domain" },
+              { status: 400 }
+            );
+          }
+        } catch {
+          return NextResponse.json(
+            { success: false, error: "Invalid URL format" },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
     // Verify user owns this tenant
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },

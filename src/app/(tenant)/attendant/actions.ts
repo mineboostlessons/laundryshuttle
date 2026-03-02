@@ -696,7 +696,10 @@ export async function markOrderReadyAndCharge(orderId: string) {
         error: "No payment method on file. Please collect payment manually before marking ready.",
       };
     }
-    // If no Stripe connect, skip payment silently (walk-in / cash)
+    // If no Stripe connect, skip payment — tenant collects payment manually (walk-in / cash)
+    if (!tenant.stripeConnectAccountId) {
+      console.warn(`Order ${orderId}: tenant ${tenant.id} has no Stripe Connect — payment skipped`);
+    }
   }
 
   // Update status to ready

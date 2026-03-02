@@ -35,7 +35,7 @@ const updateTaxSettingsSchema = z.object({
   defaultTaxRate: z
     .number()
     .min(0, "Tax rate cannot be negative")
-    .max(100, "Tax rate cannot exceed 100%"),
+    .max(25, "Tax rate cannot exceed 25%"),
 });
 
 export async function updateTaxSettings(

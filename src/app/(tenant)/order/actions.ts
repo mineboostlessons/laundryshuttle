@@ -202,6 +202,7 @@ export async function getAvailableDates(
   startFrom: Date = new Date(),
   count: number = 14
 ): Promise<string[]> {
+  const cappedCount = Math.min(Math.max(count, 1), 60);
   const dayNames = [
     "sunday",
     "monday",
@@ -215,7 +216,7 @@ export async function getAvailableDates(
   const dates: string[] = [];
   let current = startOfDay(startFrom);
 
-  for (let i = 0; i < 60 && dates.length < count; i++) {
+  for (let i = 0; i < 60 && dates.length < cappedCount; i++) {
     const dayName = dayNames[current.getDay()];
     const dateStr = format(current, "yyyy-MM-dd");
 
@@ -388,7 +389,7 @@ export async function createOrder(
   }
 
   const paymentMethodCount = await prisma.customerPaymentMethod.count({
-    where: { userId: session.user.id },
+    where: { userId: session.user.id, user: { tenantId: tenant.id } },
   });
 
   if (paymentMethodCount === 0) {
@@ -454,15 +455,6 @@ export async function createOrder(
       totalPrice,
     };
   });
-
-  // Generate order number using atomic counter to prevent duplicates
-  const updatedTenant = await prisma.tenant.update({
-    where: { id: tenant.id },
-    data: { orderCounter: { increment: 1 } },
-    select: { orderCounter: true },
-  });
-  const prefix = tenant.slug.substring(0, 3).toUpperCase();
-  const orderNumber = generateOrderNumber(prefix, updatedTenant.orderCounter);
 
   // Same-day pickup validation & fee
   const pickupDate = parseISO(data.pickupDate);
@@ -569,6 +561,16 @@ export async function createOrder(
       }
     }
   }
+
+  // Generate order number using atomic counter — placed right before order creation
+  // to minimize wasted counter values if earlier validation fails
+  const updatedTenant = await prisma.tenant.update({
+    where: { id: tenant.id },
+    data: { orderCounter: { increment: 1 } },
+    select: { orderCounter: true },
+  });
+  const prefix = tenant.slug.substring(0, 3).toUpperCase();
+  const orderNumber = generateOrderNumber(prefix, updatedTenant.orderCounter);
 
   // Create order — auto-confirmed
   const order = await prisma.order.create({

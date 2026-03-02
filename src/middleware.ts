@@ -152,8 +152,8 @@ export default auth((request) => {
 
   if (hostname.includes("localhost") || hostname === vercelUrl || hostname.endsWith(".vercel.app")) {
     const tenantSlug = url.searchParams.get("tenant");
-    if (tenantSlug) {
-      // Explicit tenant param — use it and persist via cookie
+    if (tenantSlug && /^[a-z0-9][a-z0-9-]{0,62}$/.test(tenantSlug)) {
+      // Explicit tenant param — validate format and persist via cookie
       resolvedTenantSlug = tenantSlug;
       tenantFromParam = true;
     } else if (pathname !== "/" && !isPublicRoute(pathname)) {

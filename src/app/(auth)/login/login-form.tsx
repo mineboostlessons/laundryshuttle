@@ -19,11 +19,16 @@ import { loginAction, oauthSignIn, type AuthState } from "../actions";
 
 const initialState: AuthState = {};
 
+function isSafeRedirect(url: string): boolean {
+  return url.startsWith("/") && !url.startsWith("//") && !url.startsWith("/\\");
+}
+
 export function LoginForm({ tenantSlug }: { tenantSlug?: string }) {
   const [state, formAction, isPending] = useActionState(loginAction, initialState);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl");
+  const rawCallback = searchParams.get("callbackUrl");
+  const callbackUrl = rawCallback && isSafeRedirect(rawCallback) ? rawCallback : null;
   const error = searchParams.get("error");
 
   useEffect(() => {
