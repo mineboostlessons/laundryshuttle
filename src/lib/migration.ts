@@ -392,10 +392,9 @@ export async function importOrders(
   });
   const emailToId = new Map(customers.map((c) => [c.email.toLowerCase(), c.id]));
 
-  // Get existing order count for numbering
+  // Get tenant info for numbering
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { slug: true } });
   const prefix = (tenant?.slug ?? "LS").toUpperCase().slice(0, 3);
-  let orderCounter = await prisma.order.count({ where: { tenantId } });
 
   const BATCH_SIZE = 50;
   for (let i = 0; i < rows.length; i += BATCH_SIZE) {
@@ -423,8 +422,16 @@ export async function importOrders(
       }
 
       try {
-        orderCounter++;
-        const orderNumber = parsed.data.orderNumber || `${prefix}-MIG-${String(orderCounter).padStart(5, "0")}`;
+        // Use atomic counter for order numbering to prevent duplicates
+        let orderNumber = parsed.data.orderNumber;
+        if (!orderNumber) {
+          const updatedTenant = await prisma.tenant.update({
+            where: { id: tenantId },
+            data: { orderCounter: { increment: 1 } },
+            select: { orderCounter: true },
+          });
+          orderNumber = `${prefix}-MIG-${String(updatedTenant.orderCounter).padStart(5, "0")}`;
+        }
         const createdAt = parsed.data.createdAt ? new Date(parsed.data.createdAt) : new Date();
 
         await prisma.order.create({

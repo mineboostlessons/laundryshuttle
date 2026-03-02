@@ -142,8 +142,10 @@ export function renderSmsTemplate(
 ): string {
   let rendered = template;
   for (const [key, value] of Object.entries(variables)) {
+    // Escape regex special chars in key to prevent ReDoS
+    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     rendered = rendered.replace(
-      new RegExp(`\\{\\{${key}\\}\\}`, "g"),
+      new RegExp(`\\{\\{${escapedKey}\\}\\}`, "g"),
       value
     );
   }

@@ -1,5 +1,6 @@
 "use server";
 
+import crypto from "crypto";
 import prisma from "@/lib/prisma";
 import { sendNotification } from "@/lib/notifications";
 
@@ -44,7 +45,7 @@ export interface CustomerReferralInfo {
 // =============================================================================
 
 export async function generateReferralCode(prefix: string | null, userId: string): Promise<string> {
-  const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const randomPart = crypto.randomBytes(4).toString("hex").toUpperCase().slice(0, 6);
   const userPart = userId.slice(-4).toUpperCase();
   if (prefix) {
     return `${prefix}-${userPart}${randomPart}`.slice(0, 16);
@@ -215,22 +216,12 @@ async function rewardReferrer(
   rewardType: string
 ): Promise<void> {
   if (rewardType === "credit") {
-    // Add wallet credit
-    const newBalance = referrer.walletBalance + rewardAmount;
-    await prisma.$transaction([
+    // Add wallet credit using atomic increment to prevent race conditions
+    const [updatedUser] = await prisma.$transaction([
       prisma.user.update({
         where: { id: referrer.id },
-        data: { walletBalance: newBalance },
-      }),
-      prisma.walletTransaction.create({
-        data: {
-          userId: referrer.id,
-          tenantId,
-          type: "promo_credit",
-          amount: rewardAmount,
-          balanceAfter: newBalance,
-          description: `Referral reward - $${rewardAmount} credit`,
-        },
+        data: { walletBalance: { increment: rewardAmount } },
+        select: { walletBalance: true },
       }),
       prisma.referral.update({
         where: { id: referralId },
@@ -242,9 +233,21 @@ async function rewardReferrer(
         },
       }),
     ]);
+
+    // Create wallet transaction after atomic update
+    await prisma.walletTransaction.create({
+      data: {
+        userId: referrer.id,
+        tenantId,
+        type: "promo_credit",
+        amount: rewardAmount,
+        balanceAfter: updatedUser.walletBalance,
+        description: `Referral reward - $${rewardAmount} credit`,
+      },
+    });
   } else {
     // Create promo code reward
-    const promoCode = `REFBONUS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const promoCode = `REFBONUS-${crypto.randomBytes(4).toString("hex").toUpperCase().slice(0, 6)}`;
     const validUntil = new Date();
     validUntil.setDate(validUntil.getDate() + 30);
 

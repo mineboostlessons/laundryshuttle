@@ -81,7 +81,11 @@ export async function getPlanSubscribers(planId: string) {
 export async function createSubscriptionPlan(data: z.infer<typeof planSchema>) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
-  const parsed = planSchema.parse(data);
+  const result = planSchema.safeParse(data);
+  if (!result.success) {
+    return { success: false as const, error: result.error.errors[0].message };
+  }
+  const parsed = result.data;
 
   // Create Stripe Price if the tenant has a connected account
   let stripePriceId: string | null = null;
@@ -149,7 +153,11 @@ export async function updateSubscriptionPlan(
 ) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
-  const parsed = planSchema.parse(data);
+  const result = planSchema.safeParse(data);
+  if (!result.success) {
+    throw new Error(result.error.errors[0].message);
+  }
+  const parsed = result.data;
 
   const existing = await prisma.subscriptionPlan.findFirst({
     where: { id: planId, tenantId: tenant.id },

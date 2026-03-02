@@ -96,8 +96,22 @@ export async function sendEmail(params: SendEmailParams): Promise<{
 // Email Template Rendering
 // =============================================================================
 
+/** Escape HTML special characters to prevent XSS in email bodies. */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/** Escape regex special characters in a string. */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /**
- * Render an email template by replacing {{merge_tags}} with values.
+ * Render an email template by replacing {{merge_tags}} with HTML-escaped values.
  */
 export function renderEmailTemplate(
   template: string,
@@ -106,8 +120,8 @@ export function renderEmailTemplate(
   let rendered = template;
   for (const [key, value] of Object.entries(variables)) {
     rendered = rendered.replace(
-      new RegExp(`\\{\\{${key}\\}\\}`, "g"),
-      value
+      new RegExp(`\\{\\{${escapeRegex(key)}\\}\\}`, "g"),
+      escapeHtml(value)
     );
   }
   return rendered;

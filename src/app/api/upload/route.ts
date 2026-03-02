@@ -78,9 +78,10 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Detect content type from file
-    const contentType = file.type || uploadConfig.contentType;
-    const ext = file.name?.match(/\.\w+$/)?.[0] || uploadConfig.ext;
+    // Always use server-defined content type and extension to prevent
+    // upload of HTML/JS disguised as images
+    const contentType = uploadConfig.contentType;
+    const ext = uploadConfig.ext;
 
     let url: string;
     if (type === "delivery_photo") {

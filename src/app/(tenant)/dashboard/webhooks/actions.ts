@@ -29,7 +29,11 @@ export async function createWebhookEndpoint(data: z.infer<typeof createEndpointS
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
 
-  const validated = createEndpointSchema.parse(data);
+  const result = createEndpointSchema.safeParse(data);
+  if (!result.success) {
+    throw new Error(result.error.errors[0].message);
+  }
+  const validated = result.data;
   const secret = generateWebhookSecret();
 
   return prisma.webhookEndpoint.create({
@@ -46,19 +50,31 @@ export async function createWebhookEndpoint(data: z.infer<typeof createEndpointS
   });
 }
 
+const updateEndpointSchema = z.object({
+  url: z.string().url("Must be a valid URL").optional(),
+  events: z.array(z.string()).min(1, "Select at least one event").optional(),
+  isActive: z.boolean().optional(),
+});
+
 export async function updateWebhookEndpoint(
   endpointId: string,
-  data: { url?: string; events?: string[]; isActive?: boolean }
+  data: z.infer<typeof updateEndpointSchema>
 ) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
 
+  const result = updateEndpointSchema.safeParse(data);
+  if (!result.success) {
+    throw new Error(result.error.errors[0].message);
+  }
+  const validated = result.data;
+
   return prisma.webhookEndpoint.update({
     where: { id: endpointId, tenantId: tenant.id },
     data: {
-      ...(data.url && { url: data.url }),
-      ...(data.events && { events: data.events }),
-      ...(data.isActive !== undefined && { isActive: data.isActive }),
+      ...(validated.url && { url: validated.url }),
+      ...(validated.events && { events: validated.events }),
+      ...(validated.isActive !== undefined && { isActive: validated.isActive }),
     },
     include: {
       _count: { select: { deliveryLogs: true } },

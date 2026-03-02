@@ -93,6 +93,7 @@ export async function POST(req: NextRequest) {
         where: {
           customerId: session.user.id,
           promoCodeId: promo.id,
+          tenantId: tenant.id,
           paidAt: { not: null },
         },
       });

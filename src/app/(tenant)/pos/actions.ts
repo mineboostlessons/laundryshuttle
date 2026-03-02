@@ -172,11 +172,25 @@ export async function createPosOrder(
   });
   const taxRate = tenantFull?.defaultTaxRate ?? 0;
 
-  // Calculate totals
+  // Verify prices from DB to prevent client-side price manipulation
   let subtotal = 0;
   let taxableAmount = 0;
   for (const item of data.items) {
-    const lineTotal = item.unitPrice * item.quantity;
+    let verifiedPrice = item.unitPrice;
+    if (item.type === "service") {
+      const service = await prisma.service.findFirst({
+        where: { id: item.id, tenantId: tenant.id, isActive: true },
+        select: { price: true },
+      });
+      if (service) verifiedPrice = service.price;
+    } else if (item.type === "retail_product") {
+      const product = await prisma.retailProduct.findFirst({
+        where: { id: item.id, tenantId: tenant.id, inStock: true },
+        select: { price: true },
+      });
+      if (product) verifiedPrice = product.price;
+    }
+    const lineTotal = verifiedPrice * item.quantity;
     subtotal += lineTotal;
     if (item.taxable) {
       taxableAmount += lineTotal;

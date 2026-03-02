@@ -313,7 +313,14 @@ h1, h2, h3 {
 `;
 
   if (overrides?.customCss) {
-    css += `\n${overrides.customCss}`;
+    // Sanitize custom CSS to prevent XSS via </style><script> injection
+    const sanitized = overrides.customCss
+      .replace(/<\/style/gi, "")
+      .replace(/<script/gi, "")
+      .replace(/<\//g, "")
+      .replace(/javascript:/gi, "")
+      .replace(/expression\s*\(/gi, "");
+    css += `\n${sanitized}`;
   }
 
   return css;

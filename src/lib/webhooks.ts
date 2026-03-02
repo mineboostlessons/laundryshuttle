@@ -1,9 +1,43 @@
 import crypto from "crypto";
+import { URL } from "url";
 import prisma from "./prisma";
 
 // =============================================================================
 // Outgoing Webhook System
 // =============================================================================
+
+// SSRF protection: block private/internal IP ranges and cloud metadata endpoints
+const BLOCKED_HOSTNAME_PATTERNS = [
+  "localhost",
+  "127.0.0.1",
+  "[::1]",
+  "0.0.0.0",
+  "169.254.169.254",  // AWS/GCP metadata
+  "metadata.google.internal",
+];
+
+const PRIVATE_IP_RANGES = [
+  /^10\./,
+  /^172\.(1[6-9]|2\d|3[01])\./,
+  /^192\.168\./,
+  /^169\.254\./,
+  /^127\./,
+  /^0\./,
+];
+
+function isUrlSafe(urlStr: string): boolean {
+  try {
+    const url = new URL(urlStr);
+    if (!["http:", "https:"].includes(url.protocol)) return false;
+    const hostname = url.hostname.toLowerCase();
+    if (BLOCKED_HOSTNAME_PATTERNS.some((p) => hostname === p || hostname.endsWith(`.${p}`))) return false;
+    // Check if hostname looks like a private IP
+    if (PRIVATE_IP_RANGES.some((r) => r.test(hostname))) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /** Supported webhook events that tenants can subscribe to */
 export const WEBHOOK_EVENTS = [
@@ -68,6 +102,22 @@ async function deliverWebhook(params: {
   statusCode: number | null;
   responseBody: string | null;
 }> {
+  // SSRF protection: reject internal/private URLs
+  if (!isUrlSafe(params.url)) {
+    const errorMessage = "Webhook URL blocked: private or internal address";
+    await prisma.webhookDeliveryLog.create({
+      data: {
+        endpointId: params.endpointId,
+        event: params.payload.event,
+        payload: JSON.parse(JSON.stringify(params.payload)),
+        statusCode: null,
+        responseBody: errorMessage,
+        success: false,
+      },
+    });
+    return { success: false, statusCode: null, responseBody: errorMessage };
+  }
+
   const body = JSON.stringify(params.payload);
   const signature = signPayload(body, params.secret);
   const timestamp = Math.floor(Date.now() / 1000).toString();

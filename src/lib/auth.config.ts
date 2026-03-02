@@ -31,10 +31,11 @@ export const authConfig = {
         token.tenantSlug = user.tenantSlug ?? null;
       }
 
-      if (trigger === "update" && session) {
-        if (session.role) token.role = session.role;
-        if (session.tenantId !== undefined) token.tenantId = session.tenantId;
-        if (session.tenantSlug !== undefined) token.tenantSlug = session.tenantSlug;
+      // Session updates are handled in auth.ts where Prisma is available
+      // to verify values from the database. Do NOT trust client-provided
+      // role/tenantId/tenantSlug here — that would allow privilege escalation.
+      if (trigger === "update") {
+        // Noop in edge config — full auth.ts callback handles this securely
       }
 
       return token;

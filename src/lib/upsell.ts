@@ -1,5 +1,6 @@
 "use server";
 
+import crypto from "crypto";
 import prisma from "@/lib/prisma";
 import { sendNotification } from "@/lib/notifications";
 
@@ -289,7 +290,7 @@ export async function generateWinBackPromos(
 
     if (existing) continue;
 
-    const code = `COMEBACK-${customer.firstName?.toUpperCase().slice(0, 3) ?? "CUS"}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+    const code = `COMEBACK-${customer.firstName?.toUpperCase().slice(0, 3) ?? "CUS"}-${crypto.randomBytes(3).toString("hex").toUpperCase().slice(0, 4)}`;
 
     const validUntil = new Date();
     validUntil.setDate(validUntil.getDate() + 14); // 2 week expiry
@@ -369,7 +370,7 @@ export async function executeWinBackCampaign(
 
     if (existing) continue;
 
-    const code = `COMEBACK-${customer.firstName?.toUpperCase().slice(0, 3) ?? "CUS"}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+    const code = `COMEBACK-${customer.firstName?.toUpperCase().slice(0, 3) ?? "CUS"}-${crypto.randomBytes(3).toString("hex").toUpperCase().slice(0, 4)}`;
 
     const validUntil = new Date();
     validUntil.setDate(validUntil.getDate() + 14);

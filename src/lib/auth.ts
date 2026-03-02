@@ -217,10 +217,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
 
-      if (trigger === "update" && session) {
-        if (session.role) token.role = session.role;
-        if (session.tenantId !== undefined) token.tenantId = session.tenantId;
-        if (session.tenantSlug !== undefined) token.tenantSlug = session.tenantSlug;
+      // On session update, re-fetch role/tenant from DB to prevent
+      // client-side privilege escalation via update({ role: "owner" })
+      if (trigger === "update") {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true, tenantId: true, isActive: true },
+        });
+        if (dbUser && dbUser.isActive) {
+          token.role = dbUser.role;
+          token.tenantId = dbUser.tenantId;
+          if (dbUser.tenantId) {
+            const t = await prisma.tenant.findUnique({
+              where: { id: dbUser.tenantId },
+              select: { slug: true },
+            });
+            token.tenantSlug = t?.slug ?? null;
+          } else {
+            token.tenantSlug = null;
+          }
+        }
       }
 
       return token;
