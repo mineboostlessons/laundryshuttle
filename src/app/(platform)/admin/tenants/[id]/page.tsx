@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import prisma from "@/lib/prisma";
+import { requireRole } from "@/lib/auth-helpers";
+import { UserRole } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -13,6 +15,7 @@ interface PageProps {
 }
 
 export default async function TenantDetailPage({ params }: PageProps) {
+  await requireRole(UserRole.PLATFORM_ADMIN);
   const { id } = await params;
 
   const tenant = await prisma.tenant.findUnique({

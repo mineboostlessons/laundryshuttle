@@ -584,6 +584,17 @@ export async function completeDelivery(
 
   const { stopId, deliveryPhotoUrl, signatureUrl } = parsed.data;
 
+  // Validate URLs are from our R2 storage domain
+  const r2PublicUrl = process.env.R2_PUBLIC_URL;
+  if (r2PublicUrl) {
+    if (deliveryPhotoUrl && !deliveryPhotoUrl.startsWith(r2PublicUrl)) {
+      return { success: false, error: "Invalid delivery photo URL" };
+    }
+    if (signatureUrl && !signatureUrl.startsWith(r2PublicUrl)) {
+      return { success: false, error: "Invalid signature URL" };
+    }
+  }
+
   const stop = await prisma.routeStop.findFirst({
     where: {
       id: stopId,

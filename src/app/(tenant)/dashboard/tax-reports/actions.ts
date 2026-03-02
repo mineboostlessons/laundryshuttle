@@ -166,8 +166,11 @@ export async function exportTaxReportCsv(taxYear: number) {
 
   const monthly = (report.monthlyBreakdown as { month: number; gross: number; transactions: number; refunds: number }[]) ?? [];
 
+  // Escape CSV values to prevent formula injection
+  const esc = (v: string) => (/^[=+\-@\t\r]/.test(v) ? `'${v}` : v);
+
   let csv = "1099-K Tax Summary Report\n";
-  csv += `Business: ${report.businessName}\n`;
+  csv += `Business: ${esc(report.businessName)}\n`;
   csv += `Tax Year: ${report.taxYear}\n\n`;
   csv += "Month,Gross Payments,Transactions,Refunds\n";
 

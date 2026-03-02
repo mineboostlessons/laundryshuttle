@@ -31,7 +31,11 @@ export async function getAdminMarketplaceApps() {
 export async function createMarketplaceApp(data: z.infer<typeof createAppSchema>) {
   await requireRole(UserRole.PLATFORM_ADMIN);
 
-  const validated = createAppSchema.parse(data);
+  const parsed = createAppSchema.safeParse(data);
+  if (!parsed.success) {
+    throw new Error(parsed.error.errors[0].message);
+  }
+  const validated = parsed.data;
 
   return prisma.marketplaceApp.create({
     data: {

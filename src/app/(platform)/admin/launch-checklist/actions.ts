@@ -1,6 +1,8 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { requireRole } from "@/lib/auth-helpers";
+import { UserRole } from "@/types";
 
 export interface ChecklistItem {
   id: string;
@@ -12,6 +14,7 @@ export interface ChecklistItem {
 }
 
 export async function runLaunchChecklist(): Promise<ChecklistItem[]> {
+  await requireRole(UserRole.PLATFORM_ADMIN);
   const checks: ChecklistItem[] = [];
 
   // ── Infrastructure ──────────────────────────────────────────────────────

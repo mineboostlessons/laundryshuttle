@@ -53,32 +53,35 @@ export async function GET(request: Request) {
         select: { id: true },
       });
 
-      if (sandboxOrders.length > 0) {
-        const orderIds = sandboxOrders.map((o) => o.id);
-        await prisma.orderItem.deleteMany({
-          where: { orderId: { in: orderIds } },
-        });
-        await prisma.orderStatusHistory.deleteMany({
-          where: { orderId: { in: orderIds } },
-        });
-        await prisma.order.deleteMany({
-          where: { id: { in: orderIds } },
-        });
-      }
+      // Wrap all deletes in a transaction for atomicity
+      await prisma.$transaction(async (tx) => {
+        if (sandboxOrders.length > 0) {
+          const orderIds = sandboxOrders.map((o) => o.id);
+          await tx.orderItem.deleteMany({
+            where: { orderId: { in: orderIds } },
+          });
+          await tx.orderStatusHistory.deleteMany({
+            where: { orderId: { in: orderIds } },
+          });
+          await tx.order.deleteMany({
+            where: { id: { in: orderIds } },
+          });
+        }
 
-      await prisma.user.deleteMany({
-        where: {
-          tenantId: tenant.id,
-          email: { contains: "sandbox-" },
-        },
-      });
+        await tx.user.deleteMany({
+          where: {
+            tenantId: tenant.id,
+            email: { contains: "sandbox-" },
+          },
+        });
 
-      // Clear expired demo sessions
-      await prisma.demoSession.deleteMany({
-        where: {
-          tenantId: tenant.id,
-          expiresAt: { lt: new Date() },
-        },
+        // Clear expired demo sessions
+        await tx.demoSession.deleteMany({
+          where: {
+            tenantId: tenant.id,
+            expiresAt: { lt: new Date() },
+          },
+        });
       });
 
       resetCount++;

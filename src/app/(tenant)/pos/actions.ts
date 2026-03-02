@@ -175,6 +175,7 @@ export async function createPosOrder(
   // Verify prices from DB to prevent client-side price manipulation
   let subtotal = 0;
   let taxableAmount = 0;
+  const verifiedPrices = new Map<string, number>();
   for (const item of data.items) {
     let verifiedPrice = item.unitPrice;
     if (item.type === "service") {
@@ -190,6 +191,7 @@ export async function createPosOrder(
       });
       if (product) verifiedPrice = product.price;
     }
+    verifiedPrices.set(item.id, verifiedPrice);
     const lineTotal = verifiedPrice * item.quantity;
     subtotal += lineTotal;
     if (item.taxable) {
@@ -226,15 +228,18 @@ export async function createPosOrder(
         paidAt: new Date(),
         specialInstructions: data.notes,
         items: {
-          create: data.items.map((item) => ({
-            itemType: item.type === "service" ? "service" : "retail_product",
-            serviceId: item.type === "service" ? item.id : null,
-            retailProductId: item.type === "retail_product" ? item.id : null,
-            name: item.name,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            totalPrice: item.unitPrice * item.quantity,
-          })),
+          create: data.items.map((item) => {
+            const price = verifiedPrices.get(item.id) ?? item.unitPrice;
+            return {
+              itemType: item.type === "service" ? "service" : "retail_product",
+              serviceId: item.type === "service" ? item.id : null,
+              retailProductId: item.type === "retail_product" ? item.id : null,
+              name: item.name,
+              quantity: item.quantity,
+              unitPrice: price,
+              totalPrice: price * item.quantity,
+            };
+          }),
         },
       },
     });
@@ -256,7 +261,7 @@ export async function createPosOrder(
           where: {
             id: item.id,
             tenantId: tenant.id,
-            stockQuantity: { not: null },
+            stockQuantity: { not: null, gte: item.quantity },
           },
           data: {
             stockQuantity: { decrement: item.quantity },

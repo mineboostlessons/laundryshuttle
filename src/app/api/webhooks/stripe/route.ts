@@ -149,32 +149,34 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
       });
     }
 
-    // Deduct wallet if used
+    // Deduct wallet if used (atomic decrement to prevent race conditions)
     if (walletDeduction > 0 && order.customerId) {
-      const user = await tx.user.findUnique({
+      const updatedUser = await tx.user.update({
         where: { id: order.customerId },
+        data: { walletBalance: { decrement: walletDeduction } },
         select: { walletBalance: true },
       });
 
-      if (user) {
-        const newBalance = Math.max(0, user.walletBalance - walletDeduction);
+      // Clamp to zero if balance went negative
+      const finalBalance = Math.max(0, updatedUser.walletBalance);
+      if (updatedUser.walletBalance < 0) {
         await tx.user.update({
           where: { id: order.customerId },
-          data: { walletBalance: newBalance },
-        });
-
-        await tx.walletTransaction.create({
-          data: {
-            userId: order.customerId,
-            tenantId: order.tenantId,
-            type: "order_payment",
-            amount: -walletDeduction,
-            balanceAfter: newBalance,
-            description: `Payment for order ${order.orderNumber}`,
-            orderId: order.id,
-          },
+          data: { walletBalance: 0 },
         });
       }
+
+      await tx.walletTransaction.create({
+        data: {
+          userId: order.customerId,
+          tenantId: order.tenantId,
+          type: "order_payment",
+          amount: -walletDeduction,
+          balanceAfter: finalBalance,
+          description: `Payment for order ${order.orderNumber}`,
+          orderId: order.id,
+        },
+      });
     }
   });
 }

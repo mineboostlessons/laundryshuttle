@@ -47,11 +47,14 @@ const installSchema = z.object({
 });
 
 export async function installApp(data: z.infer<typeof installSchema>) {
-  await requireRole(UserRole.OWNER);
-  const tenant = await requireTenant();
   const session = await requireRole(UserRole.OWNER);
+  const tenant = await requireTenant();
 
-  const validated = installSchema.parse(data);
+  const parsed = installSchema.safeParse(data);
+  if (!parsed.success) {
+    throw new Error(parsed.error.errors[0].message);
+  }
+  const validated = parsed.data;
 
   // Verify the app exists and is active
   const app = await prisma.marketplaceApp.findFirst({

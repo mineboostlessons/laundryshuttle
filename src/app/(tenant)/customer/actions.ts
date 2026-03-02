@@ -430,6 +430,17 @@ export async function deleteAddress(addressId: string) {
   });
   if (!existing) throw new Error("Address not found");
 
+  // Prevent deleting addresses used in active orders
+  const activeOrders = await prisma.order.count({
+    where: {
+      pickupAddressId: addressId,
+      status: { notIn: ["delivered", "completed", "cancelled", "refunded"] },
+    },
+  });
+  if (activeOrders > 0) {
+    throw new Error("Cannot delete address used in active orders");
+  }
+
   await prisma.customerAddress.delete({ where: { id: addressId } });
   revalidatePath("/customer/addresses");
   return { success: true };

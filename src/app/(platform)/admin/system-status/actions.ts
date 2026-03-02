@@ -68,7 +68,7 @@ export async function getSystemStatus(): Promise<SystemStatusData> {
       name: "Stripe Payments",
       status: process.env.STRIPE_SECRET_KEY ? "healthy" : "unhealthy",
       message: process.env.STRIPE_SECRET_KEY
-        ? `Key: ${process.env.STRIPE_SECRET_KEY.substring(0, 7)}...`
+        ? "API key configured"
         : "API key not configured",
     },
     {
