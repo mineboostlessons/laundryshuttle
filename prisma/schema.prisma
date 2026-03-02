@@ -246,6 +246,8 @@ model User {
   walletTransactions    WalletTransaction[]
   posShifts             PosShift[]                 @relation("AttendantShifts")
   tourProgress          ProductTourProgress[]
+  installedApps         TenantAppInstallation[]    @relation("InstalledApps")
+  createdMigrations     MigrationLog[]             @relation("MigrationCreatedBy")
 
   @@unique([email, tenantId])
   @@index([tenantId])
@@ -281,6 +283,7 @@ model Account {
   session_state     String?
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -291,6 +294,7 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expires      DateTime
 
+  @@index([userId])
   @@map("sessions")
 }
 
@@ -523,6 +527,9 @@ model Order {
 
   @@index([tenantId])
   @@index([customerId])
+  @@index([driverId])
+  @@index([attendantId])
+  @@index([laundromatId])
   @@index([status])
   @@index([createdAt])
   @@map("orders")
@@ -606,6 +613,7 @@ model DriverRoute {
   stops RouteStop[]
 
   @@index([driverId, date])
+  @@index([laundromatId])
   @@map("driver_routes")
 }
 
@@ -702,6 +710,7 @@ model CustomerSubscription {
   cancelledAt DateTime?
 
   @@index([userId])
+  @@index([planId])
   @@map("customer_subscriptions")
 }
 
@@ -1121,6 +1130,7 @@ model TenantAppInstallation {
   config        Json? // App-specific configuration
   status        String    @default("active") // active, paused, error
   installedById String // User who installed
+  installedBy   User      @relation("InstalledApps", fields: [installedById], references: [id])
   lastSyncAt    DateTime?
   errorMessage  String?
 
@@ -1203,6 +1213,7 @@ model MigrationLog {
   startedAt       DateTime?
   completedAt     DateTime?
   createdByUserId String?
+  createdByUser   User?     @relation("MigrationCreatedBy", fields: [createdByUserId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
