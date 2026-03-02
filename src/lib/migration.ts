@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { z } from "zod";
+import { geocodeAddress } from "@/lib/mapbox";
 
 // =============================================================================
 // TYPES
@@ -209,13 +210,31 @@ export async function importCustomers(
             where: { tenantId, email: parsed.data.email },
           });
           if (user) {
+            // Geocode the address to get coordinates
+            let lat: number | null = null;
+            let lng: number | null = null;
+            const city = parsed.data.city || "";
+            const state = parsed.data.state || "";
+            const zip = parsed.data.zip || "";
+            if (city && state && zip) {
+              const geo = await geocodeAddress(
+                `${parsed.data.addressLine1}, ${city}, ${state} ${zip}`
+              );
+              if (geo) {
+                lat = geo.lat;
+                lng = geo.lng;
+              }
+            }
+
             await prisma.customerAddress.create({
               data: {
                 userId: user.id,
                 addressLine1: parsed.data.addressLine1,
-                city: parsed.data.city || "",
-                state: parsed.data.state || "",
-                zip: parsed.data.zip || "",
+                city,
+                state,
+                zip,
+                lat,
+                lng,
                 isDefault: true,
                 pickupNotes: parsed.data.notes || null,
               },

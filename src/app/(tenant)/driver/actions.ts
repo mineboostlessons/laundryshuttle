@@ -224,16 +224,17 @@ export async function buildTodaysRoute(
 
   // Determine stop type per order and route type
   const stops = orders
-    .filter((o) => o.pickupAddress)
+    .filter((o) => o.pickupAddress && o.pickupAddress.lat != null && o.pickupAddress.lng != null)
     .map((o, idx) => {
+      const addr = o.pickupAddress!;
       const stopType = o.status === "confirmed" ? "pickup" : "delivery";
       return {
         orderId: o.id,
         stopType,
         sequence: idx + 1,
-        address: `${o.pickupAddress!.addressLine1}, ${o.pickupAddress!.city}, ${o.pickupAddress!.state} ${o.pickupAddress!.zip}`,
-        lat: o.pickupAddress!.lat,
-        lng: o.pickupAddress!.lng,
+        address: `${addr.addressLine1}, ${addr.city}, ${addr.state} ${addr.zip}`,
+        lat: addr.lat as number,
+        lng: addr.lng as number,
       };
     });
 
@@ -249,18 +250,18 @@ export async function buildTodaysRoute(
   const depotLat = parsed.data.depotLat ?? laundromat.lat;
   const depotLng = parsed.data.depotLng ?? laundromat.lng;
 
-  // Create route + stops in a transaction
-  const route = await prisma.$transaction(async (tx) => {
+  // Create route + stops in a transaction, then query with includes
+  const routeId = await prisma.$transaction(async (tx) => {
     const newRoute = await tx.driverRoute.create({
       data: {
-        laundromatId: laundromat.id,
-        driverId: session.user.id,
+        laundromat: { connect: { id: laundromat.id } },
+        driver: { connect: { id: session.user.id } },
         date: todayStart,
         routeType,
         status: "planned",
         stops: {
           create: stops.map((s) => ({
-            orderId: s.orderId,
+            order: { connect: { id: s.orderId } },
             stopType: s.stopType,
             sequence: s.sequence,
             address: s.address,
@@ -269,9 +270,13 @@ export async function buildTodaysRoute(
           })),
         },
       },
-      include: { stops: true },
     });
-    return newRoute;
+    return newRoute.id;
+  });
+
+  const route = await prisma.driverRoute.findUniqueOrThrow({
+    where: { id: routeId },
+    include: { stops: true },
   });
 
   // Auto-optimize if more than 1 stop (max 12 for Mapbox)

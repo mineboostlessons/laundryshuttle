@@ -2,6 +2,7 @@
 
 import { Component, type ReactNode } from "react";
 import dynamic from "next/dynamic";
+import type { ServiceAreaViewProps } from "./service-area-view";
 
 // Error boundary to catch client-side Mapbox crashes
 class MapErrorBoundary extends Component<
@@ -71,7 +72,7 @@ const DynamicServiceAreaView = dynamic(
 );
 
 // Wrap in error boundary to catch runtime errors from Mapbox
-export function ServiceAreaView(props: Record<string, unknown>) {
+export function ServiceAreaView(props: ServiceAreaViewProps) {
   return (
     <MapErrorBoundary>
       <DynamicServiceAreaView {...props} />

@@ -83,10 +83,12 @@ export function TenantEditForm({ tenant }: { tenant: TenantData }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="modern">Modern</SelectItem>
-                <SelectItem value="classic">Classic</SelectItem>
-                <SelectItem value="bold">Bold</SelectItem>
-                <SelectItem value="minimal">Minimal</SelectItem>
+                <SelectItem value="clean_luxe">Clean Luxe</SelectItem>
+                <SelectItem value="fresh_wave">Fresh Wave</SelectItem>
+                <SelectItem value="eco_zen">Eco Zen</SelectItem>
+                <SelectItem value="neon_express">Neon Express</SelectItem>
+                <SelectItem value="soft_cloud">Soft Cloud</SelectItem>
+                <SelectItem value="metro_editorial">Metro Editorial</SelectItem>
               </SelectContent>
             </Select>
           </div>

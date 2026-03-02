@@ -29,7 +29,7 @@ interface ZoneOverride {
   };
 }
 
-interface ServiceAreaViewProps {
+export interface ServiceAreaViewProps {
   laundromatId: string;
   laundromatName: string;
   center: [number, number]; // [lng, lat]

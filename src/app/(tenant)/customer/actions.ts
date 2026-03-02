@@ -7,6 +7,7 @@ import { UserRole } from "@/types";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getUpsellsForCustomer, type UpsellRecommendation } from "@/lib/upsell";
+import { geocodeAddress } from "@/lib/mapbox";
 
 // ---------------------------------------------------------------------------
 // Dashboard Overview
@@ -322,6 +323,18 @@ export async function createAddress(data: z.infer<typeof addressSchema>) {
   const session = await requireRole(UserRole.CUSTOMER);
   const parsed = addressSchema.parse(data);
 
+  // Geocode if lat/lng not provided
+  let lat = parsed.lat ?? null;
+  let lng = parsed.lng ?? null;
+  if (lat == null || lng == null) {
+    const query = `${parsed.addressLine1}, ${parsed.city}, ${parsed.state} ${parsed.zip}`;
+    const result = await geocodeAddress(query);
+    if (result) {
+      lat = result.lat;
+      lng = result.lng;
+    }
+  }
+
   if (parsed.isDefault) {
     await prisma.customerAddress.updateMany({
       where: { userId: session.user.id },
@@ -338,8 +351,8 @@ export async function createAddress(data: z.infer<typeof addressSchema>) {
       city: parsed.city,
       state: parsed.state,
       zip: parsed.zip,
-      lat: parsed.lat ?? null,
-      lng: parsed.lng ?? null,
+      lat,
+      lng,
       pickupNotes: parsed.pickupNotes ?? null,
       isDefault: parsed.isDefault ?? false,
     },
@@ -362,6 +375,18 @@ export async function updateAddress(
   });
   if (!existing) throw new Error("Address not found");
 
+  // Geocode if lat/lng not provided
+  let lat = parsed.lat ?? null;
+  let lng = parsed.lng ?? null;
+  if (lat == null || lng == null) {
+    const query = `${parsed.addressLine1}, ${parsed.city}, ${parsed.state} ${parsed.zip}`;
+    const result = await geocodeAddress(query);
+    if (result) {
+      lat = result.lat;
+      lng = result.lng;
+    }
+  }
+
   if (parsed.isDefault) {
     await prisma.customerAddress.updateMany({
       where: { userId: session.user.id, id: { not: addressId } },
@@ -378,8 +403,8 @@ export async function updateAddress(
       city: parsed.city,
       state: parsed.state,
       zip: parsed.zip,
-      lat: parsed.lat ?? null,
-      lng: parsed.lng ?? null,
+      lat,
+      lng,
       pickupNotes: parsed.pickupNotes ?? null,
       isDefault: parsed.isDefault ?? false,
     },

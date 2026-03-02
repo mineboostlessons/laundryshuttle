@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth-helpers";
 import { requireTenant } from "@/lib/tenant";
 import { UserRole } from "@/types";
 import { z } from "zod";
+import { geocodeAddress } from "@/lib/mapbox";
 
 const customerRowSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -179,6 +180,17 @@ export async function importCustomers(
 
       // Create address if provided
       if (row.addressLine1 && row.city && row.state && row.zip) {
+        // Geocode the address to get coordinates
+        let lat: number | null = null;
+        let lng: number | null = null;
+        const geo = await geocodeAddress(
+          `${row.addressLine1}, ${row.city}, ${row.state} ${row.zip}`
+        );
+        if (geo) {
+          lat = geo.lat;
+          lng = geo.lng;
+        }
+
         await prisma.customerAddress.create({
           data: {
             userId: user.id,
@@ -188,6 +200,8 @@ export async function importCustomers(
             city: row.city,
             state: row.state,
             zip: row.zip,
+            lat,
+            lng,
             isDefault: true,
           },
         });

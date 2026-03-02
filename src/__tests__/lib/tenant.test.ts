@@ -10,7 +10,7 @@ const MOCK_TENANT = {
   slug: "demo",
   businessName: "Demo Laundry",
   isActive: true,
-  themePreset: "modern",
+  themePreset: "clean_luxe",
   themeConfig: { primaryColor: "#3B82F6" },
 };
 
@@ -30,14 +30,6 @@ describe("getTenantBySlug", () => {
     });
     expect(mockPrisma.tenant.findUnique).toHaveBeenCalledWith({
       where: { slug: "demo" },
-      select: {
-        id: true,
-        slug: true,
-        businessName: true,
-        isActive: true,
-        themePreset: true,
-        themeConfig: true,
-      },
     });
   });
 
@@ -85,7 +77,6 @@ describe("getTenantByDomain", () => {
     });
     expect(mockPrisma.tenant.findUnique).toHaveBeenCalledWith({
       where: { customDomain: "demolaundry.com" },
-      select: expect.any(Object),
     });
   });
 
