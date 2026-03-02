@@ -17,13 +17,20 @@ export async function POST() {
       );
     }
 
-    // Find tenant's connected account
+    // Find tenant's connected account and verify it's active
     const tenant = await prisma.tenant.findUnique({
       where: { id: session.user.tenantId },
-      select: { stripeConnectAccountId: true, stripeConnectStatus: true },
+      select: { stripeConnectAccountId: true, stripeConnectStatus: true, isActive: true },
     });
 
-    if (!tenant?.stripeConnectAccountId) {
+    if (!tenant || !tenant.isActive) {
+      return NextResponse.json(
+        { success: false, error: "Tenant not found or inactive" },
+        { status: 403 }
+      );
+    }
+
+    if (!tenant.stripeConnectAccountId) {
       return NextResponse.json(
         { success: false, error: "Payments not set up for this business" },
         { status: 400 }

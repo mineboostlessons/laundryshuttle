@@ -40,9 +40,17 @@ export async function POST(request: NextRequest) {
 
     const { routeId } = parsed.data;
 
+    if (!session.user.tenantId) {
+      return NextResponse.json(
+        { success: false, error: "No tenant context" },
+        { status: 403 }
+      );
+    }
+
     const route = await prisma.driverRoute.findFirst({
       where: {
         id: routeId,
+        laundromat: { tenantId: session.user.tenantId },
         ...(session.user.role === "driver" && { driverId: session.user.id }),
       },
       include: {

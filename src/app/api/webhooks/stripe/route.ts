@@ -77,15 +77,35 @@ export async function POST(req: NextRequest) {
 async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
   // Handle wallet top-up
   if (paymentIntent.metadata?.type === "wallet_top_up") {
-    const { creditWalletFromPayment } = await import(
-      "@/app/(tenant)/customer/wallet/actions"
-    );
-    await creditWalletFromPayment({
-      userId: paymentIntent.metadata.userId,
-      tenantId: paymentIntent.metadata.tenantId,
-      amount: parseFloat(paymentIntent.metadata.amount),
-      stripePaymentIntentId: paymentIntent.id,
-    });
+    try {
+      const { creditWalletFromPayment } = await import(
+        "@/app/(tenant)/customer/wallet/actions"
+      );
+      await creditWalletFromPayment({
+        userId: paymentIntent.metadata.userId,
+        tenantId: paymentIntent.metadata.tenantId,
+        amount: parseFloat(paymentIntent.metadata.amount),
+        stripePaymentIntentId: paymentIntent.id,
+      });
+    } catch (walletError) {
+      console.error(
+        `Wallet credit failed for payment ${paymentIntent.id} ` +
+          `(user: ${paymentIntent.metadata.userId}, amount: ${paymentIntent.metadata.amount}):`,
+        walletError
+      );
+      // Log for manual reconciliation — payment succeeded but wallet credit did not
+      await prisma.walletTransaction.create({
+        data: {
+          userId: paymentIntent.metadata.userId,
+          tenantId: paymentIntent.metadata.tenantId,
+          type: "top_up_failed",
+          amount: parseFloat(paymentIntent.metadata.amount),
+          balanceAfter: 0,
+          description: `FAILED wallet credit — manual reconciliation needed. PaymentIntent: ${paymentIntent.id}`,
+          stripePaymentIntentId: paymentIntent.id,
+        },
+      });
+    }
     return;
   }
 
