@@ -20,93 +20,98 @@ datasource db {
 // =============================================================================
 
 model Tenant {
-  id                     String    @id @default(cuid())
-  slug                   String    @unique // URL slug: fastfreshlaundry
-  customDomain           String?   @unique // Optional: fastfreshlaundry.com
-  businessName           String
-  businessType           String    @default("laundromat") // laundromat, dry_cleaner, wash_and_fold, combo
-  phone                  String?
-  email                  String?
-  website                String?
-  yearEstablished        Int?
-  socialLinks            Json?     // { facebook, instagram, yelp, google }
-  trustBadges            Json?     // ["veteran_owned", "eco_friendly", etc.]
+  id              String  @id @default(cuid())
+  slug            String  @unique // URL slug: fastfreshlaundry
+  customDomain    String? @unique // Optional: fastfreshlaundry.com
+  businessName    String
+  businessType    String  @default("laundromat") // laundromat, dry_cleaner, wash_and_fold, combo
+  phone           String?
+  email           String?
+  website         String?
+  yearEstablished Int?
+  socialLinks     Json? // { facebook, instagram, yelp, google }
+  trustBadges     Json? // ["veteran_owned", "eco_friendly", etc.]
 
   // Stripe Connect
-  stripeConnectAccountId String?   @unique
-  stripeConnectStatus    String    @default("pending") // pending, active, restricted, disabled
+  stripeConnectAccountId   String? @unique
+  stripeConnectStatus      String  @default("pending") // pending, active, restricted, disabled
   stripeOnboardingComplete Boolean @default(false)
 
   // Subscription & Billing
-  subscriptionPlan       String    @default("standard") // standard ($99/mo)
-  subscriptionStatus     String    @default("active") // active, past_due, cancelled, trialing
-  platformFeePercent     Float     @default(0.01) // 1% default, adjustable per tenant
-  setupFeePaid           Boolean   @default(false)
+  subscriptionPlan   String  @default("standard") // standard ($99/mo)
+  subscriptionStatus String  @default("active") // active, past_due, cancelled, trialing
+  platformFeePercent Float   @default(0.01) // 1% default, adjustable per tenant
+  setupFeePaid       Boolean @default(false)
 
   // Theming
-  themePreset            String    @default("modern") // modern, classic, bold, minimal
-  themeConfig            Json?     // { primaryColor, secondaryColor, accentColor, fontFamily, logoUrl, faviconUrl, heroImageUrl }
-  customCss              String?
+  themePreset String  @default("clean_luxe") // clean_luxe, fresh_wave, eco_zen, neon_express, soft_cloud, metro_editorial
+  themeConfig Json? // { primaryColor, secondaryColor, accentColor, fontFamily, logoUrl, faviconUrl, heroImageUrl }
+  customCss   String?
 
   // SEO
-  seoDefaults            Json?     // { metaTitleTemplate, metaDescriptionTemplate, ogImageUrl }
+  seoDefaults Json? // { metaTitleTemplate, metaDescriptionTemplate, ogImageUrl }
 
   // Notification Settings
-  notificationSettings   Json?     // { emailEnabled, smsEnabled, pushEnabled, smsBudgetCap }
+  notificationSettings Json? // { emailEnabled, smsEnabled, pushEnabled, smsBudgetCap }
 
   // Operating Policies (auto-generated)
-  termsOfService         String?   @db.Text
-  refundPolicy           String?   @db.Text
-  privacyPolicy          String?   @db.Text
+  termsOfService String? @db.Text
+  refundPolicy   String? @db.Text
+  privacyPolicy  String? @db.Text
 
   // Tax
-  taxMode                String    @default("manual") // manual, stripe_tax
-  defaultTaxRate         Float     @default(0)
-  taxRegistrations       Json?     // [{ state, rate, registrationNumber }]
+  taxMode          String @default("manual") // manual, stripe_tax
+  defaultTaxRate   Float  @default(0)
+  taxRegistrations Json? // [{ state, rate, registrationNumber }]
 
   // Sandbox & Demo
-  isSandbox              Boolean   @default(false)
-  sandboxExpiresAt       DateTime?
-  isDemo                 Boolean   @default(false)
-  demoResetInterval      Int?      // Hours between auto-resets (null = no auto-reset)
+  isSandbox         Boolean   @default(false)
+  sandboxExpiresAt  DateTime?
+  isDemo            Boolean   @default(false)
+  demoResetInterval Int? // Hours between auto-resets (null = no auto-reset)
 
   // Referral Program
-  referralEnabled        Boolean   @default(false)
-  referralRewardAmount   Float     @default(10.0)  // Reward per successful referral
-  referralRewardType     String    @default("credit") // credit, promo_code
-  referralMinOrderValue  Float     @default(0)      // Min order value for referral to count
-  referralCodePrefix     String?                     // Custom prefix e.g. "FRESH"
-  referralExpiryDays     Int       @default(90)      // Days before referral code expires
+  referralEnabled       Boolean @default(false)
+  referralRewardAmount  Float   @default(10.0) // Reward per successful referral
+  referralRewardType    String  @default("credit") // credit, promo_code
+  referralMinOrderValue Float   @default(0) // Min order value for referral to count
+  referralCodePrefix    String? // Custom prefix e.g. "FRESH"
+  referralExpiryDays    Int     @default(90) // Days before referral code expires
 
   // Permissions
-  managerCanCreateStaff  Boolean   @default(false)
+  managerCanCreateStaff Boolean @default(false)
 
   // Status
-  isActive               Boolean   @default(true)
-  onboardingComplete     Boolean   @default(false)
-  setupCompletenessScore Int       @default(0)
+  isActive               Boolean @default(true)
+  onboardingComplete     Boolean @default(false)
+  setupCompletenessScore Int     @default(0)
 
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  laundromats            Laundromat[]
-  users                  User[]
-  orders                 Order[]
-  services               Service[]
-  serviceOptions         ServiceOption[]
-  promoCodes             PromoCode[]
-  pages                  Page[]
-  subscriptionPlans      SubscriptionPlan[]
-  commercialAccounts     CommercialAccount[]
-  webhookEndpoints       WebhookEndpoint[]
-  milestones             Milestone[]
-  notificationTemplates  NotificationTemplate[]
-  retailProducts         RetailProduct[]
-  migrationLogs          MigrationLog[]
-  benchmarkSnapshots     BenchmarkSnapshot[]
-  referrals              Referral[]
-  serviceAreaInterests   ServiceAreaInterest[]
+  laundromats           Laundromat[]
+  users                 User[]
+  orders                Order[]
+  services              Service[]
+  serviceOptions        ServiceOption[]
+  promoCodes            PromoCode[]
+  pages                 Page[]
+  subscriptionPlans     SubscriptionPlan[]
+  commercialAccounts    CommercialAccount[]
+  webhookEndpoints      WebhookEndpoint[]
+  milestones            Milestone[]
+  notificationTemplates NotificationTemplate[]
+  retailProducts        RetailProduct[]
+  migrationLogs         MigrationLog[]
+  benchmarkSnapshots    BenchmarkSnapshot[]
+  referrals             Referral[]
+  serviceAreaInterests  ServiceAreaInterest[]
+  walletTransactions    WalletTransaction[]
+  taxReports            TaxReport[]
+  appInstallations      TenantAppInstallation[]
+  demoSessions          DemoSession[]
+  domainVerifications   CustomDomainVerification[]
 
   @@map("tenants")
 }
@@ -116,54 +121,55 @@ model Tenant {
 // =============================================================================
 
 model Laundromat {
-  id                      String    @id @default(cuid())
-  tenantId                String
-  tenant                  Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  name                    String
-  address                 String
-  addressLine2            String?
-  city                    String
-  state                   String
-  zip                     String
-  lat                     Float
-  lng                     Float
-  phone                   String?
-  email                   String?
-  timezone                String    @default("America/New_York")
+  name         String
+  address      String
+  addressLine2 String?
+  city         String
+  state        String
+  zip          String
+  lat          Float
+  lng          Float
+  phone        String?
+  email        String?
+  timezone     String  @default("America/New_York")
 
   // Service Area
-  serviceAreaPolygons     Json?     // GeoJSON FeatureCollection
+  serviceAreaPolygons Json? // GeoJSON FeatureCollection
 
   // Operating Hours
-  operatingHours          Json?     // { monday: { open: "07:00", close: "21:00" }, ... }
-  pickupDays              Json?     // ["monday", "wednesday", "friday"]
-  deliveryDays            Json?     // ["tuesday", "thursday", "saturday"]
-  pickupTimeSlots         Json?     // ["9am-12pm", "12pm-3pm", "3pm-6pm"]
-  deliveryTimeSlots       Json?     // ["9am-12pm", "12pm-3pm", "3pm-6pm"]
-  sameDayPickupEnabled    Boolean   @default(false)
-  sameDayPickupCutoff     String?   // "12:00"
-  sameDayPickupFee        Float     @default(0)    // surcharge for same-day pickup
-  sameDayCutoffHours      Int       @default(3)    // hours before driver shift end as cutoff
-  minHoursBeforeDelivery  Int       @default(24)
-  blockedDates            Json?     // [{ date, reason }]
+  operatingHours         Json? // { monday: { open: "07:00", close: "21:00" }, ... }
+  pickupDays             Json? // ["monday", "wednesday", "friday"]
+  deliveryDays           Json? // ["tuesday", "thursday", "saturday"]
+  pickupTimeSlots        Json? // ["9am-12pm", "12pm-3pm", "3pm-6pm"]
+  deliveryTimeSlots      Json? // ["9am-12pm", "12pm-3pm", "3pm-6pm"]
+  sameDayPickupEnabled   Boolean @default(false)
+  sameDayPickupCutoff    String? // "12:00"
+  sameDayPickupFee       Float   @default(0) // surcharge for same-day pickup
+  sameDayCutoffHours     Int     @default(3) // hours before driver shift end as cutoff
+  minHoursBeforeDelivery Int     @default(24)
+  blockedDates           Json? // [{ date, reason }]
 
   // Equipment
-  numWashers              Int       @default(0)
-  numDryers               Int       @default(0)
+  numWashers Int @default(0)
+  numDryers  Int @default(0)
 
   // Notes
-  managerNote             String?   @db.Text
+  managerNote String? @db.Text
 
-  isActive                Boolean   @default(true)
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  orders                  Order[]
-  driverRoutes            DriverRoute[]
-  userAssignments         UserLaundromatAssignment[]
-  zoneDriverOverrides     ZoneDriverOverride[]
+  orders              Order[]
+  driverRoutes        DriverRoute[]
+  userAssignments     UserLaundromatAssignment[]
+  zoneDriverOverrides ZoneDriverOverride[]
+  posShifts           PosShift[]
 
   @@index([tenantId])
   @@map("laundromats")
@@ -174,69 +180,72 @@ model Laundromat {
 // =============================================================================
 
 model User {
-  id                     String    @id @default(cuid())
-  tenantId               String?   // null for Platform Admins
-  tenant                 Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id       String  @id @default(cuid())
+  tenantId String? // null for Platform Admins
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  email                  String
-  phone                  String?
-  passwordHash           String?   // null if social login only
-  emailVerified          DateTime?
-  twoFactorEnabled       Boolean   @default(false)
+  email            String
+  phone            String?
+  passwordHash     String? // null if social login only
+  emailVerified    DateTime?
+  twoFactorEnabled Boolean   @default(false)
 
   // Profile
-  firstName              String?
-  lastName               String?
-  avatarUrl              String?
+  firstName String?
+  lastName  String?
+  avatarUrl String?
 
   // Auth Provider
-  authProvider           String    @default("email") // email, google, facebook
-  authProviderId         String?
+  authProvider   String  @default("email") // email, google, facebook
+  authProviderId String?
 
   // Role
-  role                   String    // platform_admin, owner, manager, attendant, driver, customer
+  role String // platform_admin, owner, manager, attendant, driver, customer
 
   // Customer Preferences
-  notificationPreference String    @default("both") // email, sms, both, push
-  defaultPreferences     Json?     // { detergent, waterTemp, fabricSoftener, ... }
+  notificationPreference String @default("both") // email, sms, both, push
+  defaultPreferences     Json? // { detergent, waterTemp, fabricSoftener, ... }
 
   // Customer Wallet
-  walletBalance          Float     @default(0)
+  walletBalance Float @default(0)
 
   // Stripe
-  stripeCustomerId       String?   // For customers (on connected account)
+  stripeCustomerId String? // For customers (on connected account)
 
   // Driver-specific
-  vehicleInfo            Json?     // { make, model, year, color, licensePlate }
-  shiftEndTime           String?   // e.g. "18:00", driver's daily shift end
+  vehicleInfo  Json? // { make, model, year, color, licensePlate }
+  shiftEndTime String? // e.g. "18:00", driver's daily shift end
 
   // Status
-  isActive               Boolean   @default(true)
-  forcePasswordChange    Boolean   @default(false)
-  lastLoginAt            DateTime?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  isActive            Boolean   @default(true)
+  forcePasswordChange Boolean   @default(false)
+  lastLoginAt         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   // Relations
-  addresses              CustomerAddress[]
-  paymentMethods         CustomerPaymentMethod[]
-  ordersAsCustomer       Order[]           @relation("CustomerOrders")
-  ordersAsDriver         Order[]           @relation("DriverOrders")
-  ordersAsAttendant      Order[]           @relation("AttendantOrders")
-  orderStatusChanges     OrderStatusHistory[]
-  driverRoutes           DriverRoute[]
-  reviews                Review[]
-  tips                   Tip[]
-  referralsGiven         Referral[]        @relation("ReferrerUser")
-  referralsReceived      Referral[]        @relation("ReferredUser")
-  laundromatAssignments  UserLaundromatAssignment[]
-  notificationLog        NotificationLog[]
-  sessions               Session[]
-  accounts               Account[]
-  customerSubscriptions  CustomerSubscription[]
-  issuedReports          IssueReport[]     @relation("IssuedBy")
-  resolvedReports        IssueReport[]     @relation("ResolvedBy")
-  zoneDriverOverrides    ZoneDriverOverride[] @relation("ZoneDriverOverrides")
+  addresses             CustomerAddress[]
+  paymentMethods        CustomerPaymentMethod[]
+  ordersAsCustomer      Order[]                    @relation("CustomerOrders")
+  ordersAsDriver        Order[]                    @relation("DriverOrders")
+  ordersAsAttendant     Order[]                    @relation("AttendantOrders")
+  orderStatusChanges    OrderStatusHistory[]
+  driverRoutes          DriverRoute[]
+  reviews               Review[]
+  tips                  Tip[]
+  referralsGiven        Referral[]                 @relation("ReferrerUser")
+  referralsReceived     Referral[]                 @relation("ReferredUser")
+  laundromatAssignments UserLaundromatAssignment[]
+  notificationLog       NotificationLog[]
+  sessions              Session[]
+  accounts              Account[]
+  customerSubscriptions CustomerSubscription[]
+  issuedReports         IssueReport[]              @relation("IssuedBy")
+  resolvedReports       IssueReport[]              @relation("ResolvedBy")
+  zoneDriverOverrides   ZoneDriverOverride[]       @relation("ZoneDriverOverrides")
+  walletTransactions    WalletTransaction[]
+  posShifts             PosShift[]                 @relation("AttendantShifts")
+  tourProgress          ProductTourProgress[]
 
   @@unique([email, tenantId])
   @@index([tenantId])
@@ -245,11 +254,11 @@ model User {
 }
 
 model UserLaundromatAssignment {
-  id            String      @id @default(cuid())
-  userId        String
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  laundromatId  String
-  laundromat    Laundromat  @relation(fields: [laundromatId], references: [id], onDelete: Cascade)
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  laundromatId String
+  laundromat   Laundromat @relation(fields: [laundromatId], references: [id], onDelete: Cascade)
 
   @@unique([userId, laundromatId])
   @@map("user_laundromat_assignments")
@@ -299,11 +308,11 @@ model VerificationToken {
 // =============================================================================
 
 model CustomerAddress {
-  id           String   @id @default(cuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  label        String?  // "Home", "Work", etc.
+  label        String? // "Home", "Work", etc.
   addressLine1 String
   addressLine2 String?
   city         String
@@ -311,30 +320,30 @@ model CustomerAddress {
   zip          String
   lat          Float?
   lng          Float?
-  isDefault    Boolean  @default(false)
-  pickupNotes  String?  @db.Text
+  isDefault    Boolean @default(false)
+  pickupNotes  String? @db.Text
 
-  createdAt    DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  orders       Order[]
+  orders Order[]
 
   @@index([userId])
   @@map("customer_addresses")
 }
 
 model CustomerPaymentMethod {
-  id                    String   @id @default(cuid())
-  userId                String
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   stripePaymentMethodId String
   cardLastFour          String
-  cardBrand             String   // visa, mastercard, amex, etc.
+  cardBrand             String // visa, mastercard, amex, etc.
   expMonth              Int
   expYear               Int
-  isDefault             Boolean  @default(false)
+  isDefault             Boolean @default(false)
 
-  createdAt             DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@map("customer_payment_methods")
@@ -345,68 +354,68 @@ model CustomerPaymentMethod {
 // =============================================================================
 
 model Service {
-  id             String   @id @default(cuid())
-  tenantId       String
-  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  category       String   // wash_and_fold, dry_cleaning, specialty
-  name           String
-  description    String?  @db.Text
-  pricingType    String   // per_pound, per_bag, per_item, flat_rate
-  price          Float
-  icon           String?
-  isActive       Boolean  @default(true)
-  isSystem       Boolean  @default(false)
-  sortOrder      Int      @default(0)
-  taxable        Boolean  @default(true)
+  category    String // wash_and_fold, dry_cleaning, specialty
+  name        String
+  description String? @db.Text
+  pricingType String // per_pound, per_bag, per_item, flat_rate
+  price       Float
+  icon        String?
+  isActive    Boolean @default(true)
+  isSystem    Boolean @default(false)
+  sortOrder   Int     @default(0)
+  taxable     Boolean @default(true)
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  orderItems     OrderItem[]
+  orderItems OrderItem[]
 
   @@index([tenantId])
   @@map("services")
 }
 
 model ServiceOption {
-  id             String   @id @default(cuid())
-  tenantId       String
-  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  name           String   // "Detergent: Tide", "Fabric Softener"
-  extraCost      Float    @default(0)
-  costType       String   @default("per_order") // per_order, per_item, per_pound
-  isDefault      Boolean  @default(false)
-  sortOrder      Int      @default(0)
+  name      String // "Detergent: Tide", "Fabric Softener"
+  extraCost Float   @default(0)
+  costType  String  @default("per_order") // per_order, per_item, per_pound
+  isDefault Boolean @default(false)
+  sortOrder Int     @default(0)
 
-  createdAt      DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([tenantId])
   @@map("service_options")
 }
 
 model RetailProduct {
-  id             String   @id @default(cuid())
-  tenantId       String
-  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  name           String
-  description    String?
-  sku            String?
-  price          Float
-  costPrice      Float?
-  imageUrl       String?
-  category       String?
-  inStock        Boolean  @default(true)
-  stockQuantity  Int?
-  taxable        Boolean  @default(true)
-  sortOrder      Int      @default(0)
+  name          String
+  description   String?
+  sku           String?
+  price         Float
+  costPrice     Float?
+  imageUrl      String?
+  category      String?
+  inStock       Boolean @default(true)
+  stockQuantity Int?
+  taxable       Boolean @default(true)
+  sortOrder     Int     @default(0)
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  orderItems     OrderItem[]
+  orderItems OrderItem[]
 
   @@index([tenantId])
   @@map("retail_products")
@@ -417,100 +426,100 @@ model RetailProduct {
 // =============================================================================
 
 model Order {
-  id                       String    @id @default(cuid())
-  orderNumber              String    @unique // FFL-2025-00142
-  tenantId                 String
-  tenant                   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  laundromatId             String
-  laundromat               Laundromat @relation(fields: [laundromatId], references: [id])
+  id           String     @id @default(cuid())
+  orderNumber  String     @unique // FFL-2025-00142
+  tenantId     String
+  tenant       Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  laundromatId String
+  laundromat   Laundromat @relation(fields: [laundromatId], references: [id])
 
   // People
-  customerId               String?
-  customer                 User?     @relation("CustomerOrders", fields: [customerId], references: [id])
-  driverId                 String?
-  driver                   User?     @relation("DriverOrders", fields: [driverId], references: [id])
-  attendantId              String?
-  attendant                User?     @relation("AttendantOrders", fields: [attendantId], references: [id])
+  customerId  String?
+  customer    User?   @relation("CustomerOrders", fields: [customerId], references: [id])
+  driverId    String?
+  driver      User?   @relation("DriverOrders", fields: [driverId], references: [id])
+  attendantId String?
+  attendant   User?   @relation("AttendantOrders", fields: [attendantId], references: [id])
 
   // Order Type
-  orderType                String    @default("delivery") // delivery, walk_in, pos
-  serviceType              String?   // laundry_only, dry_cleaning_only, both
-  frequency                String    @default("one_time") // one_time, weekly, biweekly, monthly
+  orderType   String  @default("delivery") // delivery, walk_in, pos
+  serviceType String? // laundry_only, dry_cleaning_only, both
+  frequency   String  @default("one_time") // one_time, weekly, biweekly, monthly
 
   // Pickup & Delivery
-  pickupAddressId          String?
-  pickupAddress            CustomerAddress? @relation(fields: [pickupAddressId], references: [id])
-  pickupDate               DateTime?
-  pickupTimeSlot           String?
-  deliveryDate             DateTime?
-  deliveryTimeSlot         String?
+  pickupAddressId  String?
+  pickupAddress    CustomerAddress? @relation(fields: [pickupAddressId], references: [id])
+  pickupDate       DateTime?
+  pickupTimeSlot   String?
+  deliveryDate     DateTime?
+  deliveryTimeSlot String?
 
   // Status
-  status                   String    @default("pending")
+  status String @default("pending")
 
   // Notes
-  pickupNotes              String?   @db.Text
-  specialInstructions      String?   @db.Text
-  preferencesSnapshot      Json?
+  pickupNotes         String? @db.Text
+  specialInstructions String? @db.Text
+  preferencesSnapshot Json?
 
   // Processing
-  numBags                  Int?
-  totalWeightLbs           Float?
-  binNumber                String?
-  washerNumber             Int?
-  dryerNumber              Int?
-  washerNumberUsed         Int?
-  dryerNumberUsed          Int?
+  numBags          Int?
+  totalWeightLbs   Float?
+  binNumber        String?
+  washerNumber     Int?
+  dryerNumber      Int?
+  washerNumberUsed Int?
+  dryerNumberUsed  Int?
 
   // Delivery Proof
-  deliveryPhotoUrl         String?
-  signatureUrl             String?
+  deliveryPhotoUrl String?
+  signatureUrl     String?
 
   // Financials
-  subtotal                 Float     @default(0)
-  taxRate                  Float     @default(0)
-  taxAmount                Float     @default(0)
-  deliveryFee              Float     @default(0)
-  sameDayFee               Float     @default(0)  // surcharge for same-day pickup
-  discountAmount           Float     @default(0)
-  tipAmount                Float     @default(0)
-  totalAmount              Float     @default(0)
+  subtotal       Float @default(0)
+  taxRate        Float @default(0)
+  taxAmount      Float @default(0)
+  deliveryFee    Float @default(0)
+  sameDayFee     Float @default(0) // surcharge for same-day pickup
+  discountAmount Float @default(0)
+  tipAmount      Float @default(0)
+  totalAmount    Float @default(0)
 
   // Payment
-  paymentMethod            String?   // card, cash, split, stored_card, invoice
-  stripePaymentIntentId    String?
-  paidAt                   DateTime?
+  paymentMethod         String? // card, cash, split, stored_card, invoice
+  stripePaymentIntentId String?
+  paidAt                DateTime?
 
   // Promo
-  promoCodeId              String?
-  promoCode                PromoCode? @relation(fields: [promoCodeId], references: [id])
+  promoCodeId String?
+  promoCode   PromoCode? @relation(fields: [promoCodeId], references: [id])
 
   // Commercial
-  commercialAccountId      String?
-  commercialAccount        CommercialAccount? @relation(fields: [commercialAccountId], references: [id])
-  poNumber                 String?
+  commercialAccountId String?
+  commercialAccount   CommercialAccount? @relation(fields: [commercialAccountId], references: [id])
+  poNumber            String?
 
   // Flags
-  isUnexpectedPickup       Boolean   @default(false)
-  tagPrinted               Boolean   @default(false)
-  isSubscriptionOrder      Boolean   @default(false)
+  isUnexpectedPickup  Boolean @default(false)
+  tagPrinted          Boolean @default(false)
+  isSubscriptionOrder Boolean @default(false)
 
   // Rating
-  rating                   Int?      // 1-5
-  reviewText               String?   @db.Text
-  reviewedAt               DateTime?
+  rating     Int? // 1-5
+  reviewText String?   @db.Text
+  reviewedAt DateTime?
 
-  createdAt                DateTime  @default(now())
-  updatedAt                DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  items                    OrderItem[]
-  statusHistory            OrderStatusHistory[]
-  routeStops               RouteStop[]
-  review                   Review?
-  tips                     Tip[]
-  issueReports             IssueReport[]
-  messages                 OrderMessage[]
+  items         OrderItem[]
+  statusHistory OrderStatusHistory[]
+  routeStops    RouteStop[]
+  review        Review?
+  tips          Tip[]
+  issueReports  IssueReport[]
+  messages      OrderMessage[]
 
   @@index([tenantId])
   @@index([customerId])
@@ -520,56 +529,56 @@ model Order {
 }
 
 model OrderItem {
-  id              String    @id @default(cuid())
-  orderId         String
-  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   // Can be a service or retail product
   serviceId       String?
-  service         Service?  @relation(fields: [serviceId], references: [id])
+  service         Service?       @relation(fields: [serviceId], references: [id])
   retailProductId String?
   retailProduct   RetailProduct? @relation(fields: [retailProductId], references: [id])
 
-  itemType        String    @default("service") // service, retail_product
-  name            String    // Snapshot of name at order time
-  quantity        Float
-  unitPrice       Float
-  totalPrice      Float
+  itemType   String @default("service") // service, retail_product
+  name       String // Snapshot of name at order time
+  quantity   Float
+  unitPrice  Float
+  totalPrice Float
 
-  createdAt       DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   @@index([orderId])
   @@map("order_items")
 }
 
 model OrderStatusHistory {
-  id              String   @id @default(cuid())
-  orderId         String
-  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   status          String
   changedByUserId String?
-  changedByUser   User?    @relation(fields: [changedByUserId], references: [id])
-  notes           String?  @db.Text
+  changedByUser   User?   @relation(fields: [changedByUserId], references: [id])
+  notes           String? @db.Text
   metadata        Json?
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([orderId])
   @@map("order_status_history")
 }
 
 model OrderMessage {
-  id        String   @id @default(cuid())
-  orderId   String
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  senderType String  // customer, staff, system
+  senderType String // customer, staff, system
   senderId   String?
   message    String  @db.Text
   channel    String  @default("in_app") // in_app, sms, email
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([orderId])
   @@map("order_messages")
@@ -580,40 +589,40 @@ model OrderMessage {
 // =============================================================================
 
 model DriverRoute {
-  id              String      @id @default(cuid())
-  laundromatId    String
-  laundromat      Laundromat  @relation(fields: [laundromatId], references: [id])
-  driverId        String
-  driver          User        @relation(fields: [driverId], references: [id])
+  id           String     @id @default(cuid())
+  laundromatId String
+  laundromat   Laundromat @relation(fields: [laundromatId], references: [id])
+  driverId     String
+  driver       User       @relation(fields: [driverId], references: [id])
 
-  date            DateTime    @db.Date
-  routeType       String      // pickup, delivery, mixed
-  optimizedOrder  Json?       // Array of stop IDs in optimal order
-  status          String      @default("planned") // planned, in_progress, completed
+  date           DateTime @db.Date
+  routeType      String // pickup, delivery, mixed
+  optimizedOrder Json? // Array of stop IDs in optimal order
+  status         String   @default("planned") // planned, in_progress, completed
 
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  stops           RouteStop[]
+  stops RouteStop[]
 
   @@index([driverId, date])
   @@map("driver_routes")
 }
 
 model RouteStop {
-  id              String      @id @default(cuid())
-  routeId         String
-  route           DriverRoute @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  orderId         String
-  order           Order       @relation(fields: [orderId], references: [id])
+  id      String      @id @default(cuid())
+  routeId String
+  route   DriverRoute @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  orderId String
+  order   Order       @relation(fields: [orderId], references: [id])
 
-  stopType        String      // pickup, delivery
-  sequence        Int
-  address         String
-  lat             Float
-  lng             Float
-  status          String      @default("pending") // pending, en_route, arrived, completed, skipped
-  completedAt     DateTime?
+  stopType    String // pickup, delivery
+  sequence    Int
+  address     String
+  lat         Float
+  lng         Float
+  status      String    @default("pending") // pending, en_route, arrived, completed, skipped
+  completedAt DateTime?
 
   @@index([routeId])
   @@map("route_stops")
@@ -624,28 +633,28 @@ model RouteStop {
 // =============================================================================
 
 model PromoCode {
-  id                  String    @id @default(cuid())
-  tenantId            String
-  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  code                String
-  description         String?
-  discountType        String    // percentage, flat_amount, free_delivery
-  discountValue       Float
-  minOrderAmount      Float?
-  maxUses             Int?
-  maxUsesPerCustomer  Int?      @default(1)
-  validFrom           DateTime
-  validUntil          DateTime?
-  isActive            Boolean   @default(true)
-  currentUses         Int       @default(0)
+  code               String
+  description        String?
+  discountType       String // percentage, flat_amount, free_delivery
+  discountValue      Float
+  minOrderAmount     Float?
+  maxUses            Int?
+  maxUsesPerCustomer Int?      @default(1)
+  validFrom          DateTime
+  validUntil         DateTime?
+  isActive           Boolean   @default(true)
+  currentUses        Int       @default(0)
 
   // Win-back campaign link
-  campaignType        String?   // welcome, winback_14d, winback_21d, winback_45d, etc.
+  campaignType String? // welcome, winback_14d, winback_21d, winback_45d, etc.
 
-  createdAt           DateTime  @default(now())
+  createdAt DateTime @default(now())
 
-  orders              Order[]
+  orders Order[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -657,40 +666,40 @@ model PromoCode {
 // =============================================================================
 
 model SubscriptionPlan {
-  id                  String    @id @default(cuid())
-  tenantId            String
-  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  name                String    // "Weekly Pickup", "Bi-Weekly Pickup"
-  frequency           String    // weekly, biweekly, monthly
-  discountPercentage  Float?
-  pricingOverride     Json?
-  stripePriceId       String?   // Stripe Billing price ID
-  isActive            Boolean   @default(true)
+  name               String // "Weekly Pickup", "Bi-Weekly Pickup"
+  frequency          String // weekly, biweekly, monthly
+  discountPercentage Float?
+  pricingOverride    Json?
+  stripePriceId      String? // Stripe Billing price ID
+  isActive           Boolean @default(true)
 
-  createdAt           DateTime  @default(now())
+  createdAt DateTime @default(now())
 
-  subscriptions       CustomerSubscription[]
+  subscriptions CustomerSubscription[]
 
   @@index([tenantId])
   @@map("subscription_plans")
 }
 
 model CustomerSubscription {
-  id                    String           @id @default(cuid())
-  userId                String
-  user                  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  planId                String
-  plan                  SubscriptionPlan @relation(fields: [planId], references: [id])
+  id     String           @id @default(cuid())
+  userId String
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId String
+  plan   SubscriptionPlan @relation(fields: [planId], references: [id])
 
-  stripeSubscriptionId  String?
-  status                String           @default("active") // active, paused, cancelled
-  nextPickupDate        DateTime?
-  preferredDay          String?          // monday, tuesday, etc.
-  preferredTimeSlot     String?
+  stripeSubscriptionId String?
+  status               String    @default("active") // active, paused, cancelled
+  nextPickupDate       DateTime?
+  preferredDay         String? // monday, tuesday, etc.
+  preferredTimeSlot    String?
 
-  createdAt             DateTime         @default(now())
-  cancelledAt           DateTime?
+  createdAt   DateTime  @default(now())
+  cancelledAt DateTime?
 
   @@index([userId])
   @@map("customer_subscriptions")
@@ -701,58 +710,59 @@ model CustomerSubscription {
 // =============================================================================
 
 model CommercialAccount {
-  id                  String    @id @default(cuid())
-  tenantId            String
-  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  companyName         String
-  contactName         String?
-  contactEmail        String
-  contactPhone        String?
-  billingAddress      String?
+  companyName    String
+  contactName    String?
+  contactEmail   String
+  contactPhone   String?
+  billingAddress String?
 
   // Pricing
-  negotiatedRates     Json?     // Custom per-service rates
-  creditLimit         Float?
-  paymentTerms        String    @default("net_30") // net_7, net_15, net_30
+  negotiatedRates Json? // Custom per-service rates
+  creditLimit     Float?
+  paymentTerms    String @default("net_30") // net_7, net_15, net_30
 
   // Billing
-  billingCycle        String    @default("monthly") // weekly, biweekly, monthly
-  preferredPayment    String    @default("ach") // ach, card
-  stripeCustomerId    String?   // On connected account
+  billingCycle     String  @default("monthly") // weekly, biweekly, monthly
+  preferredPayment String  @default("ach") // ach, card
+  stripeCustomerId String? // On connected account
 
   // Status
-  currentBalance      Float     @default(0) // Running tab
-  isActive            Boolean   @default(true)
+  currentBalance Float   @default(0) // Running tab
+  isActive       Boolean @default(true)
 
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  orders              Order[]
-  invoices            Invoice[]
+  orders   Order[]
+  invoices Invoice[]
 
   @@index([tenantId])
   @@map("commercial_accounts")
 }
 
 model Invoice {
-  id                    String            @id @default(cuid())
-  commercialAccountId   String
-  commercialAccount     CommercialAccount @relation(fields: [commercialAccountId], references: [id])
+  id                  String            @id @default(cuid())
+  commercialAccountId String
+  commercialAccount   CommercialAccount @relation(fields: [commercialAccountId], references: [id])
 
-  invoiceNumber         String            @unique
-  stripeInvoiceId       String?
-  billingPeriodStart    DateTime
-  billingPeriodEnd      DateTime
-  subtotal              Float
-  taxAmount             Float
-  totalAmount           Float
-  status                String            @default("draft") // draft, sent, paid, overdue, void
-  paidAt                DateTime?
-  dueDate               DateTime
+  invoiceNumber      String    @unique
+  stripeInvoiceId    String?
+  billingPeriodStart DateTime
+  billingPeriodEnd   DateTime
+  subtotal           Float
+  taxAmount          Float
+  totalAmount        Float
+  status             String    @default("draft") // draft, sent, paid, overdue, void
+  paidAt             DateTime?
+  dueDate            DateTime
 
-  createdAt             DateTime          @default(now())
+  createdAt DateTime @default(now())
 
+  @@index([commercialAccountId])
   @@map("invoices")
 }
 
@@ -761,61 +771,66 @@ model Invoice {
 // =============================================================================
 
 model Review {
-  id              String   @id @default(cuid())
-  orderId         String   @unique
-  order           Order    @relation(fields: [orderId], references: [id])
-  userId          String
-  user            User     @relation(fields: [userId], references: [id])
+  id      String @id @default(cuid())
+  orderId String @unique
+  order   Order  @relation(fields: [orderId], references: [id])
+  userId  String
+  user    User   @relation(fields: [userId], references: [id])
 
-  rating          Int      // 1-5
-  text            String?  @db.Text
-  isPublic        Boolean  @default(true)
+  rating   Int // 1-5
+  text     String? @db.Text
+  isPublic Boolean @default(true)
 
   // Review routing
-  routedToGoogle  Boolean  @default(false) // 4-5 stars → Google review link
-  managerAlerted  Boolean  @default(false) // 1-3 stars → manager alert
+  routedToGoogle Boolean @default(false) // 4-5 stars → Google review link
+  managerAlerted Boolean @default(false) // 1-3 stars → manager alert
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
+  @@index([userId])
   @@map("reviews")
 }
 
 model Tip {
-  id              String   @id @default(cuid())
-  orderId         String
-  order           Order    @relation(fields: [orderId], references: [id])
-  userId          String
-  user            User     @relation(fields: [userId], references: [id])
-  driverId        String?
+  id       String  @id @default(cuid())
+  orderId  String
+  order    Order   @relation(fields: [orderId], references: [id])
+  userId   String
+  user     User    @relation(fields: [userId], references: [id])
+  driverId String?
 
-  amount          Float
+  amount           Float
   stripeTransferId String?
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
+  @@index([orderId])
+  @@index([userId])
   @@map("tips")
 }
 
 model IssueReport {
-  id              String   @id @default(cuid())
-  orderId         String
-  order           Order    @relation(fields: [orderId], references: [id])
-  reportedById    String
-  reportedBy      User     @relation("IssuedBy", fields: [reportedById], references: [id])
+  id           String @id @default(cuid())
+  orderId      String
+  order        Order  @relation(fields: [orderId], references: [id])
+  reportedById String
+  reportedBy   User   @relation("IssuedBy", fields: [reportedById], references: [id])
 
-  issueType       String   // damage, missing_item, late_delivery, wrong_order, other
-  description     String   @db.Text
-  photoUrls       Json?    // Array of photo URLs
-  status          String   @default("open") // open, investigating, resolved, closed
-  resolution      String?  @db.Text
-  resolvedById    String?
-  resolvedBy      User?    @relation("ResolvedBy", fields: [resolvedById], references: [id])
-  compensationType String? // refund_full, refund_partial, credit, reprocess
+  issueType          String // damage, missing_item, late_delivery, wrong_order, other
+  description        String  @db.Text
+  photoUrls          Json? // Array of photo URLs
+  status             String  @default("open") // open, investigating, resolved, closed
+  resolution         String? @db.Text
+  resolvedById       String?
+  resolvedBy         User?   @relation("ResolvedBy", fields: [resolvedById], references: [id])
+  compensationType   String? // refund_full, refund_partial, credit, reprocess
   compensationAmount Float?
 
-  createdAt       DateTime @default(now())
-  resolvedAt      DateTime?
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
 
+  @@index([orderId])
+  @@index([reportedById])
   @@map("issue_reports")
 }
 
@@ -824,28 +839,28 @@ model IssueReport {
 // =============================================================================
 
 model Referral {
-  id              String   @id @default(cuid())
-  tenantId        String
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  referrerId      String
-  referrer        User     @relation("ReferrerUser", fields: [referrerId], references: [id])
-  referredId      String?
-  referred        User?    @relation("ReferredUser", fields: [referredId], references: [id])
+  id         String  @id @default(cuid())
+  tenantId   String
+  tenant     Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  referrerId String
+  referrer   User    @relation("ReferrerUser", fields: [referrerId], references: [id])
+  referredId String?
+  referred   User?   @relation("ReferredUser", fields: [referredId], references: [id])
 
-  referralCode    String
-  status          String   @default("pending") // pending, signed_up, completed, rewarded
-  rewardAmount    Float?
-  rewardType      String?  // credit, promo_code
+  referralCode String
+  status       String  @default("pending") // pending, signed_up, completed, rewarded
+  rewardAmount Float?
+  rewardType   String? // credit, promo_code
 
   // Tracking
-  referredEmail   String?  // Email used to sign up
-  referredOrderId String?  // First qualifying order
+  referredEmail   String? // Email used to sign up
+  referredOrderId String? // First qualifying order
   signedUpAt      DateTime?
   completedAt     DateTime?
   rewardedAt      DateTime?
   expiresAt       DateTime?
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([tenantId, referralCode])
   @@index([tenantId])
@@ -858,42 +873,42 @@ model Referral {
 // =============================================================================
 
 model NotificationTemplate {
-  id              String   @id @default(cuid())
-  tenantId        String
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  name            String   // order_confirmed, order_ready, driver_en_route, etc.
-  channel         String   // email, sms, push
-  subject         String?  // For emails
-  body            String   @db.Text // With {{merge_tags}}
-  isActive        Boolean  @default(true)
+  name     String // order_confirmed, order_ready, driver_en_route, etc.
+  channel  String // email, sms, push
+  subject  String? // For emails
+  body     String  @db.Text // With {{merge_tags}}
+  isActive Boolean @default(true)
 
   // A/B testing
-  variantLabel    String?  // "A" or "B"
-  variantGroup    String?  // Group name for A/B test
+  variantLabel String? // "A" or "B"
+  variantGroup String? // Group name for A/B test
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([tenantId])
   @@map("notification_templates")
 }
 
 model NotificationLog {
-  id              String   @id @default(cuid())
-  userId          String?
-  user            User?    @relation(fields: [userId], references: [id])
+  id     String  @id @default(cuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
 
-  channel         String   // email, sms, push
-  recipient       String   // email address or phone number
-  templateName    String?
-  subject         String?
-  body            String?  @db.Text
-  status          String   @default("sent") // sent, delivered, failed, bounced
-  externalId      String?  // SES message ID, Telnyx message ID, etc.
-  metadata        Json?
+  channel      String // email, sms, push
+  recipient    String // email address or phone number
+  templateName String?
+  subject      String?
+  body         String? @db.Text
+  status       String  @default("sent") // sent, delivered, failed, bounced
+  externalId   String? // SES message ID, Telnyx message ID, etc.
+  metadata     Json?
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([createdAt])
@@ -905,20 +920,20 @@ model NotificationLog {
 // =============================================================================
 
 model Page {
-  id              String   @id @default(cuid())
-  tenantId        String
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  slug            String   // about, services, faq, etc.
-  title           String
-  blocks          Json     // Array of page builder blocks
-  seoTitle        String?
-  seoDescription  String?
-  isPublished     Boolean  @default(false)
-  sortOrder       Int      @default(0)
+  slug           String // about, services, faq, etc.
+  title          String
+  blocks         Json // Array of page builder blocks
+  seoTitle       String?
+  seoDescription String?
+  isPublished    Boolean @default(false)
+  sortOrder      Int     @default(0)
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([tenantId, slug])
   @@map("pages")
@@ -929,37 +944,37 @@ model Page {
 // =============================================================================
 
 model WebhookEndpoint {
-  id              String   @id @default(cuid())
-  tenantId        String
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   url             String
-  events          Json     // ["order.created", "order.completed", "customer.created", etc.]
-  secret          String   // HMAC signing secret
-  isActive        Boolean  @default(true)
+  events          Json // ["order.created", "order.completed", "customer.created", etc.]
+  secret          String // HMAC signing secret
+  isActive        Boolean   @default(true)
   lastTriggeredAt DateTime?
-  failureCount    Int      @default(0)
+  failureCount    Int       @default(0)
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  deliveryLogs    WebhookDeliveryLog[]
+  deliveryLogs WebhookDeliveryLog[]
 
   @@index([tenantId])
   @@map("webhook_endpoints")
 }
 
 model WebhookDeliveryLog {
-  id              String           @id @default(cuid())
-  endpointId      String
-  endpoint        WebhookEndpoint  @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  id         String          @id @default(cuid())
+  endpointId String
+  endpoint   WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
 
-  event           String
-  payload         Json
-  statusCode      Int?
-  responseBody    String?  @db.Text
-  success         Boolean  @default(false)
+  event        String
+  payload      Json
+  statusCode   Int?
+  responseBody String? @db.Text
+  success      Boolean @default(false)
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([endpointId])
   @@map("webhook_delivery_logs")
@@ -970,13 +985,13 @@ model WebhookDeliveryLog {
 // =============================================================================
 
 model Milestone {
-  id              String   @id @default(cuid())
-  tenantId        String
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  type            String   // first_order, 10th_order, 50th_order, first_5star, first_commercial, first_1k_day
-  achievedAt      DateTime @default(now())
-  metadata        Json?
+  type       String // first_order, 10th_order, 50th_order, first_5star, first_commercial, first_1k_day
+  achievedAt DateTime @default(now())
+  metadata   Json?
 
   @@index([tenantId])
   @@map("milestones")
@@ -987,18 +1002,20 @@ model Milestone {
 // =============================================================================
 
 model WalletTransaction {
-  id              String   @id @default(cuid())
-  userId          String
-  tenantId        String
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  type            String   // top_up, order_payment, refund_credit, promo_credit, adjustment
-  amount          Float    // positive = credit, negative = debit
-  balanceAfter    Float
-  description     String
-  orderId         String?
+  type                  String // top_up, order_payment, refund_credit, promo_credit, adjustment
+  amount                Float // positive = credit, negative = debit
+  balanceAfter          Float
+  description           String
+  orderId               String?
   stripePaymentIntentId String?
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([tenantId])
@@ -1010,19 +1027,23 @@ model WalletTransaction {
 // =============================================================================
 
 model PosShift {
-  id              String   @id @default(cuid())
-  laundromatId    String
-  attendantId     String
+  id           String     @id @default(cuid())
+  laundromatId String
+  laundromat   Laundromat @relation(fields: [laundromatId], references: [id])
+  attendantId  String
+  attendant    User       @relation("AttendantShifts", fields: [attendantId], references: [id])
 
-  openedAt        DateTime @default(now())
-  closedAt        DateTime?
-  openingBalance  Float    @default(0)
-  closingBalance  Float?
-  cashSales       Float    @default(0)
-  cardSales       Float    @default(0)
-  totalOrders     Int      @default(0)
-  notes           String?  @db.Text
+  openedAt       DateTime  @default(now())
+  closedAt       DateTime?
+  openingBalance Float     @default(0)
+  closingBalance Float?
+  cashSales      Float     @default(0)
+  cardSales      Float     @default(0)
+  totalOrders    Int       @default(0)
+  notes          String?   @db.Text
 
+  @@index([laundromatId])
+  @@index([attendantId])
   @@map("pos_shifts")
 }
 
@@ -1031,31 +1052,32 @@ model PosShift {
 // =============================================================================
 
 model TaxReport {
-  id                  String   @id @default(cuid())
+  id                  String @id @default(cuid())
   tenantId            String
+  tenant              Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   taxYear             Int
-  grossPayments       Float    @default(0) // Total gross payments processed
-  totalTransactions   Int      @default(0) // Number of payment transactions
-  refundsAmount       Float    @default(0) // Total refunds issued
-  adjustmentsAmount   Float    @default(0) // Chargebacks, disputes, etc.
-  netPayments         Float    @default(0) // Gross - refunds - adjustments
-  platformFeesAmount  Float    @default(0) // Total platform fees collected
-  stripePayoutsAmount Float    @default(0) // Total payouts to connected account
-  monthlyBreakdown    Json?    // [{ month: 1, gross: 1000, transactions: 50, ... }]
+  grossPayments       Float  @default(0) // Total gross payments processed
+  totalTransactions   Int    @default(0) // Number of payment transactions
+  refundsAmount       Float  @default(0) // Total refunds issued
+  adjustmentsAmount   Float  @default(0) // Chargebacks, disputes, etc.
+  netPayments         Float  @default(0) // Gross - refunds - adjustments
+  platformFeesAmount  Float  @default(0) // Total platform fees collected
+  stripePayoutsAmount Float  @default(0) // Total payouts to connected account
+  monthlyBreakdown    Json? // [{ month: 1, gross: 1000, transactions: 50, ... }]
 
   // Tenant business info snapshot (for form generation)
-  businessName        String
-  businessAddress     String?
-  ein                 String?  // Employer Identification Number
-  ssnLast4            String?  // For sole proprietors
+  businessName    String
+  businessAddress String?
+  ein             String? // Employer Identification Number
+  ssnLast4        String? // For sole proprietors
 
   // Status
-  status              String   @default("draft") // draft, generated, filed, corrected
-  generatedAt         DateTime?
-  filedAt             DateTime?
+  status      String    @default("draft") // draft, generated, filed, corrected
+  generatedAt DateTime?
+  filedAt     DateTime?
 
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([tenantId, taxYear])
   @@index([tenantId])
@@ -1067,42 +1089,43 @@ model TaxReport {
 // =============================================================================
 
 model MarketplaceApp {
-  id              String   @id @default(cuid())
-  slug            String   @unique
-  name            String
-  description     String   @db.Text
+  id               String  @id @default(cuid())
+  slug             String  @unique
+  name             String
+  description      String  @db.Text
   shortDescription String?
-  iconUrl         String?
-  category        String   // automation, accounting, communication, analytics, marketing
-  provider        String   // zapier, quickbooks, google, slack, mailchimp, custom
-  configSchema    Json?    // JSON Schema for configuration fields
-  webhookEvents   Json?    // Events this app can subscribe to
-  docsUrl         String?
-  isActive        Boolean  @default(true)
-  isFeatured      Boolean  @default(false)
+  iconUrl          String?
+  category         String // automation, accounting, communication, analytics, marketing
+  provider         String // zapier, quickbooks, google, slack, mailchimp, custom
+  configSchema     Json? // JSON Schema for configuration fields
+  webhookEvents    Json? // Events this app can subscribe to
+  docsUrl          String?
+  isActive         Boolean @default(true)
+  isFeatured       Boolean @default(false)
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  installations   TenantAppInstallation[]
+  installations TenantAppInstallation[]
 
   @@map("marketplace_apps")
 }
 
 model TenantAppInstallation {
-  id              String         @id @default(cuid())
-  tenantId        String
-  appId           String
-  app             MarketplaceApp @relation(fields: [appId], references: [id], onDelete: Cascade)
+  id       String         @id @default(cuid())
+  tenantId String
+  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  appId    String
+  app      MarketplaceApp @relation(fields: [appId], references: [id], onDelete: Cascade)
 
-  config          Json?    // App-specific configuration
-  status          String   @default("active") // active, paused, error
-  installedById   String   // User who installed
-  lastSyncAt      DateTime?
-  errorMessage    String?
+  config        Json? // App-specific configuration
+  status        String    @default("active") // active, paused, error
+  installedById String // User who installed
+  lastSyncAt    DateTime?
+  errorMessage  String?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([tenantId, appId])
   @@index([tenantId])
@@ -1114,17 +1137,18 @@ model TenantAppInstallation {
 // =============================================================================
 
 model ProductTourProgress {
-  id              String   @id @default(cuid())
-  userId          String
-  tourSlug        String   // owner_dashboard, customer_ordering, driver_routes, pos, manager
-  completedSteps  Int      @default(0)
-  totalSteps      Int
-  isCompleted     Boolean  @default(false)
-  dismissedAt     DateTime?
-  completedAt     DateTime?
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tourSlug       String // owner_dashboard, customer_ordering, driver_routes, pos, manager
+  completedSteps Int       @default(0)
+  totalSteps     Int
+  isCompleted    Boolean   @default(false)
+  dismissedAt    DateTime?
+  completedAt    DateTime?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, tourSlug])
   @@index([userId])
@@ -1136,16 +1160,17 @@ model ProductTourProgress {
 // =============================================================================
 
 model DemoSession {
-  id              String   @id @default(cuid())
-  tenantId        String
-  sessionToken    String   @unique
-  role            String   // owner, manager, attendant, driver, customer
-  ipAddress       String?
-  userAgent       String?
-  expiresAt       DateTime
-  lastActiveAt    DateTime @default(now())
+  id           String   @id @default(cuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sessionToken String   @unique
+  role         String // owner, manager, attendant, driver, customer
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  lastActiveAt DateTime @default(now())
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([tenantId])
   @@index([expiresAt])
@@ -1157,30 +1182,30 @@ model DemoSession {
 // =============================================================================
 
 model MigrationLog {
-  id                String   @id @default(cuid())
-  tenantId          String
-  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  operationType     String   // import_customers, import_orders, import_services, import_promo_codes
-  sourceFormat      String   @default("csv") // csv, json
-  fileName          String?
-  status            String   @default("pending") // pending, processing, completed, failed, rolled_back
+  operationType String // import_customers, import_orders, import_services, import_promo_codes
+  sourceFormat  String  @default("csv") // csv, json
+  fileName      String?
+  status        String  @default("pending") // pending, processing, completed, failed, rolled_back
 
-  totalRecords      Int      @default(0)
-  successCount      Int      @default(0)
-  failedCount       Int      @default(0)
-  skippedCount      Int      @default(0)
+  totalRecords Int @default(0)
+  successCount Int @default(0)
+  failedCount  Int @default(0)
+  skippedCount Int @default(0)
 
-  errorLog          Json?    // [{ row, field, message }]
-  columnMapping     Json?    // { sourceColumn: targetField }
-  metadata          Json?    // Additional migration context
+  errorLog      Json? // [{ row, field, message }]
+  columnMapping Json? // { sourceColumn: targetField }
+  metadata      Json? // Additional migration context
 
-  startedAt         DateTime?
-  completedAt       DateTime?
-  createdByUserId   String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdByUserId String?
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([tenantId])
   @@index([status])
@@ -1192,36 +1217,36 @@ model MigrationLog {
 // =============================================================================
 
 model BenchmarkSnapshot {
-  id                  String   @id @default(cuid())
-  tenantId            String
-  tenant              Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  period              String   // daily, weekly, monthly
-  periodStart         DateTime
-  periodEnd           DateTime
+  period      String // daily, weekly, monthly
+  periodStart DateTime
+  periodEnd   DateTime
 
   // Order Metrics
-  totalOrders         Int      @default(0)
-  avgOrderValue       Float    @default(0)
-  totalRevenue        Float    @default(0)
-  deliveryOrders      Int      @default(0)
-  walkInOrders        Int      @default(0)
+  totalOrders    Int   @default(0)
+  avgOrderValue  Float @default(0)
+  totalRevenue   Float @default(0)
+  deliveryOrders Int   @default(0)
+  walkInOrders   Int   @default(0)
 
   // Customer Metrics
-  newCustomers        Int      @default(0)
-  returningCustomers  Int      @default(0)
-  customerChurnRate   Float    @default(0)
+  newCustomers       Int   @default(0)
+  returningCustomers Int   @default(0)
+  customerChurnRate  Float @default(0)
 
   // Operational Metrics
-  avgFulfillmentHours Float    @default(0) // Avg hours from order to delivery
-  onTimeDeliveryRate  Float    @default(0) // % delivered within scheduled window
-  avgRating           Float    @default(0)
+  avgFulfillmentHours Float @default(0) // Avg hours from order to delivery
+  onTimeDeliveryRate  Float @default(0) // % delivered within scheduled window
+  avgRating           Float @default(0)
 
   // Financial Metrics
-  avgRevenuePerDay    Float    @default(0)
-  revenueGrowthRate   Float    @default(0) // % change vs previous period
+  avgRevenuePerDay  Float @default(0)
+  revenueGrowthRate Float @default(0) // % change vs previous period
 
-  createdAt           DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([tenantId, period, periodStart])
   @@index([tenantId])
@@ -1234,21 +1259,22 @@ model BenchmarkSnapshot {
 // =============================================================================
 
 model CustomDomainVerification {
-  id                  String   @id @default(cuid())
-  tenantId            String
-  domain              String   @unique
-  verificationToken   String   @unique // TXT record value for DNS verification
-  verificationMethod  String   @default("cname") // cname, txt
-  status              String   @default("pending") // pending, verified, failed, expired
-  cnameTarget         String   @default("domains.laundryshuttle.com") // Required CNAME target
-  txtRecordName       String?  // e.g. _laundryshuttle-verify.example.com
-  lastCheckedAt       DateTime?
-  verifiedAt          DateTime?
-  failureReason       String?
-  checkCount          Int      @default(0)
+  id                 String    @id @default(cuid())
+  tenantId           String
+  tenant             Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  domain             String    @unique
+  verificationToken  String    @unique // TXT record value for DNS verification
+  verificationMethod String    @default("cname") // cname, txt
+  status             String    @default("pending") // pending, verified, failed, expired
+  cnameTarget        String    @default("domains.laundryshuttle.com") // Required CNAME target
+  txtRecordName      String? // e.g. _laundryshuttle-verify.example.com
+  lastCheckedAt      DateTime?
+  verifiedAt         DateTime?
+  failureReason      String?
+  checkCount         Int       @default(0)
 
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([tenantId])
   @@index([status])
@@ -1260,9 +1286,9 @@ model CustomDomainVerification {
 // =============================================================================
 
 model ServiceAreaInterest {
-  id           String    @id @default(cuid())
-  tenantId     String
-  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   email        String
   addressLine1 String
@@ -1273,7 +1299,7 @@ model ServiceAreaInterest {
   lng          Float
   notifiedAt   DateTime?
 
-  createdAt    DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   @@index([tenantId])
   @@map("service_area_interests")
@@ -1284,16 +1310,16 @@ model ServiceAreaInterest {
 // =============================================================================
 
 model ZoneDriverOverride {
-  id              String     @id @default(cuid())
-  laundromatId    String
-  laundromat      Laundromat @relation(fields: [laundromatId], references: [id], onDelete: Cascade)
-  zoneFeatureId   String     // The GeoJSON feature ID of the polygon
-  driverId        String
-  driver          User       @relation("ZoneDriverOverrides", fields: [driverId], references: [id])
-  startDate       DateTime   @db.Date
-  endDate         DateTime   @db.Date
-  reason          String?    // "PTO", "Sick", etc.
-  createdAt       DateTime   @default(now())
+  id            String     @id @default(cuid())
+  laundromatId  String
+  laundromat    Laundromat @relation(fields: [laundromatId], references: [id], onDelete: Cascade)
+  zoneFeatureId String // The GeoJSON feature ID of the polygon
+  driverId      String
+  driver        User       @relation("ZoneDriverOverrides", fields: [driverId], references: [id])
+  startDate     DateTime   @db.Date
+  endDate       DateTime   @db.Date
+  reason        String? // "PTO", "Sick", etc.
+  createdAt     DateTime   @default(now())
 
   @@index([laundromatId, zoneFeatureId])
   @@map("zone_driver_overrides")
