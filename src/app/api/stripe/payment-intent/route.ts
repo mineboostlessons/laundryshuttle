@@ -108,21 +108,17 @@ export async function POST(req: NextRequest) {
           discountAmount = Math.min(discountAmount, totalAmount);
           totalAmount = totalAmount - discountAmount;
 
-          // Update order with promo
-          await prisma.$transaction([
-            prisma.order.update({
-              where: { id: orderId },
-              data: {
-                promoCodeId: promo.id,
-                discountAmount,
-                totalAmount,
-              },
-            }),
-            prisma.promoCode.update({
-              where: { id: promo.id },
-              data: { currentUses: { increment: 1 } },
-            }),
-          ]);
+          // Update order with promo — usage is incremented in the
+          // payment_intent.succeeded webhook to avoid inflating count
+          // for abandoned checkouts
+          await prisma.order.update({
+            where: { id: orderId },
+            data: {
+              promoCodeId: promo.id,
+              discountAmount,
+              totalAmount,
+            },
+          });
         }
       }
     }

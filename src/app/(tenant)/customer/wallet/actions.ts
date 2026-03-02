@@ -126,38 +126,7 @@ export async function addFundsToWallet(input: z.infer<typeof addFundsSchema>) {
 
 // =============================================================================
 // Credit Wallet (called after successful payment webhook)
+// NOTE: This is intentionally NOT exported from this "use server" file to
+// prevent direct invocation as a server action. Import from
+// "@/lib/wallet" instead for internal use (e.g., from webhook handlers).
 // =============================================================================
-
-export async function creditWalletFromPayment(params: {
-  userId: string;
-  tenantId: string;
-  amount: number;
-  stripePaymentIntentId: string;
-}) {
-  const user = await prisma.user.findUnique({
-    where: { id: params.userId },
-    select: { walletBalance: true },
-  });
-
-  if (!user) return;
-
-  const newBalance = user.walletBalance + params.amount;
-
-  await prisma.$transaction([
-    prisma.user.update({
-      where: { id: params.userId },
-      data: { walletBalance: newBalance },
-    }),
-    prisma.walletTransaction.create({
-      data: {
-        userId: params.userId,
-        tenantId: params.tenantId,
-        type: "top_up",
-        amount: params.amount,
-        balanceAfter: newBalance,
-        description: `Added ${params.amount.toFixed(2)} to wallet`,
-        stripePaymentIntentId: params.stripePaymentIntentId,
-      },
-    }),
-  ]);
-}

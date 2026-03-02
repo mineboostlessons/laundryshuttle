@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth-helpers";
 import { requireTenant } from "@/lib/tenant";
 import { UserRole } from "@/types";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 
 export async function getSchedulingSettings() {
   await requireRole(UserRole.OWNER, UserRole.MANAGER);

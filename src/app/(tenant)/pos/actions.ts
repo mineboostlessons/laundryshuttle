@@ -185,11 +185,13 @@ export async function createPosOrder(
   const taxAmount = Math.round(taxableAmount * taxRate * 100) / 100;
   const totalAmount = Math.round((subtotal + taxAmount) * 100) / 100;
 
-  // Generate order number
-  const orderCount = await prisma.order.count({
-    where: { tenantId: tenant.id },
+  // Generate order number using atomic counter to prevent duplicates
+  const updatedTenant = await prisma.tenant.update({
+    where: { id: tenant.id },
+    data: { orderCounter: { increment: 1 } },
+    select: { orderCounter: true },
   });
-  const orderNumber = generateOrderNumber("POS", orderCount + 1);
+  const orderNumber = generateOrderNumber("POS", updatedTenant.orderCounter);
 
   // Create order + items in a transaction
   const order = await prisma.$transaction(async (tx) => {

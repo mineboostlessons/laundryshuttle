@@ -209,13 +209,15 @@ export async function retryFailedWebhooks(): Promise<{
   retried: number;
   succeeded: number;
 }> {
+  const MAX_RETRIES = 5;
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-  // Find failed deliveries from the last 24 hours
+  // Find failed deliveries from the last 24 hours that haven't exceeded max retries
   const failedLogs = await prisma.webhookDeliveryLog.findMany({
     where: {
       success: false,
       createdAt: { gte: oneDayAgo },
+      retryCount: { lt: MAX_RETRIES },
     },
     include: {
       endpoint: true,
@@ -235,6 +237,16 @@ export async function retryFailedWebhooks(): Promise<{
       url: log.endpoint.url,
       secret: log.endpoint.secret,
       payload: log.payload as unknown as WebhookPayload,
+    });
+
+    // Track retry attempt on the original log
+    await prisma.webhookDeliveryLog.update({
+      where: { id: log.id },
+      data: {
+        retryCount: { increment: 1 },
+        lastRetriedAt: new Date(),
+        ...(result.success ? { success: true } : {}),
+      },
     });
 
     retried++;

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth-helpers";
 import { requireTenant } from "@/lib/tenant";
 import { UserRole } from "@/types";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { findZoneForPoint } from "@/lib/mapbox";
 import { notifyDriverZoneChange } from "@/lib/notifications";
 import type { Prisma } from "@prisma/client";

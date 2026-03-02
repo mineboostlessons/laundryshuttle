@@ -79,7 +79,7 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
   if (paymentIntent.metadata?.type === "wallet_top_up") {
     try {
       const { creditWalletFromPayment } = await import(
-        "@/app/(tenant)/customer/wallet/actions"
+        "@/lib/wallet"
       );
       await creditWalletFromPayment({
         userId: paymentIntent.metadata.userId,
@@ -117,7 +117,7 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
   await prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({
       where: { id: orderId },
-      select: { id: true, customerId: true, tenantId: true, orderNumber: true, paidAt: true },
+      select: { id: true, customerId: true, tenantId: true, orderNumber: true, paidAt: true, promoCodeId: true },
     });
 
     if (!order || order.paidAt) return;
@@ -140,6 +140,14 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
         notes: "Payment confirmed via Stripe",
       },
     });
+
+    // Increment promo code usage now that payment is confirmed
+    if (order.promoCodeId) {
+      await tx.promoCode.update({
+        where: { id: order.promoCodeId },
+        data: { currentUses: { increment: 1 } },
+      });
+    }
 
     // Deduct wallet if used
     if (walletDeduction > 0 && order.customerId) {

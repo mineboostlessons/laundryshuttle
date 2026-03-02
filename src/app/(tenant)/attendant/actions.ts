@@ -758,7 +758,7 @@ async function recalculateOrderTotals(orderId: string, tenantId: string) {
   const subtotal = order.items.reduce((sum, item) => sum + item.totalPrice, 0);
   const taxAmount = subtotal * order.taxRate;
   const totalAmount =
-    subtotal + taxAmount + order.deliveryFee + order.tipAmount - order.discountAmount;
+    subtotal + taxAmount + order.deliveryFee + order.sameDayFee + order.tipAmount - order.discountAmount;
 
   await prisma.order.update({
     where: { id: orderId },

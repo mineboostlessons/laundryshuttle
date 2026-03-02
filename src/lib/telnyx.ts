@@ -1,4 +1,5 @@
 import Telnyx from "telnyx";
+import crypto from "crypto";
 
 // =============================================================================
 // Telnyx — SMS Helper
@@ -102,17 +103,30 @@ export async function sendBulkSms(
   recipients: string[],
   body: string
 ): Promise<{ sent: number; failed: number; errors: string[] }> {
+  const CONCURRENCY = 10;
   let sent = 0;
   let failed = 0;
   const errors: string[] = [];
 
-  for (const to of recipients) {
-    const result = await sendSms({ to, body });
-    if (result.success) {
-      sent++;
-    } else {
-      failed++;
-      if (result.error) errors.push(`${to}: ${result.error}`);
+  // Process in batches for controlled concurrency
+  for (let i = 0; i < recipients.length; i += CONCURRENCY) {
+    const batch = recipients.slice(i, i + CONCURRENCY);
+    const results = await Promise.allSettled(
+      batch.map((to) => sendSms({ to, body }))
+    );
+
+    for (let j = 0; j < results.length; j++) {
+      const outcome = results[j];
+      if (outcome.status === "fulfilled" && outcome.value.success) {
+        sent++;
+      } else {
+        failed++;
+        const errMsg =
+          outcome.status === "fulfilled"
+            ? outcome.value.error
+            : outcome.reason?.message ?? "Unknown error";
+        if (errMsg) errors.push(`${batch[j]}: ${errMsg}`);
+      }
     }
   }
 
@@ -148,12 +162,16 @@ export function verifyWebhookSignature(
   signature: string,
   timestamp: string
 ): boolean {
-  const crypto = require("crypto") as typeof import("crypto");
   const secret = process.env.TELNYX_WEBHOOK_SECRET!;
   const signedPayload = `${timestamp}|${payload}`;
   const expectedSignature = crypto
     .createHmac("sha256", secret)
     .update(signedPayload)
     .digest("hex");
-  return signature === expectedSignature;
+
+  // Use timing-safe comparison to prevent timing attacks
+  const sigBuffer = Buffer.from(signature, "hex");
+  const expectedBuffer = Buffer.from(expectedSignature, "hex");
+  if (sigBuffer.length !== expectedBuffer.length) return false;
+  return crypto.timingSafeEqual(sigBuffer, expectedBuffer);
 }

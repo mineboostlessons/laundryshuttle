@@ -3,7 +3,7 @@
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { requireAuth } from "@/lib/auth-helpers";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 
 const changePasswordSchema = z
   .object({

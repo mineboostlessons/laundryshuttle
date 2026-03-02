@@ -14,12 +14,15 @@ export async function POST(request: Request) {
     const signature = request.headers.get("telnyx-signature-ed25519") ?? "";
     const timestamp = request.headers.get("telnyx-timestamp") ?? "";
 
-    if (process.env.TELNYX_WEBHOOK_SECRET) {
-      const isValid = verifyWebhookSignature(body, signature, timestamp);
-      if (!isValid) {
-        console.error("Telnyx webhook signature verification failed");
-        return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-      }
+    if (!process.env.TELNYX_WEBHOOK_SECRET) {
+      console.error("TELNYX_WEBHOOK_SECRET not configured — rejecting webhook");
+      return NextResponse.json({ error: "Webhook verification not configured" }, { status: 500 });
+    }
+
+    const isValid = verifyWebhookSignature(body, signature, timestamp);
+    if (!isValid) {
+      console.error("Telnyx webhook signature verification failed");
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
     const payload = JSON.parse(body);

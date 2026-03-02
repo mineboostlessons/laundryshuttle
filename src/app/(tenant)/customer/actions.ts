@@ -321,7 +321,11 @@ export async function getCustomerAddresses() {
 
 export async function createAddress(data: z.infer<typeof addressSchema>) {
   const session = await requireRole(UserRole.CUSTOMER);
-  const parsed = addressSchema.parse(data);
+  const result = addressSchema.safeParse(data);
+  if (!result.success) {
+    return { success: false, error: result.error.errors[0].message };
+  }
+  const parsed = result.data;
 
   // Geocode if lat/lng not provided
   let lat = parsed.lat ?? null;
@@ -367,7 +371,11 @@ export async function updateAddress(
   data: z.infer<typeof addressSchema>
 ) {
   const session = await requireRole(UserRole.CUSTOMER);
-  const parsed = addressSchema.parse(data);
+  const result = addressSchema.safeParse(data);
+  if (!result.success) {
+    return { success: false, error: result.error.errors[0].message };
+  }
+  const parsed = result.data;
 
   // Verify ownership
   const existing = await prisma.customerAddress.findFirst({
@@ -488,7 +496,11 @@ export async function getCustomerProfile() {
 
 export async function updateProfile(data: z.infer<typeof profileSchema>) {
   const session = await requireRole(UserRole.CUSTOMER);
-  const parsed = profileSchema.parse(data);
+  const result = profileSchema.safeParse(data);
+  if (!result.success) {
+    return { success: false, error: result.error.errors[0].message };
+  }
+  const parsed = result.data;
 
   await prisma.user.update({
     where: { id: session.user.id },
@@ -508,7 +520,11 @@ export async function updatePreferences(
   data: z.infer<typeof preferencesSchema>
 ) {
   const session = await requireRole(UserRole.CUSTOMER);
-  const parsed = preferencesSchema.parse(data);
+  const result = preferencesSchema.safeParse(data);
+  if (!result.success) {
+    return { success: false, error: result.error.errors[0].message };
+  }
+  const parsed = result.data;
 
   await prisma.user.update({
     where: { id: session.user.id },
@@ -532,7 +548,11 @@ const reviewSchema = z.object({
 export async function submitReview(data: z.infer<typeof reviewSchema>) {
   const session = await requireRole(UserRole.CUSTOMER);
   const tenant = await requireTenant();
-  const parsed = reviewSchema.parse(data);
+  const result = reviewSchema.safeParse(data);
+  if (!result.success) {
+    return { success: false, error: result.error.errors[0].message };
+  }
+  const parsed = result.data;
 
   // Verify the order belongs to this customer and is deliverable
   const order = await prisma.order.findFirst({
@@ -618,7 +638,11 @@ const tipSchema = z.object({
 export async function submitTip(data: z.infer<typeof tipSchema>) {
   const session = await requireRole(UserRole.CUSTOMER);
   const tenant = await requireTenant();
-  const parsed = tipSchema.parse(data);
+  const result = tipSchema.safeParse(data);
+  if (!result.success) {
+    return { success: false, error: result.error.errors[0].message };
+  }
+  const parsed = result.data;
 
   // Verify the order belongs to this customer
   const order = await prisma.order.findFirst({

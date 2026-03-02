@@ -66,6 +66,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Platform admins must provide a tenantId in the request body
+    if (!session.user.tenantId) {
+      return NextResponse.json(
+        { success: false, error: "Platform admins must specify a tenant context" },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
     const parsed = sendNotificationSchema.safeParse(body);
     if (!parsed.success) {
@@ -76,7 +84,7 @@ export async function POST(request: Request) {
     }
 
     const data = parsed.data;
-    const tenantId = session.user.tenantId!;
+    const tenantId = session.user.tenantId;
 
     const result = await sendNotification({
       tenantId,

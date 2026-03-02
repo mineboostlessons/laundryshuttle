@@ -126,8 +126,21 @@ export async function loginAction(
     });
 
     // Fetch the user to return role and tenantSlug for proper redirect
+    // Scope to tenant if tenantSlug was provided, to avoid returning wrong user
+    let tenantIdForLookup: string | undefined;
+    if (parsed.data.tenantSlug) {
+      const loginTenant = await prisma.tenant.findUnique({
+        where: { slug: parsed.data.tenantSlug },
+        select: { id: true },
+      });
+      tenantIdForLookup = loginTenant?.id;
+    }
+
     const user = await prisma.user.findFirst({
-      where: { email: parsed.data.email },
+      where: {
+        email: parsed.data.email,
+        ...(tenantIdForLookup ? { tenantId: tenantIdForLookup } : {}),
+      },
       select: { role: true, tenantId: true },
     });
 

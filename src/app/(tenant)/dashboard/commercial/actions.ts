@@ -73,6 +73,8 @@ export async function createCommercialAccount(data: z.infer<typeof createAccount
   return account;
 }
 
+const updateAccountSchema = createAccountSchema.partial();
+
 export async function updateCommercialAccount(
   accountId: string,
   data: Partial<z.infer<typeof createAccountSchema>>
@@ -80,19 +82,26 @@ export async function updateCommercialAccount(
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
 
+  const parsed = updateAccountSchema.safeParse(data);
+  if (!parsed.success) {
+    throw new Error(parsed.error.errors[0].message);
+  }
+
+  const validated = parsed.data;
+
   const account = await prisma.commercialAccount.update({
     where: { id: accountId, tenantId: tenant.id },
     data: {
-      ...(data.companyName && { companyName: data.companyName }),
-      ...(data.contactName !== undefined && { contactName: data.contactName }),
-      ...(data.contactEmail && { contactEmail: data.contactEmail }),
-      ...(data.contactPhone !== undefined && { contactPhone: data.contactPhone }),
-      ...(data.billingAddress !== undefined && { billingAddress: data.billingAddress }),
-      ...(data.paymentTerms && { paymentTerms: data.paymentTerms }),
-      ...(data.billingCycle && { billingCycle: data.billingCycle }),
-      ...(data.preferredPayment && { preferredPayment: data.preferredPayment }),
-      ...(data.creditLimit !== undefined && { creditLimit: data.creditLimit }),
-      ...(data.negotiatedRates && { negotiatedRates: data.negotiatedRates }),
+      ...(validated.companyName && { companyName: validated.companyName }),
+      ...(validated.contactName !== undefined && { contactName: validated.contactName }),
+      ...(validated.contactEmail && { contactEmail: validated.contactEmail }),
+      ...(validated.contactPhone !== undefined && { contactPhone: validated.contactPhone }),
+      ...(validated.billingAddress !== undefined && { billingAddress: validated.billingAddress }),
+      ...(validated.paymentTerms && { paymentTerms: validated.paymentTerms }),
+      ...(validated.billingCycle && { billingCycle: validated.billingCycle }),
+      ...(validated.preferredPayment && { preferredPayment: validated.preferredPayment }),
+      ...(validated.creditLimit !== undefined && { creditLimit: validated.creditLimit }),
+      ...(validated.negotiatedRates && { negotiatedRates: validated.negotiatedRates }),
     },
   });
 

@@ -59,6 +59,9 @@ model Tenant {
   refundPolicy   String? @db.Text
   privacyPolicy  String? @db.Text
 
+  // Order numbering (atomic counter to prevent race conditions)
+  orderCounter Int @default(0)
+
   // Tax
   taxMode          String @default("manual") // manual, stripe_tax
   defaultTaxRate   Float  @default(0)
@@ -981,7 +984,9 @@ model WebhookDeliveryLog {
   payload      Json
   statusCode   Int?
   responseBody String? @db.Text
-  success      Boolean @default(false)
+  success      Boolean  @default(false)
+  retryCount   Int      @default(0)
+  lastRetriedAt DateTime?
 
   createdAt DateTime @default(now())
 

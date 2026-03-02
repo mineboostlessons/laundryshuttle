@@ -455,12 +455,14 @@ export async function createOrder(
     };
   });
 
-  // Generate order number
-  const orderCount = await prisma.order.count({
-    where: { tenantId: tenant.id },
+  // Generate order number using atomic counter to prevent duplicates
+  const updatedTenant = await prisma.tenant.update({
+    where: { id: tenant.id },
+    data: { orderCounter: { increment: 1 } },
+    select: { orderCounter: true },
   });
   const prefix = tenant.slug.substring(0, 3).toUpperCase();
-  const orderNumber = generateOrderNumber(prefix, orderCount + 1);
+  const orderNumber = generateOrderNumber(prefix, updatedTenant.orderCounter);
 
   // Same-day pickup validation & fee
   const pickupDate = parseISO(data.pickupDate);

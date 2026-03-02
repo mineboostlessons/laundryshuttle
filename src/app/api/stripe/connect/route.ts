@@ -195,6 +195,14 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Verify owner can only access their own tenant
+    if (session.user.role === "owner" && session.user.tenantId !== tenantId) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 403 }
+      );
+    }
+
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
       select: {
