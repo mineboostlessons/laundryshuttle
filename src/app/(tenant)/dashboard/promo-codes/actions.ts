@@ -14,12 +14,20 @@ const createPromoSchema = z.object({
   code: z.string().min(1).max(32),
   description: z.string().optional(),
   discountType: z.enum(["percentage", "flat_amount", "free_delivery"]),
-  discountValue: z.number().min(0),
+  discountValue: z.number().min(0).max(100000),
   minOrderAmount: z.number().min(0).optional(),
   maxUses: z.number().int().min(1).optional(),
   maxUsesPerCustomer: z.number().int().min(1).optional(),
   validFrom: z.string().min(1),
   validUntil: z.string().optional(),
+}).refine((data) => {
+  if (data.discountType === "percentage" && data.discountValue > 100) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Percentage discount cannot exceed 100%",
+  path: ["discountValue"],
 });
 
 const updatePromoSchema = z.object({

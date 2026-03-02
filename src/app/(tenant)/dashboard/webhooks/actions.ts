@@ -100,7 +100,7 @@ export async function testWebhookEndpoint(endpointId: string) {
   });
 
   if (!endpoint) {
-    throw new Error("Endpoint not found");
+    return { success: false, statusCode: null, responseBody: "Endpoint not found" };
   }
 
   return sendTestWebhook({

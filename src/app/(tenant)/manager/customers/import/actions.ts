@@ -140,11 +140,22 @@ function parseCSVLine(line: string): string[] {
   return result;
 }
 
+const MAX_IMPORT_ROWS = 5000;
+
 export async function importCustomers(
   rows: CustomerRow[]
 ): Promise<ImportResult> {
   await requireRole(UserRole.OWNER, UserRole.MANAGER);
   const tenant = await requireTenant();
+
+  if (rows.length > MAX_IMPORT_ROWS) {
+    return {
+      total: rows.length,
+      created: 0,
+      skipped: 0,
+      errors: [{ row: 0, email: "", error: `Import limited to ${MAX_IMPORT_ROWS} rows. Got ${rows.length}.` }],
+    };
+  }
 
   const result: ImportResult = {
     total: rows.length,

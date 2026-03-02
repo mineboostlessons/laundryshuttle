@@ -95,11 +95,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, url });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error("Upload error:", message, error);
+    console.error("Upload error:", error);
 
     return NextResponse.json(
-      { success: false, error: `Upload failed: ${message}` },
+      { success: false, error: "Upload failed. Please try again." },
       { status: 500 }
     );
   }

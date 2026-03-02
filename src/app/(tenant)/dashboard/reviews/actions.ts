@@ -14,8 +14,8 @@ export async function getReviewsDashboard(params: {
   await requireRole(UserRole.OWNER, UserRole.MANAGER);
   const tenant = await requireTenant();
 
-  const page = params.page ?? 1;
-  const limit = params.limit ?? 20;
+  const page = Math.max(1, params.page ?? 1);
+  const limit = Math.min(params.limit ?? 20, 100);
   const skip = (page - 1) * limit;
 
   const where: Record<string, unknown> = {

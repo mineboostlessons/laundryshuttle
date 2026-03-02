@@ -236,6 +236,27 @@ export async function updateOrderStatus(
     return { success: false, error: "Order not found" };
   }
 
+  // Validate status transition
+  const VALID_TRANSITIONS: Record<string, readonly string[]> = {
+    pending: ["confirmed", "cancelled"],
+    confirmed: ["picked_up", "processing", "cancelled"],
+    picked_up: ["processing", "cancelled"],
+    processing: ["ready", "cancelled"],
+    ready: ["out_for_delivery", "completed", "cancelled"],
+    out_for_delivery: ["delivered", "cancelled"],
+    delivered: ["completed"],
+    completed: [],
+    cancelled: [],
+  };
+
+  const allowed = VALID_TRANSITIONS[order.status];
+  if (allowed && !allowed.includes(status)) {
+    return {
+      success: false,
+      error: `Cannot transition from "${order.status}" to "${status}"`,
+    };
+  }
+
   await prisma.$transaction([
     prisma.order.update({
       where: { id: orderId },

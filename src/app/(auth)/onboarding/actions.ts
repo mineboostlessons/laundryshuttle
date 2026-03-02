@@ -200,6 +200,10 @@ const DEFAULT_OPERATING_HOURS = {
 };
 
 export async function checkSlugAvailability(slug: string): Promise<boolean> {
+  if (!slug || slug.length < 3 || slug.length > 40 || !/^[a-z0-9][a-z0-9-]*$/.test(slug)) {
+    return false;
+  }
+
   const existing = await prisma.tenant.findUnique({
     where: { slug },
     select: { id: true },

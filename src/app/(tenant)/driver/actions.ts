@@ -412,8 +412,9 @@ export async function getRouteDetail(routeId: string) {
 
 export async function getDriverRouteHistory(page: number = 1) {
   const session = await requireRole(UserRole.DRIVER);
+  const safePage = Math.max(1, Math.floor(page));
   const limit = 20;
-  const skip = (page - 1) * limit;
+  const skip = (safePage - 1) * limit;
 
   const [routes, total] = await Promise.all([
     prisma.driverRoute.findMany({
