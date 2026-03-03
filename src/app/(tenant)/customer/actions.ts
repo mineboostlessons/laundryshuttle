@@ -748,6 +748,12 @@ export async function submitTip(data: z.infer<typeof tipSchema>) {
     }
   }
 
+  // If Stripe payment requires client-side confirmation (clientSecret returned),
+  // only create the tip record — do NOT update order totals yet.
+  // Totals should only be updated after payment is confirmed (via webhook or off-session).
+  // If no Stripe involved (no clientSecret), update totals immediately.
+  const needsClientConfirmation = !!clientSecret;
+
   const [tip] = await prisma.$transaction([
     prisma.tip.create({
       data: {
@@ -758,13 +764,17 @@ export async function submitTip(data: z.infer<typeof tipSchema>) {
         stripeTransferId: stripePaymentIntentId,
       },
     }),
-    prisma.order.update({
-      where: { id: parsed.orderId },
-      data: {
-        tipAmount: { increment: parsed.amount },
-        totalAmount: { increment: parsed.amount },
-      },
-    }),
+    ...(needsClientConfirmation
+      ? []
+      : [
+          prisma.order.update({
+            where: { id: parsed.orderId },
+            data: {
+              tipAmount: { increment: parsed.amount },
+              totalAmount: { increment: parsed.amount },
+            },
+          }),
+        ]),
   ]);
 
   revalidatePath(`/customer/orders/${parsed.orderId}`);

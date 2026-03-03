@@ -127,6 +127,22 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
     return;
   }
 
+  // Handle tip payments — update order totals after successful payment
+  if (paymentIntent.metadata?.type === "tip") {
+    const tipOrderId = paymentIntent.metadata.orderId;
+    const tipAmount = paymentIntent.amount / 100;
+    if (tipOrderId && tipAmount > 0) {
+      await prisma.order.updateMany({
+        where: { id: tipOrderId },
+        data: {
+          tipAmount: { increment: tipAmount },
+          totalAmount: { increment: tipAmount },
+        },
+      });
+    }
+    return;
+  }
+
   const orderId = paymentIntent.metadata?.orderId;
   if (!orderId) return;
 

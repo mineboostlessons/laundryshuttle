@@ -52,6 +52,7 @@ export async function changePassword(data: {
     data: {
       passwordHash: hash,
       forcePasswordChange: false,
+      sessionVersion: { increment: 1 },
     },
   });
 

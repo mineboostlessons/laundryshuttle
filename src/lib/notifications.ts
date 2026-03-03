@@ -1,5 +1,5 @@
 import prisma from "./prisma";
-import { sendEmail, renderEmailTemplate, wrapInEmailLayout } from "./ses";
+import { sendEmail, renderEmailTemplate, wrapInEmailLayout, escapeHtml } from "./ses";
 import { sendSms, renderSmsTemplate } from "./telnyx";
 import { sendPushNotification } from "./firebase";
 import { formatCurrency } from "./utils";
@@ -358,8 +358,14 @@ function getDefaultSubject(event: NotificationEvent): string {
 
 function getDefaultEmailBody(
   event: NotificationEvent,
-  vars: Record<string, string>
+  rawVars: Record<string, string>
 ): string {
+  // Escape all values to prevent HTML injection in email templates
+  const vars: Record<string, string> = {};
+  for (const [k, v] of Object.entries(rawVars)) {
+    vars[k] = escapeHtml(v);
+  }
+
   switch (event) {
     case "order_confirmed":
       return `<p>Hi ${vars.customerName ?? "there"},</p>

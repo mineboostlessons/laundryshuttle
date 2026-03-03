@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 
 const onboardingSchema = z.object({
@@ -199,8 +200,35 @@ const DEFAULT_OPERATING_HOURS = {
   sunday: { open: "08:00", close: "18:00" },
 };
 
+// Rate limiting for slug availability checks
+const slugCheckAttempts = new Map<string, { count: number; resetAt: number }>();
+
+function checkSlugRateLimit(key: string): boolean {
+  const now = Date.now();
+  const windowMs = 60_000; // 1 minute
+  const maxAttempts = 20;
+
+  const entry = slugCheckAttempts.get(key);
+  if (!entry || entry.resetAt < now) {
+    slugCheckAttempts.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  entry.count++;
+  return entry.count <= maxAttempts;
+}
+
 export async function checkSlugAvailability(slug: string): Promise<boolean> {
   if (!slug || slug.length < 3 || slug.length > 40 || !/^[a-z0-9][a-z0-9-]*$/.test(slug)) {
+    return false;
+  }
+
+  // Rate limit to prevent tenant enumeration
+  let ip = "unknown";
+  try {
+    const hdrs = await headers();
+    ip = hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  } catch { /* ignore */ }
+  if (!checkSlugRateLimit(`slug:${ip}`)) {
     return false;
   }
 
@@ -232,10 +260,13 @@ export async function submitOnboarding(
   _prevState: OnboardingState,
   formData: FormData
 ): Promise<OnboardingState> {
-  // Rate limit by email to prevent abuse (best-effort in serverless)
-  const email = formData.get("ownerEmail") as string | null;
-  const rateLimitKey = email?.toLowerCase() ?? "unknown";
-  if (!checkOnboardingRateLimit(rateLimitKey)) {
+  // Rate limit by IP to prevent abuse (best-effort in serverless)
+  let rateLimitIp = "unknown";
+  try {
+    const hdrs = await headers();
+    rateLimitIp = hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  } catch { /* ignore */ }
+  if (!checkOnboardingRateLimit(rateLimitIp)) {
     return { error: "Too many attempts. Please try again later." };
   }
   const raw = Object.fromEntries(formData.entries());
