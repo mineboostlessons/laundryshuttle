@@ -4,9 +4,9 @@ import prisma from "@/lib/prisma";
 // Cron job: Reset demo tenants that have auto-reset enabled
 // Should be called periodically (e.g., every hour via Vercel Cron)
 export async function GET(request: Request) {
-  // Verify cron secret
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  // Verify cron secret (timing-safe)
+  const { verifyBearerSecret } = await import("@/lib/utils");
+  if (!verifyBearerSecret(request.headers.get("authorization"), process.env.CRON_SECRET)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

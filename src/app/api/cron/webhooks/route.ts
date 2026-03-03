@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { retryFailedWebhooks } from "@/lib/webhooks";
+import { verifyBearerSecret } from "@/lib/utils";
 
 /**
  * Cron job: Retry failed webhook deliveries.
  * Runs every hour via Vercel Cron.
  */
 export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!verifyBearerSecret(request.headers.get("authorization"), process.env.CRON_SECRET)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

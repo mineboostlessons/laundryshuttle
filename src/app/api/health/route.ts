@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { verifyBearerSecret } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -17,8 +18,7 @@ export async function GET(request: NextRequest) {
   // Only return detailed checks if the request includes a valid health check token
   const authHeader = request.headers.get("authorization");
   const healthSecret = process.env.HEALTH_CHECK_SECRET;
-  const isAuthenticated =
-    healthSecret && authHeader === `Bearer ${healthSecret}`;
+  const isAuthenticated = verifyBearerSecret(authHeader, healthSecret);
 
   // Database check (always performed — needed for basic status)
   let dbHealthy = false;

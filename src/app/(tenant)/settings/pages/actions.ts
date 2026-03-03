@@ -47,7 +47,7 @@ const blockSchema = z.discriminatedUnion("type", [
     subheading: z.string(),
     ctaText: z.string(),
     ctaLink: z.string(),
-    backgroundImage: z.string().optional(),
+    backgroundImage: z.string().url().refine((u) => u.startsWith("https://"), "Must use HTTPS").optional().or(z.literal("")),
     showGradient: z.boolean(),
   }),
   z.object({
@@ -125,7 +125,7 @@ const blockSchema = z.discriminatedUnion("type", [
     type: z.literal("gallery"),
     heading: z.string(),
     images: z.array(z.object({
-      url: z.string(),
+      url: z.string().url().refine((u) => u.startsWith("https://"), "Image URL must use HTTPS"),
       alt: z.string(),
       caption: z.string().optional(),
     })),

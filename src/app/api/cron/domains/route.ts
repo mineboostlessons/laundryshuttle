@@ -9,9 +9,9 @@ import { addDomainToVercel } from "@/lib/vercel-domains";
  * Checks all pending domains and marks them verified if DNS is configured.
  */
 export async function GET(request: Request) {
-  // Verify cron secret
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  // Verify cron secret (timing-safe)
+  const { verifyBearerSecret } = await import("@/lib/utils");
+  if (!verifyBearerSecret(request.headers.get("authorization"), process.env.CRON_SECRET)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

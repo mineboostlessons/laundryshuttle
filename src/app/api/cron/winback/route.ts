@@ -9,9 +9,9 @@ import { executeWinBackCampaign } from "@/lib/upsell";
  * Protected by CRON_SECRET header.
  */
 export async function GET(request: Request) {
-  // Verify cron secret
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  // Verify cron secret (timing-safe)
+  const { verifyBearerSecret } = await import("@/lib/utils");
+  if (!verifyBearerSecret(request.headers.get("authorization"), process.env.CRON_SECRET)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -126,7 +126,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
-        const { email, password, tenantSlug } = parsed.data;
+        const { password, tenantSlug } = parsed.data;
+        const email = parsed.data.email.toLowerCase();
 
         // Build the query to find user
         const where: { email: string; tenantId?: string | null } = { email };
@@ -214,6 +215,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             select: { slug: true },
           });
           token.tenantSlug = tenant?.slug ?? null;
+        }
+
+        // Clear the OAuth tenant cookie now that sign-in is complete
+        try {
+          const { cookies } = await import("next/headers");
+          const cookieStore = await cookies();
+          cookieStore.delete("__oauth_tenant_slug");
+        } catch {
+          // Ignore — may be outside request context
         }
       }
 

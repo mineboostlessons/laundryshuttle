@@ -297,19 +297,24 @@ async function rewardReferrer(
 // =============================================================================
 
 export async function getReferralStats(tenantId: string): Promise<ReferralStats> {
-  const referrals = await prisma.referral.findMany({
-    where: { tenantId },
-    select: { status: true, rewardAmount: true },
-  });
+  const [totalReferrals, pendingReferrals, completedReferrals, rewardedReferrals, rewardsAgg] =
+    await Promise.all([
+      prisma.referral.count({ where: { tenantId } }),
+      prisma.referral.count({ where: { tenantId, status: { in: ["pending", "signed_up"] } } }),
+      prisma.referral.count({ where: { tenantId, status: { in: ["completed", "rewarded"] } } }),
+      prisma.referral.count({ where: { tenantId, status: "rewarded" } }),
+      prisma.referral.aggregate({
+        where: { tenantId, status: "rewarded" },
+        _sum: { rewardAmount: true },
+      }),
+    ]);
 
   return {
-    totalReferrals: referrals.length,
-    pendingReferrals: referrals.filter((r) => r.status === "pending" || r.status === "signed_up").length,
-    completedReferrals: referrals.filter((r) => r.status === "completed" || r.status === "rewarded").length,
-    rewardedReferrals: referrals.filter((r) => r.status === "rewarded").length,
-    totalRewardsGiven: referrals
-      .filter((r) => r.status === "rewarded" && r.rewardAmount)
-      .reduce((sum, r) => sum + (r.rewardAmount ?? 0), 0),
+    totalReferrals,
+    pendingReferrals,
+    completedReferrals,
+    rewardedReferrals,
+    totalRewardsGiven: rewardsAgg._sum.rewardAmount ?? 0,
   };
 }
 
@@ -327,6 +332,7 @@ export async function getCustomerReferralInfo(
   const referrals = await prisma.referral.findMany({
     where: { tenantId, referrerId: userId },
     orderBy: { createdAt: "desc" },
+    take: 50,
     select: {
       id: true,
       referredEmail: true,

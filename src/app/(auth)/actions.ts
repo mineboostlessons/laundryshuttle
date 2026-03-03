@@ -54,7 +54,8 @@ export async function registerAction(
     return { error: parsed.error.errors[0].message };
   }
 
-  const { firstName, lastName, email, phone, password, tenantSlug } = parsed.data;
+  const { firstName, lastName, phone, password, tenantSlug } = parsed.data;
+  const email = parsed.data.email.toLowerCase();
 
   try {
     // Resolve tenant if slug provided
@@ -117,9 +118,11 @@ export async function loginAction(
     return { error: parsed.error.errors[0].message };
   }
 
+  const loginEmail = parsed.data.email.toLowerCase();
+
   try {
     await signIn("credentials", {
-      email: parsed.data.email,
+      email: loginEmail,
       password: parsed.data.password,
       tenantSlug: parsed.data.tenantSlug || "",
       redirect: false,
@@ -138,7 +141,7 @@ export async function loginAction(
 
     const user = await prisma.user.findFirst({
       where: {
-        email: parsed.data.email,
+        email: loginEmail,
         ...(tenantIdForLookup ? { tenantId: tenantIdForLookup } : {}),
       },
       select: { role: true, tenantId: true },
@@ -315,6 +318,11 @@ export async function resetPasswordWithToken(
         forcePasswordChange: false,
       },
     });
+
+    // TODO: Invalidate existing JWT sessions after password change.
+    // Since NextAuth uses stateless JWTs, existing tokens remain valid until expiry.
+    // To fix: add a `sessionVersion` column to User, increment it here,
+    // and compare it in the JWT callback to reject stale sessions.
 
     return { success: true, message: "Password reset successfully. You can now sign in." };
   } catch {

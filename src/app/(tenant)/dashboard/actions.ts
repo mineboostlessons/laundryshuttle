@@ -314,7 +314,7 @@ export async function createStaffMember(data: {
   });
 
   // Send welcome email with temp password
-  const loginUrl = `https://${data.tenantSlug}.laundryshuttle.com/staff/login`;
+  const loginUrl = `https://${tenant.slug}.laundryshuttle.com/staff/login`;
   const emailResult = await sendEmail({
     to: email.toLowerCase(),
     subject: `You've been added as ${role} at ${tenant.businessName}`,

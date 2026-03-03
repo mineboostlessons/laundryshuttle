@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import crypto from "crypto";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -43,4 +44,15 @@ export function formatPhone(phone: string): string {
  */
 export function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Timing-safe comparison for bearer tokens / secrets.
+ * Prevents timing attacks by using constant-time comparison.
+ */
+export function verifyBearerSecret(authHeader: string | null, expectedSecret: string | undefined): boolean {
+  if (!authHeader || !expectedSecret) return false;
+  const expected = `Bearer ${expectedSecret}`;
+  if (authHeader.length !== expected.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected));
 }

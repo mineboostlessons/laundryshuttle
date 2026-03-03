@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateAllBenchmarkSnapshots } from "@/lib/benchmarks";
+import { verifyBearerSecret } from "@/lib/utils";
 
 // POST /api/cron/benchmarks
 // Called by Vercel cron or external scheduler to generate benchmark snapshots
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!verifyBearerSecret(request.headers.get("authorization"), process.env.CRON_SECRET)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
