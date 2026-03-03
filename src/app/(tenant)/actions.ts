@@ -1,11 +1,40 @@
 "use server";
 
 import { z } from "zod";
+import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 import { requireTenant } from "@/lib/tenant";
 import { isPointInServiceArea } from "@/lib/mapbox";
 
+// Rate limiting for unauthenticated service area endpoints
+const serviceAreaAttempts = new Map<string, { count: number; resetAt: number }>();
+
+function checkServiceAreaRateLimit(key: string, limit: number, windowMs: number): boolean {
+  const now = Date.now();
+  const entry = serviceAreaAttempts.get(key);
+  if (!entry || entry.resetAt < now) {
+    serviceAreaAttempts.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  entry.count++;
+  return entry.count <= limit;
+}
+
+async function getClientIp(): Promise<string> {
+  try {
+    const hdrs = await headers();
+    return hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
 export async function checkServiceArea(lat: number, lng: number) {
+  const ip = await getClientIp();
+  if (!checkServiceAreaRateLimit(`area:${ip}`, 30, 60_000)) {
+    return { serviceable: false };
+  }
+
   const tenant = await requireTenant();
 
   const laundromats = await prisma.laundromat.findMany({
@@ -34,6 +63,11 @@ const interestSchema = z.object({
 });
 
 export async function saveServiceAreaInterest(input: z.infer<typeof interestSchema>) {
+  const ip = await getClientIp();
+  if (!checkServiceAreaRateLimit(`interest:${ip}`, 5, 3600_000)) {
+    return { success: false, error: "Too many submissions. Please try again later." };
+  }
+
   const tenant = await requireTenant();
 
   const parsed = interestSchema.safeParse(input);

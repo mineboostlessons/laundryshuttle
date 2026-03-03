@@ -11,6 +11,11 @@ import { UserRole } from "@/types";
 export async function getAllTaxReports(taxYear: number) {
   await requireRole(UserRole.PLATFORM_ADMIN);
 
+  const currentYear = new Date().getFullYear();
+  if (!Number.isInteger(taxYear) || taxYear < 2000 || taxYear > currentYear + 1) {
+    throw new Error("Invalid tax year");
+  }
+
   const reports = await prisma.taxReport.findMany({
     where: { taxYear },
     orderBy: { grossPayments: "desc" },
@@ -25,6 +30,11 @@ export async function getAllTaxReports(taxYear: number) {
  */
 export async function bulkGenerateTaxReports(taxYear: number) {
   await requireRole(UserRole.PLATFORM_ADMIN);
+
+  const currentYear = new Date().getFullYear();
+  if (!Number.isInteger(taxYear) || taxYear < 2000 || taxYear > currentYear + 1) {
+    throw new Error("Invalid tax year");
+  }
 
   const tenants = await prisma.tenant.findMany({
     where: { isActive: true },
@@ -152,20 +162,29 @@ export async function bulkGenerateTaxReports(taxYear: number) {
 export async function exportAllTaxReportsCsv(taxYear: number) {
   await requireRole(UserRole.PLATFORM_ADMIN);
 
+  const currentYear = new Date().getFullYear();
+  if (!Number.isInteger(taxYear) || taxYear < 2000 || taxYear > currentYear + 1) {
+    throw new Error("Invalid tax year");
+  }
+
   const reports = await prisma.taxReport.findMany({
     where: { taxYear },
     orderBy: { grossPayments: "desc" },
   });
 
-  // Escape CSV values to prevent formula injection
-  const esc = (v: string) => (/^[=+\-@\t\r]/.test(v) ? `'${v}` : v);
+  // Escape CSV values: double-quote wrap + escape internal quotes + formula prefix protection
+  const esc = (v: string) => {
+    let safe = v.replace(/"/g, '""');
+    if (/^[=+\-@\t\r]/.test(safe)) safe = "'" + safe;
+    return `"${safe}"`;
+  };
 
   let csv = "1099-K Platform Report\n";
   csv += `Tax Year: ${taxYear}\n\n`;
   csv += "Business Name,EIN,Gross Payments,Transactions,Refunds,Net Payments,Platform Fees,Payouts,Status\n";
 
   for (const report of reports) {
-    csv += `"${esc(report.businessName)}",${esc(report.ein ?? "N/A")},${report.grossPayments.toFixed(2)},${report.totalTransactions},${report.refundsAmount.toFixed(2)},${report.netPayments.toFixed(2)},${report.platformFeesAmount.toFixed(2)},${report.stripePayoutsAmount.toFixed(2)},${report.status}\n`;
+    csv += `${esc(report.businessName)},${esc(report.ein ?? "N/A")},${report.grossPayments.toFixed(2)},${report.totalTransactions},${report.refundsAmount.toFixed(2)},${report.netPayments.toFixed(2)},${report.platformFeesAmount.toFixed(2)},${report.stripePayoutsAmount.toFixed(2)},${esc(report.status)}\n`;
   }
 
   return csv;

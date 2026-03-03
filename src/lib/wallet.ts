@@ -18,6 +18,15 @@ export async function creditWalletFromPayment(params: {
 
   if (!user) return;
 
+  // Idempotency check — prevent duplicate credits from duplicate webhook deliveries
+  const existingCredit = await prisma.walletTransaction.findFirst({
+    where: {
+      stripePaymentIntentId: params.stripePaymentIntentId,
+      type: "top_up",
+    },
+  });
+  if (existingCredit) return; // Already credited
+
   // Use atomic increment to prevent race conditions with concurrent top-ups
   const updated = await prisma.user.update({
     where: { id: params.userId },

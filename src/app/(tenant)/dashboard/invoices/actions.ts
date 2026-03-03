@@ -243,16 +243,19 @@ export async function markInvoicePaid(invoiceId: string) {
     });
   }
 
-  // Update balance on commercial account (floor at zero to prevent negative balances)
-  const account = await prisma.commercialAccount.findUnique({
+  // Atomically decrement balance to prevent race conditions with concurrent invoice payments
+  const updatedAccount = await prisma.commercialAccount.update({
     where: { id: invoice.commercialAccountId },
+    data: { currentBalance: { decrement: invoice.totalAmount } },
     select: { currentBalance: true },
   });
-  const newBalance = Math.max(0, (account?.currentBalance ?? 0) - invoice.totalAmount);
-  await prisma.commercialAccount.update({
-    where: { id: invoice.commercialAccountId },
-    data: { currentBalance: newBalance },
-  });
+  // Clamp to zero if balance went negative
+  if (updatedAccount.currentBalance < 0) {
+    await prisma.commercialAccount.update({
+      where: { id: invoice.commercialAccountId },
+      data: { currentBalance: 0 },
+    });
+  }
 
   const updated = await prisma.invoice.update({
     where: { id: invoiceId },

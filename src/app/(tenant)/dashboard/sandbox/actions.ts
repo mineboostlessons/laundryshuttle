@@ -240,11 +240,11 @@ async function cleanupSandboxData(tenantId: string) {
     });
   }
 
-  // Delete sandbox user accounts
+  // Delete sandbox user accounts (match specific sandbox email pattern to avoid deleting real users)
   await prisma.user.deleteMany({
     where: {
       tenantId,
-      email: { contains: "sandbox-" },
+      email: { startsWith: "sandbox-", endsWith: "@example.com" },
     },
   });
 }

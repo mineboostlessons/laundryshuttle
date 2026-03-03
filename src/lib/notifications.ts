@@ -460,9 +460,15 @@ ${vars.totalAmount ? `<p>Amount: <strong>${vars.totalAmount}</strong></p>` : ""}
 
 function getDefaultSmsBody(
   event: NotificationEvent,
-  vars: Record<string, string>
+  rawVars: Record<string, string>
 ): string {
-  const biz = vars.businessName ?? "Laundry Shuttle";
+  // Truncate user-controlled values to prevent SMS manipulation/smishing
+  const truncate = (v: string, max: number) => (v.length > max ? v.slice(0, max) + "…" : v);
+  const vars: Record<string, string> = {};
+  for (const [k, v] of Object.entries(rawVars)) {
+    vars[k] = truncate(v, 100);
+  }
+  const biz = truncate(vars.businessName ?? "Laundry Shuttle", 50);
 
   switch (event) {
     case "order_confirmed":
