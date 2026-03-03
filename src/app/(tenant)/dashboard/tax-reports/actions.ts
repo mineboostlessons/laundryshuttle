@@ -12,6 +12,11 @@ export async function getTaxReport(taxYear: number) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
 
+  const currentYear = new Date().getFullYear();
+  if (!Number.isInteger(taxYear) || taxYear < 2000 || taxYear > currentYear + 1) {
+    return null;
+  }
+
   // Check if report already exists
   const existing = await prisma.taxReport.findUnique({
     where: {
@@ -29,6 +34,11 @@ export async function getTaxReport(taxYear: number) {
 export async function generateTaxReport(taxYear: number) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
+
+  const currentYear = new Date().getFullYear();
+  if (!Number.isInteger(taxYear) || taxYear < 2000 || taxYear > currentYear + 1) {
+    throw new Error("Invalid tax year");
+  }
 
   const yearStart = new Date(taxYear, 0, 1);
   const yearEnd = new Date(taxYear + 1, 0, 1);
@@ -151,6 +161,11 @@ export async function exportTaxReportCsv(taxYear: number) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
 
+  const currentYear = new Date().getFullYear();
+  if (!Number.isInteger(taxYear) || taxYear < 2000 || taxYear > currentYear + 1) {
+    throw new Error("Invalid tax year");
+  }
+
   const report = await prisma.taxReport.findUnique({
     where: {
       tenantId_taxYear: { tenantId: tenant.id, taxYear },
@@ -166,8 +181,12 @@ export async function exportTaxReportCsv(taxYear: number) {
 
   const monthly = (report.monthlyBreakdown as { month: number; gross: number; transactions: number; refunds: number }[]) ?? [];
 
-  // Escape CSV values to prevent formula injection
-  const esc = (v: string) => (/^[=+\-@\t\r]/.test(v) ? `'${v}` : v);
+  // Escape CSV values to prevent formula injection and handle commas/newlines
+  const esc = (v: string) => {
+    let safe = v.replace(/"/g, '""');
+    if (/^[=+\-@\t\r]/.test(safe)) safe = "'" + safe;
+    return `"${safe}"`;
+  };
 
   let csv = "1099-K Tax Summary Report\n";
   csv += `Business: ${esc(report.businessName)}\n`;

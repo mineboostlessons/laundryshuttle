@@ -13,6 +13,7 @@ export async function getServiceAreaInterests() {
     const interests = await prisma.serviceAreaInterest.findMany({
       where: { tenantId: tenant.id },
       orderBy: { createdAt: "desc" },
+      take: 500,
       select: {
         id: true,
         email: true,
@@ -63,6 +64,7 @@ export async function exportInterestsCsv() {
     const interests = await prisma.serviceAreaInterest.findMany({
       where: { tenantId: tenant.id },
       orderBy: { createdAt: "desc" },
+      take: 10000,
     });
 
     // Escape CSV values to prevent formula injection

@@ -285,6 +285,7 @@ const addressSchema = z.object({
 
 export async function getCustomerAddresses() {
   const session = await requireRole(UserRole.CUSTOMER);
+  await requireTenant();
 
   const addresses = await prisma.customerAddress.findMany({
     where: { userId: session.user.id },
@@ -322,6 +323,7 @@ export async function getCustomerAddresses() {
 
 export async function createAddress(data: z.infer<typeof addressSchema>) {
   const session = await requireRole(UserRole.CUSTOMER);
+  await requireTenant();
   const result = addressSchema.safeParse(data);
   if (!result.success) {
     return { success: false, error: result.error.errors[0].message };
@@ -372,6 +374,7 @@ export async function updateAddress(
   data: z.infer<typeof addressSchema>
 ) {
   const session = await requireRole(UserRole.CUSTOMER);
+  await requireTenant();
   const result = addressSchema.safeParse(data);
   if (!result.success) {
     return { success: false, error: result.error.errors[0].message };
@@ -427,6 +430,7 @@ export async function updateAddress(
 
 export async function deleteAddress(addressId: string) {
   const session = await requireRole(UserRole.CUSTOMER);
+  await requireTenant();
 
   const existing = await prisma.customerAddress.findFirst({
     where: { id: addressId, userId: session.user.id },

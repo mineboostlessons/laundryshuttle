@@ -33,9 +33,10 @@ export async function getAvailablePlans() {
 
 export async function getMySubscription() {
   const session = await requireRole(UserRole.CUSTOMER);
+  const tenant = await requireTenant();
 
   return prisma.customerSubscription.findFirst({
-    where: { userId: session.user.id, status: { in: ["active", "paused"] } },
+    where: { userId: session.user.id, status: { in: ["active", "paused"] }, plan: { tenantId: tenant.id } },
     include: {
       plan: {
         select: { id: true, name: true, frequency: true, discountPercentage: true },
@@ -106,9 +107,10 @@ export async function subscribeToPlan(data: z.infer<typeof subscribeSchema>) {
 
 export async function pauseSubscription() {
   const session = await requireRole(UserRole.CUSTOMER);
+  const tenant = await requireTenant();
 
   const sub = await prisma.customerSubscription.findFirst({
-    where: { userId: session.user.id, status: "active" },
+    where: { userId: session.user.id, status: "active", plan: { tenantId: tenant.id } },
   });
   if (!sub) {
     return { success: false as const, error: "No active subscription found" };
@@ -130,9 +132,10 @@ export async function pauseSubscription() {
 
 export async function resumeSubscription() {
   const session = await requireRole(UserRole.CUSTOMER);
+  const tenant = await requireTenant();
 
   const sub = await prisma.customerSubscription.findFirst({
-    where: { userId: session.user.id, status: "paused" },
+    where: { userId: session.user.id, status: "paused", plan: { tenantId: tenant.id } },
   });
   if (!sub) {
     return { success: false as const, error: "No paused subscription found" };
@@ -158,9 +161,10 @@ export async function resumeSubscription() {
 
 export async function cancelSubscription() {
   const session = await requireRole(UserRole.CUSTOMER);
+  const tenant = await requireTenant();
 
   const sub = await prisma.customerSubscription.findFirst({
-    where: { userId: session.user.id, status: { in: ["active", "paused"] } },
+    where: { userId: session.user.id, status: { in: ["active", "paused"] }, plan: { tenantId: tenant.id } },
   });
   if (!sub) {
     return { success: false as const, error: "No subscription found" };
@@ -191,6 +195,7 @@ export async function updateSubscriptionPreferences(
   data: z.infer<typeof updatePrefsSchema>
 ) {
   const session = await requireRole(UserRole.CUSTOMER);
+  const tenant = await requireTenant();
   const result = updatePrefsSchema.safeParse(data);
   if (!result.success) {
     return { success: false as const, error: result.error.errors[0].message };
@@ -198,7 +203,7 @@ export async function updateSubscriptionPreferences(
   const parsed = result.data;
 
   const sub = await prisma.customerSubscription.findFirst({
-    where: { userId: session.user.id, status: { in: ["active", "paused"] } },
+    where: { userId: session.user.id, status: { in: ["active", "paused"] }, plan: { tenantId: tenant.id } },
   });
   if (!sub) {
     return { success: false as const, error: "No subscription found" };

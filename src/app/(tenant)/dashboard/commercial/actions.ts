@@ -30,6 +30,7 @@ export async function getCommercialAccounts() {
       _count: { select: { orders: true, invoices: true } },
     },
     orderBy: { createdAt: "desc" },
+    take: 200,
   });
 
   return accounts;

@@ -93,6 +93,7 @@ export async function addPaymentMethod(stripePaymentMethodId: string) {
 
 export async function setDefaultPaymentMethod(id: string) {
   const session = await requireRole(UserRole.CUSTOMER);
+  await requireTenant();
 
   const method = await prisma.customerPaymentMethod.findFirst({
     where: { id, userId: session.user.id },
@@ -119,6 +120,7 @@ export async function setDefaultPaymentMethod(id: string) {
 
 export async function deletePaymentMethod(id: string) {
   const session = await requireRole(UserRole.CUSTOMER);
+  await requireTenant();
 
   const method = await prisma.customerPaymentMethod.findFirst({
     where: { id, userId: session.user.id },

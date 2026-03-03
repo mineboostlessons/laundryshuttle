@@ -66,7 +66,7 @@ export async function getPlanSubscribers(planId: string) {
   }
 
   return prisma.customerSubscription.findMany({
-    where: { planId },
+    where: { planId, plan: { tenantId: tenant.id } },
     orderBy: { createdAt: "desc" },
     include: {
       user: {

@@ -232,9 +232,10 @@ export async function submitOnboarding(
   _prevState: OnboardingState,
   formData: FormData
 ): Promise<OnboardingState> {
-  // Rate limit by email to prevent abuse
+  // Rate limit by email to prevent abuse (best-effort in serverless)
   const email = formData.get("ownerEmail") as string | null;
-  if (email && !checkOnboardingRateLimit(email.toLowerCase())) {
+  const rateLimitKey = email?.toLowerCase() ?? "unknown";
+  if (!checkOnboardingRateLimit(rateLimitKey)) {
     return { error: "Too many attempts. Please try again later." };
   }
   const raw = Object.fromEntries(formData.entries());

@@ -322,6 +322,7 @@ export async function removeRoute(
   routeId: string
 ): Promise<{ success: boolean; error?: string }> {
   const session = await requireRole(UserRole.DRIVER);
+  await requireTenant();
 
   const route = await prisma.driverRoute.findFirst({
     where: {
@@ -354,6 +355,7 @@ export async function removeRoute(
 
 export async function getRouteDetail(routeId: string) {
   const session = await requireRole(UserRole.DRIVER);
+  await requireTenant();
 
   const route = await prisma.driverRoute.findFirst({
     where: {
@@ -412,6 +414,7 @@ export async function getRouteDetail(routeId: string) {
 
 export async function getDriverRouteHistory(page: number = 1) {
   const session = await requireRole(UserRole.DRIVER);
+  await requireTenant();
   const safePage = Math.max(1, Math.floor(page));
   const limit = 20;
   const skip = (safePage - 1) * limit;
@@ -462,6 +465,7 @@ export async function updateStopStatus(
   input: z.infer<typeof updateStopStatusSchema>
 ) {
   const session = await requireRole(UserRole.DRIVER);
+  await requireTenant();
 
   const parsed = updateStopStatusSchema.safeParse(input);
   if (!parsed.success) {
@@ -577,6 +581,7 @@ export async function completeDelivery(
   input: z.infer<typeof completeDeliverySchema>
 ) {
   const session = await requireRole(UserRole.DRIVER);
+  await requireTenant();
 
   const parsed = completeDeliverySchema.safeParse(input);
   if (!parsed.success) {
@@ -591,10 +596,11 @@ export async function completeDelivery(
     if (!r2PublicUrl) {
       return { success: false, error: "File storage not configured" };
     }
-    if (deliveryPhotoUrl && !deliveryPhotoUrl.startsWith(r2PublicUrl)) {
+    const r2Base = r2PublicUrl.endsWith("/") ? r2PublicUrl : r2PublicUrl + "/";
+    if (deliveryPhotoUrl && !deliveryPhotoUrl.startsWith(r2Base)) {
       return { success: false, error: "Invalid delivery photo URL" };
     }
-    if (signatureUrl && !signatureUrl.startsWith(r2PublicUrl)) {
+    if (signatureUrl && !signatureUrl.startsWith(r2Base)) {
       return { success: false, error: "Invalid signature URL" };
     }
   }
@@ -679,6 +685,7 @@ export async function completeDelivery(
 
 export async function optimizeDriverRoute(routeId: string) {
   const session = await requireRole(UserRole.DRIVER);
+  await requireTenant();
 
   const route = await prisma.driverRoute.findFirst({
     where: {
@@ -746,6 +753,7 @@ export async function optimizeDriverRoute(routeId: string) {
 
 export async function startRoute(routeId: string) {
   const session = await requireRole(UserRole.DRIVER);
+  await requireTenant();
 
   const route = await prisma.driverRoute.findFirst({
     where: {
@@ -773,6 +781,7 @@ export async function startRoute(routeId: string) {
 
 export async function getDriverEarnings(params?: { period?: string }) {
   const session = await requireRole(UserRole.DRIVER);
+  await requireTenant();
 
   const now = new Date();
   let startDate: Date;

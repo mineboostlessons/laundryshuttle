@@ -84,13 +84,34 @@ export async function updateTenant(
   }
 }
 
-export async function deleteTenant(tenantId: string): Promise<AdminActionState> {
+export async function deleteTenant(
+  tenantId: string,
+  confirmSlug?: string
+): Promise<AdminActionState> {
   await requireRole(UserRole.PLATFORM_ADMIN);
 
+  // Require confirmation by providing the tenant slug
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { slug: true },
+  });
+
+  if (!tenant) {
+    return { error: "Tenant not found" };
+  }
+
+  if (!confirmSlug || confirmSlug !== tenant.slug) {
+    return { error: "Please confirm deletion by providing the tenant slug" };
+  }
+
   try {
-    await prisma.tenant.delete({ where: { id: tenantId } });
+    // Soft-delete: deactivate instead of hard-deleting to allow recovery
+    await prisma.tenant.update({
+      where: { id: tenantId },
+      data: { isActive: false },
+    });
     revalidatePath("/admin/tenants");
-    return { success: true, message: "Tenant deleted" };
+    return { success: true, message: "Tenant deactivated and marked for deletion" };
   } catch {
     return { error: "Failed to delete tenant" };
   }
