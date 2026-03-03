@@ -54,16 +54,19 @@ export async function resetDemoTenant(tenantId: string) {
     await prisma.orderStatusHistory.deleteMany({
       where: { orderId: { in: orderIds } },
     });
+    await prisma.orderMessage.deleteMany({
+      where: { orderId: { in: orderIds } },
+    });
     await prisma.order.deleteMany({
       where: { id: { in: orderIds } },
     });
   }
 
-  // Delete sandbox users
+  // Delete sandbox users (match specific pattern to avoid deleting real users)
   await prisma.user.deleteMany({
     where: {
       tenantId,
-      email: { contains: "sandbox-" },
+      email: { startsWith: "sandbox-", endsWith: "@example.com" },
     },
   });
 

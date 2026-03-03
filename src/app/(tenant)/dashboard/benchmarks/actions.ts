@@ -9,18 +9,27 @@ import {
   type BenchmarkDashboard,
 } from "@/lib/benchmarks";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
+
+const periodSchema = z.enum(["weekly", "monthly"]);
+
+function validatePeriod(period: "weekly" | "monthly"): "weekly" | "monthly" {
+  return periodSchema.parse(period);
+}
 
 export async function getBenchmarks(
   period: "weekly" | "monthly" = "monthly"
 ): Promise<BenchmarkDashboard> {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
+  period = validatePeriod(period);
   return getBenchmarkDashboard(tenant.id, period);
 }
 
 export async function refreshBenchmarks(period: "weekly" | "monthly" = "monthly") {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
+  period = validatePeriod(period);
 
   const now = new Date();
   let periodStart: Date;

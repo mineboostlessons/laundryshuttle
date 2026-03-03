@@ -41,7 +41,7 @@ export async function getCustomerDashboard() {
         },
       }),
       prisma.customerSubscription.findFirst({
-        where: { userId: session.user.id, status: "active" },
+        where: { userId: session.user.id, status: "active", plan: { tenantId: tenant.id } },
         include: { plan: true },
       }),
     ]);

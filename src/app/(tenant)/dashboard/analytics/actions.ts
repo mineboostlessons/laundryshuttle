@@ -4,8 +4,15 @@ import prisma from "@/lib/prisma";
 import { requireTenant } from "@/lib/tenant";
 import { requireRole } from "@/lib/auth-helpers";
 import { UserRole } from "@/types";
+import { z } from "zod";
 
 export type DateRange = "7d" | "30d" | "90d" | "12m";
+
+const dateRangeSchema = z.enum(["7d", "30d", "90d", "12m"]);
+
+function validateRange(range: DateRange): DateRange {
+  return dateRangeSchema.parse(range);
+}
 
 function getDateRangeStart(range: DateRange): Date {
   const now = new Date();
@@ -35,6 +42,7 @@ function getPriorPeriodStart(range: DateRange): Date {
 export async function getAnalyticsKPIs(range: DateRange) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
+  range = validateRange(range);
 
   const periodStart = getDateRangeStart(range);
   const priorStart = getPriorPeriodStart(range);
@@ -109,6 +117,7 @@ export async function getAnalyticsKPIs(range: DateRange) {
 export async function getRevenueTrend(range: DateRange) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
+  range = validateRange(range);
 
   const periodStart = getDateRangeStart(range);
 
@@ -168,6 +177,7 @@ export async function getRevenueTrend(range: DateRange) {
 export async function getServiceBreakdown(range: DateRange) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
+  range = validateRange(range);
 
   const periodStart = getDateRangeStart(range);
 
@@ -210,6 +220,7 @@ export async function getServiceBreakdown(range: DateRange) {
 export async function getRevenueByChannel(range: DateRange) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
+  range = validateRange(range);
 
   const periodStart = getDateRangeStart(range);
 
@@ -245,6 +256,7 @@ export async function getRevenueByChannel(range: DateRange) {
 export async function getTopCustomers(range: DateRange) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
+  range = validateRange(range);
 
   const periodStart = getDateRangeStart(range);
 
@@ -298,6 +310,7 @@ export async function getTopCustomers(range: DateRange) {
 export async function getCustomerGrowth(range: DateRange) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
+  range = validateRange(range);
 
   const periodStart = getDateRangeStart(range);
 
@@ -350,6 +363,7 @@ export async function getCustomerGrowth(range: DateRange) {
 export async function getOrdersForExport(range: DateRange) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
+  range = validateRange(range);
 
   const periodStart = getDateRangeStart(range);
 

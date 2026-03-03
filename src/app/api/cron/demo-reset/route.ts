@@ -63,6 +63,9 @@ export async function GET(request: Request) {
           await tx.orderStatusHistory.deleteMany({
             where: { orderId: { in: orderIds } },
           });
+          await tx.orderMessage.deleteMany({
+            where: { orderId: { in: orderIds } },
+          });
           await tx.order.deleteMany({
             where: { id: { in: orderIds } },
           });
@@ -71,7 +74,7 @@ export async function GET(request: Request) {
         await tx.user.deleteMany({
           where: {
             tenantId: tenant.id,
-            email: { contains: "sandbox-" },
+            email: { startsWith: "sandbox-", endsWith: "@example.com" },
           },
         });
 
