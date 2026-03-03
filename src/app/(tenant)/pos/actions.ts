@@ -172,6 +172,15 @@ export async function createPosOrder(
   });
   const taxRate = tenantFull?.defaultTaxRate ?? 0;
 
+  // Verify laundromat belongs to this tenant
+  const laundromat = await prisma.laundromat.findFirst({
+    where: { id: data.laundromatId, tenantId: tenant.id, isActive: true },
+    select: { id: true },
+  });
+  if (!laundromat) {
+    return { success: false as const, error: "Laundromat not found" };
+  }
+
   // Verify prices from DB to prevent client-side price manipulation
   let subtotal = 0;
   let taxableAmount = 0;

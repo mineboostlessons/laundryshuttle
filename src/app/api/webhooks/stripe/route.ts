@@ -159,13 +159,8 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
       },
     });
 
-    // Increment promo code usage now that payment is confirmed
-    if (order.promoCodeId) {
-      await tx.promoCode.update({
-        where: { id: order.promoCodeId },
-        data: { currentUses: { increment: 1 } },
-      });
-    }
+    // Promo code usage already incremented atomically in the payment-intent route
+    // to prevent TOCTOU race conditions — do NOT increment again here.
 
     // Deduct wallet if used (atomic decrement to prevent race conditions)
     if (walletDeduction > 0 && order.customerId) {
@@ -203,6 +198,13 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
   const orderId = paymentIntent.metadata?.orderId;
   if (!orderId) return;
 
+  // Decrement promo code usage — it was incremented atomically in the
+  // payment-intent route, so we must reverse it on failure.
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { promoCodeId: true },
+  });
+
   await prisma.orderStatusHistory.create({
     data: {
       orderId,
@@ -210,6 +212,13 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
       notes: `Payment failed: ${paymentIntent.last_payment_error?.message ?? "Unknown error"}`,
     },
   });
+
+  if (order?.promoCodeId) {
+    await prisma.promoCode.updateMany({
+      where: { id: order.promoCodeId, currentUses: { gt: 0 } },
+      data: { currentUses: { decrement: 1 } },
+    });
+  }
 }
 
 async function handleChargeRefunded(charge: Stripe.Charge) {
@@ -298,7 +307,8 @@ async function handleAccountUpdated(account: Stripe.Account) {
       ? "restricted"
       : "pending";
 
-  await prisma.tenant.update({
+  // Use updateMany to gracefully handle non-existent tenants (no throw)
+  await prisma.tenant.updateMany({
     where: { id: tenantId },
     data: {
       stripeConnectStatus: status,

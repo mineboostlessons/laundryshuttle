@@ -182,6 +182,7 @@ export async function getRevenueChartData() {
       createdAt: true,
     },
     orderBy: { createdAt: "asc" },
+    take: 10000,
   });
 
   // Group by day

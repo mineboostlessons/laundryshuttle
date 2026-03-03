@@ -3,7 +3,8 @@
 import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { requireTenant } from "@/lib/tenant";
-import { getSession } from "@/lib/auth-helpers";
+import { getSession, requireRole } from "@/lib/auth-helpers";
+import { UserRole } from "@/types";
 import { isPointInServiceArea, findZoneForPoint } from "@/lib/mapbox";
 import { generateOrderNumber } from "@/lib/utils";
 import { notifyOrderConfirmed } from "@/lib/notifications";
@@ -373,7 +374,7 @@ export async function createOrder(
   input: z.infer<typeof createOrderSchema>
 ): Promise<{ success: boolean; orderId?: string; orderNumber?: string; error?: string }> {
   const tenant = await requireTenant();
-  const session = await getSession();
+  const session = await requireRole(UserRole.CUSTOMER);
 
   // Validate input
   const parsed = createOrderSchema.safeParse(input);
@@ -382,11 +383,6 @@ export async function createOrder(
   }
 
   const data = parsed.data;
-
-  // Require logged-in user with a payment method on file
-  if (!session?.user?.id) {
-    return { success: false, error: "Please sign in to place an order" };
-  }
 
   const paymentMethodCount = await prisma.customerPaymentMethod.count({
     where: { userId: session.user.id, user: { tenantId: tenant.id } },
@@ -487,7 +483,7 @@ export async function createOrder(
 
   // Reuse existing customer address or create a new one
   let addressId: string | undefined;
-  if (session?.user?.id) {
+  if (session.user.id) {
     // Check for an existing address with the same addressLine1
     const existing = await prisma.customerAddress.findFirst({
       where: {
@@ -578,7 +574,7 @@ export async function createOrder(
       orderNumber,
       tenantId: tenant.id,
       laundromatId: laundromat.id,
-      customerId: session?.user?.id ?? null,
+      customerId: session.user.id,
       driverId: assignedDriverId,
       orderType: "delivery",
       serviceType: data.serviceType,
@@ -602,7 +598,7 @@ export async function createOrder(
       statusHistory: {
         create: {
           status: "confirmed",
-          changedByUserId: session?.user?.id ?? null,
+          changedByUserId: session.user.id,
           notes: "Order placed and confirmed",
         },
       },
@@ -610,7 +606,7 @@ export async function createOrder(
   });
 
   // Send order confirmation notification (fire-and-forget)
-  if (session?.user?.id) {
+  if (session.user.id) {
     notifyOrderConfirmed({
       tenantId: tenant.id,
       userId: session.user.id,

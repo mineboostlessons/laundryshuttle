@@ -121,6 +121,7 @@ export async function getRevenueTrend(range: DateRange) {
     },
     select: { totalAmount: true, createdAt: true },
     orderBy: { createdAt: "asc" },
+    take: 50000,
   });
 
   // Group by day or month depending on range
@@ -180,6 +181,7 @@ export async function getServiceBreakdown(range: DateRange) {
       itemType: "service",
     },
     select: { name: true, totalPrice: true, quantity: true },
+    take: 50000,
   });
 
   const breakdown: Record<string, { revenue: number; count: number }> = {};
@@ -307,6 +309,7 @@ export async function getCustomerGrowth(range: DateRange) {
     },
     select: { createdAt: true },
     orderBy: { createdAt: "asc" },
+    take: 50000,
   });
 
   const useMonths = range === "12m";
@@ -371,6 +374,7 @@ export async function getOrdersForExport(range: DateRange) {
       customer: { select: { firstName: true, lastName: true, email: true } },
     },
     orderBy: { createdAt: "desc" },
+    take: 10000,
   });
 
   return orders.map((o) => ({
