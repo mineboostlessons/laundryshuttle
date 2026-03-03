@@ -27,8 +27,10 @@ const pageUpdateSchema = pageSchema.extend({
   isPublished: z.boolean().optional(),
 });
 
+const featureIconSchema = z.enum(["truck", "clock", "sparkles", "shield", "phone", "dollar", "map", "calendar", "leaf", "heart"]);
+
 const featureSchema = z.object({
-  icon: z.enum(["truck", "clock", "sparkles", "shield", "phone", "dollar"]),
+  icon: featureIconSchema,
   title: z.string(),
   description: z.string(),
 });
@@ -74,6 +76,59 @@ const blockSchema = z.discriminatedUnion("type", [
     type: z.literal("faq"),
     heading: z.string(),
     items: z.array(faqItemSchema),
+  }),
+  z.object({
+    type: z.literal("pricing"),
+    heading: z.string(),
+    subheading: z.string().optional(),
+    tiers: z.array(z.object({
+      name: z.string(),
+      price: z.string(),
+      unit: z.string(),
+      description: z.string(),
+      featured: z.boolean().optional(),
+    })),
+  }),
+  z.object({
+    type: z.literal("how_it_works"),
+    heading: z.string(),
+    steps: z.array(z.object({
+      title: z.string(),
+      description: z.string(),
+      icon: featureIconSchema,
+    })),
+  }),
+  z.object({
+    type: z.literal("testimonials"),
+    heading: z.string(),
+    testimonials: z.array(z.object({
+      name: z.string(),
+      text: z.string(),
+      rating: z.number().min(1).max(5),
+    })),
+  }),
+  z.object({
+    type: z.literal("contact"),
+    heading: z.string(),
+    subheading: z.string().optional(),
+    showPhone: z.boolean(),
+    showEmail: z.boolean(),
+    showForm: z.boolean(),
+  }),
+  z.object({
+    type: z.literal("service_areas"),
+    heading: z.string(),
+    subheading: z.string().optional(),
+    showZipChecker: z.boolean(),
+  }),
+  z.object({
+    type: z.literal("gallery"),
+    heading: z.string(),
+    images: z.array(z.object({
+      url: z.string(),
+      alt: z.string(),
+      caption: z.string().optional(),
+    })),
   }),
 ]);
 
@@ -272,5 +327,5 @@ export async function togglePagePublished(
 }
 
 export async function getBlockTypes(): Promise<BlockType[]> {
-  return ["hero", "text", "services", "features", "cta", "faq"];
+  return ["hero", "text", "services", "features", "cta", "faq", "pricing", "how_it_works", "testimonials", "contact", "service_areas", "gallery"];
 }

@@ -166,7 +166,7 @@ export async function getWinBackCandidates(tenantId: string): Promise<{
   const fourteenDaysAgo = new Date(now);
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
-  // Get all customers who have ordered before but not recently
+  // Get customers who have ordered before but not recently (capped at 1000 to prevent memory issues)
   const customers = await prisma.user.findMany({
     where: {
       tenantId,
@@ -200,6 +200,7 @@ export async function getWinBackCandidates(tenantId: string): Promise<{
         },
       },
     },
+    take: 1000,
   });
 
   // Get total spent per customer

@@ -10,7 +10,12 @@ export async function POST(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
-  const period = (searchParams.get("period") ?? "daily") as "daily" | "weekly" | "monthly";
+  const rawPeriod = searchParams.get("period") ?? "daily";
+  const validPeriods = ["daily", "weekly", "monthly"] as const;
+  if (!validPeriods.includes(rawPeriod as (typeof validPeriods)[number])) {
+    return NextResponse.json({ error: "Invalid period" }, { status: 400 });
+  }
+  const period = rawPeriod as "daily" | "weekly" | "monthly";
 
   const results = await generateAllBenchmarkSnapshots(period);
 

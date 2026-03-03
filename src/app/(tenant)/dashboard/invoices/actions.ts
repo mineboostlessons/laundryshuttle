@@ -63,6 +63,7 @@ export async function getInvoices(filters?: {
       },
     },
     orderBy: { createdAt: "desc" },
+    take: 200,
   });
 
   return invoices;

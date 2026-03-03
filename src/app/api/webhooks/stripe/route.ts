@@ -78,19 +78,37 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
   // Handle wallet top-up
   if (paymentIntent.metadata?.type === "wallet_top_up") {
     try {
+      // Use the actual Stripe amount (in cents) instead of trusting metadata
+      const actualAmount = paymentIntent.amount / 100;
+      const userId = paymentIntent.metadata.userId;
+      const tenantId = paymentIntent.metadata.tenantId;
+
+      // Verify the user belongs to the claimed tenant
+      const user = await prisma.user.findFirst({
+        where: { id: userId, tenantId },
+        select: { id: true },
+      });
+      if (!user) {
+        console.error(
+          `Wallet top-up: user ${userId} not found in tenant ${tenantId} for payment ${paymentIntent.id}`
+        );
+        return;
+      }
+
       const { creditWalletFromPayment } = await import(
         "@/lib/wallet"
       );
       await creditWalletFromPayment({
-        userId: paymentIntent.metadata.userId,
-        tenantId: paymentIntent.metadata.tenantId,
-        amount: parseFloat(paymentIntent.metadata.amount),
+        userId,
+        tenantId,
+        amount: actualAmount,
         stripePaymentIntentId: paymentIntent.id,
       });
     } catch (walletError) {
+      const actualAmount = paymentIntent.amount / 100;
       console.error(
         `Wallet credit failed for payment ${paymentIntent.id} ` +
-          `(user: ${paymentIntent.metadata.userId}, amount: ${paymentIntent.metadata.amount}):`,
+          `(user: ${paymentIntent.metadata.userId}, amount: ${actualAmount}):`,
         walletError
       );
       // Log for manual reconciliation — payment succeeded but wallet credit did not
@@ -99,7 +117,7 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
           userId: paymentIntent.metadata.userId,
           tenantId: paymentIntent.metadata.tenantId,
           type: "top_up_failed",
-          amount: parseFloat(paymentIntent.metadata.amount),
+          amount: actualAmount,
           balanceAfter: 0,
           description: `FAILED wallet credit — manual reconciliation needed. PaymentIntent: ${paymentIntent.id}`,
           stripePaymentIntentId: paymentIntent.id,

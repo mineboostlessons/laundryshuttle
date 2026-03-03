@@ -135,13 +135,15 @@ export function wrapInEmailLayout(params: {
   businessName: string;
   preheader?: string;
 }): string {
+  const safeName = escapeHtml(params.businessName);
+  const safePreheader = params.preheader ? escapeHtml(params.preheader) : "";
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${params.businessName}</title>
-  ${params.preheader ? `<span style="display:none;max-height:0;overflow:hidden;">${params.preheader}</span>` : ""}
+  <title>${safeName}</title>
+  ${safePreheader ? `<span style="display:none;max-height:0;overflow:hidden;">${safePreheader}</span>` : ""}
 </head>
 <body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background-color:#f5f5f5;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:24px 0;">
@@ -150,7 +152,7 @@ export function wrapInEmailLayout(params: {
         <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:8px;overflow:hidden;max-width:600px;width:100%;">
           <tr>
             <td style="padding:24px 32px;background-color:#1a1a1a;">
-              <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">${params.businessName}</h1>
+              <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">${safeName}</h1>
             </td>
           </tr>
           <tr>

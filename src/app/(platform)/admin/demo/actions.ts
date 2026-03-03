@@ -85,6 +85,10 @@ export async function updateDemoResetInterval(
 ) {
   await requireRole(UserRole.PLATFORM_ADMIN);
 
+  if (intervalHours !== null && (intervalHours < 1 || intervalHours > 720)) {
+    return { success: false, error: "Interval must be between 1 and 720 hours" };
+  }
+
   await prisma.tenant.update({
     where: { id: tenantId },
     data: { demoResetInterval: intervalHours },

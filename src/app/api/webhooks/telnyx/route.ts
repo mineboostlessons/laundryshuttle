@@ -118,6 +118,7 @@ async function handleInboundMessage(
   if (!eventData) return;
 
   const from = (eventData.from as { phone_number?: string })?.phone_number;
+  const to = (eventData.to as { phone_number?: string })?.phone_number ?? (eventData.to as string[] | undefined)?.[0];
   const text = eventData.text as string | undefined;
 
   if (!from || !text) return;
@@ -126,10 +127,24 @@ async function handleInboundMessage(
   const normalizedFrom = normalizePhone(from);
   const digits = normalizedFrom.replace(/\D/g, "");
 
-  // Find the customer by phone number — try exact E.164 first, then suffix match
+  // Resolve tenant from the receiving phone number to scope the customer lookup
+  let tenantScope: { tenantId: string } | undefined;
+  if (to) {
+    const normalizedTo = normalizePhone(to);
+    const tenant = await prisma.tenant.findFirst({
+      where: { phone: normalizedTo },
+      select: { id: true },
+    });
+    if (tenant) {
+      tenantScope = { tenantId: tenant.id };
+    }
+  }
+
+  // Find the customer by phone number — scoped to tenant when possible
   const user = await prisma.user.findFirst({
     where: {
       role: "customer",
+      ...tenantScope,
       OR: [
         { phone: normalizedFrom },
         // Match last 10 digits to handle varied storage formats

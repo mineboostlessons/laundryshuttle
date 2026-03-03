@@ -76,7 +76,7 @@ export async function deleteMarketplaceApp(appId: string) {
   });
 
   if (count > 0) {
-    throw new Error(`Cannot delete app with ${count} active installation(s). Deactivate it instead.`);
+    return { success: false as const, error: `Cannot delete app with ${count} active installation(s). Deactivate it instead.` };
   }
 
   return prisma.marketplaceApp.delete({ where: { id: appId } });

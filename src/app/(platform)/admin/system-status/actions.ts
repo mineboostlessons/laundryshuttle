@@ -2,6 +2,8 @@
 
 import prisma from "@/lib/prisma";
 import { checkEnvironmentVariables } from "@/lib/env";
+import { requireRole } from "@/lib/auth-helpers";
+import { UserRole } from "@/types";
 
 export interface ServiceHealth {
   name: string;
@@ -34,6 +36,8 @@ export interface SystemStatusData {
 }
 
 export async function getSystemStatus(): Promise<SystemStatusData> {
+  await requireRole(UserRole.PLATFORM_ADMIN);
+
   // Database connectivity and stats
   let dbConnected = false;
   let dbLatency = 0;
