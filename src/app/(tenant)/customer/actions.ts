@@ -731,6 +731,7 @@ export async function submitTip(data: z.infer<typeof tipSchema>) {
         metadata: {
           type: "tip",
           orderId: order.id,
+          tenantId: tenant.id,
           driverId: order.driverId ?? "",
         },
         ...(customer?.stripeCustomerId

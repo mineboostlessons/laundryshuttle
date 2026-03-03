@@ -130,10 +130,14 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
   // Handle tip payments — update order totals after successful payment
   if (paymentIntent.metadata?.type === "tip") {
     const tipOrderId = paymentIntent.metadata.orderId;
+    const tipTenantId = paymentIntent.metadata.tenantId;
     const tipAmount = paymentIntent.amount / 100;
     if (tipOrderId && tipAmount > 0) {
       await prisma.order.updateMany({
-        where: { id: tipOrderId },
+        where: {
+          id: tipOrderId,
+          ...(tipTenantId ? { tenantId: tipTenantId } : {}),
+        },
         data: {
           tipAmount: { increment: tipAmount },
           totalAmount: { increment: tipAmount },

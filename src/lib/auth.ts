@@ -61,8 +61,11 @@ function tenantAwarePrismaAdapter(): Adapter {
 
     async getUserByEmail(email: string) {
       const tenantId = await getOAuthTenantId();
+      // If tenantId is null (cookie expired), explicitly search for tenantId: null
+      // to avoid returning an arbitrary tenant user. This means OAuth sign-in will
+      // only match platform-level users when no tenant context is available.
       const user = await prisma.user.findFirst({
-        where: { email, tenantId, isActive: true },
+        where: { email, tenantId: tenantId ?? null, isActive: true },
       });
       if (!user) return null;
       return {
@@ -78,6 +81,14 @@ function tenantAwarePrismaAdapter(): Adapter {
 
     async createUser(data) {
       const tenantId = await getOAuthTenantId();
+
+      // Prevent creating platform-scoped users via OAuth — OAuth is only
+      // for tenant customers. If tenantId is null the cookie likely expired
+      // during the OAuth redirect round-trip.
+      if (!tenantId) {
+        throw new Error("OAuth sign-up requires a tenant context. Please try again.");
+      }
+
       const nameParts = (data.name ?? "").split(" ");
       const firstName = nameParts[0] || "";
       const lastName = nameParts.slice(1).join(" ") || "";

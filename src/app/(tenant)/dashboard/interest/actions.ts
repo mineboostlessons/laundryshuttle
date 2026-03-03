@@ -48,7 +48,7 @@ export async function deleteInterest(id: string) {
       return { success: false, error: "Not found" };
     }
 
-    await prisma.serviceAreaInterest.delete({ where: { id } });
+    await prisma.serviceAreaInterest.deleteMany({ where: { id, tenantId: tenant.id } });
     return { success: true };
   } catch (error) {
     console.error("Failed to delete interest:", error);

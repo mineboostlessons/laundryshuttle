@@ -18,7 +18,7 @@ export async function GET(request: Request) {
   try {
     // Get active tenants that have opted into automatic win-back campaigns
     const tenants = await prisma.tenant.findMany({
-      where: { isActive: true, onboardingComplete: true, autoWinBackEnabled: true },
+      where: { isActive: true, onboardingComplete: true, autoWinBackEnabled: true, isDemo: false },
       select: { id: true, businessName: true },
     });
 

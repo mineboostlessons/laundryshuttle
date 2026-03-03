@@ -36,7 +36,7 @@ export async function updateTenantLogo(logoUrl: string | null) {
       return { success: false, error: "Invalid URL format" };
     }
     const r2Domain = process.env.R2_PUBLIC_URL;
-    if (r2Domain && !logoUrl.startsWith(r2Domain)) {
+    if (!r2Domain || !logoUrl.startsWith(r2Domain)) {
       return { success: false, error: "Logo must be uploaded through the app" };
     }
   }
