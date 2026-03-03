@@ -314,16 +314,22 @@ h1, h2, h3 {
 
   if (overrides?.customCss) {
     // Sanitize custom CSS to prevent XSS and data exfiltration
+    // Strip null bytes and unicode escape sequences first
     const sanitized = overrides.customCss
+      .replace(/\0/g, "")
+      .replace(/\\0+/g, "")
       .replace(/<\/style/gi, "")
       .replace(/<script/gi, "")
       .replace(/<\//g, "")
       .replace(/javascript:/gi, "")
       .replace(/expression\s*\(/gi, "")
       .replace(/@import/gi, "")
-      .replace(/url\s*\(/gi, "url(/* blocked */")
+      .replace(/u\s*r\s*l\s*\(/gi, "url(/* blocked */")
       .replace(/behavior\s*:/gi, "")
-      .replace(/-moz-binding\s*:/gi, "");
+      .replace(/-moz-binding\s*:/gi, "")
+      .replace(/-moz-document/gi, "")
+      .replace(/@supports/gi, "")
+      .replace(/@font-face/gi, "");
     css += `\n${sanitized}`;
   }
 

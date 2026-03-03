@@ -2,14 +2,27 @@ import Link from "next/link";
 import type { HeroBlock } from "@/types/blocks";
 import { HomepageAddressChecker } from "@/app/(tenant)/components/homepage-address-checker";
 
+function isSafeImageUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url, "https://placeholder.local");
+    return parsed.protocol === "https:" || parsed.protocol === "http:" || url.startsWith("/");
+  } catch {
+    return false;
+  }
+}
+
 export function HeroBlockComponent({ block }: { block: HeroBlock }) {
+  const safeBgImage = block.backgroundImage && isSafeImageUrl(block.backgroundImage)
+    ? block.backgroundImage
+    : null;
+
   return (
     <section
       className="relative flex min-h-[420px] items-center justify-center px-6 py-24 text-center"
       style={
-        block.backgroundImage
+        safeBgImage
           ? {
-              backgroundImage: `url(${block.backgroundImage})`,
+              backgroundImage: `url(${safeBgImage})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
             }

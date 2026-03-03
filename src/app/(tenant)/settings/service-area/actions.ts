@@ -318,7 +318,7 @@ export async function createZoneOverride(input: z.infer<typeof createOverrideSch
 
   if (orderIdsToReassign.length > 0) {
     await prisma.order.updateMany({
-      where: { id: { in: orderIdsToReassign } },
+      where: { id: { in: orderIdsToReassign }, status: "confirmed" },
       data: { driverId },
     });
   }

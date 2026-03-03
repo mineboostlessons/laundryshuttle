@@ -142,7 +142,7 @@ const createPosOrderSchema = z.object({
   paymentMethod: z.enum(["card", "cash", "split"]),
   cashAmount: z.number().min(0).optional(),
   cardAmount: z.number().min(0).optional(),
-  stripePaymentIntentId: z.string().optional(),
+  stripePaymentIntentId: z.string().startsWith("pi_").optional(),
   laundromatId: z.string(),
   customerName: z.string().optional(),
   notes: z.string().optional(),
