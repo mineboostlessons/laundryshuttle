@@ -12,7 +12,7 @@ import { UserRole } from "@/types";
 export async function POST(request: Request) {
   try {
     const session = await auth();
-    if (!session?.user) {
+    if (!session?.user || !session.user.id || !session.user.role) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }

@@ -6,7 +6,7 @@ import { getUpsellsForCustomer } from "@/lib/upsell";
 export async function GET() {
   try {
     const session = await auth();
-    if (!session?.user || session.user.role !== "customer") {
+    if (!session?.user || !session.user.id || !session.user.role || session.user.role !== "customer") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

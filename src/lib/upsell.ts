@@ -291,7 +291,7 @@ export async function generateWinBackPromos(
 
     if (existing) continue;
 
-    const code = `COMEBACK-${customer.firstName?.toUpperCase().slice(0, 3) ?? "CUS"}-${crypto.randomBytes(3).toString("hex").toUpperCase().slice(0, 4)}`;
+    const code = `COMEBACK-${customer.firstName?.toUpperCase().slice(0, 3) ?? "CUS"}-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
 
     const validUntil = new Date();
     validUntil.setDate(validUntil.getDate() + 14); // 2 week expiry
@@ -371,7 +371,7 @@ export async function executeWinBackCampaign(
 
     if (existing) continue;
 
-    const code = `COMEBACK-${customer.firstName?.toUpperCase().slice(0, 3) ?? "CUS"}-${crypto.randomBytes(3).toString("hex").toUpperCase().slice(0, 4)}`;
+    const code = `COMEBACK-${customer.firstName?.toUpperCase().slice(0, 3) ?? "CUS"}-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
 
     const validUntil = new Date();
     validUntil.setDate(validUntil.getDate() + 14);

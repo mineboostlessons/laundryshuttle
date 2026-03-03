@@ -23,7 +23,7 @@ const connectSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session?.user || !["owner", "platform_admin"].includes(session.user.role)) {
+    if (!session?.user || !session.user.id || !session.user.role || !["owner", "platform_admin"].includes(session.user.role)) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
@@ -201,7 +201,7 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
-    if (!session?.user || !["owner", "platform_admin"].includes(session.user.role)) {
+    if (!session?.user || !session.user.id || !session.user.role || !["owner", "platform_admin"].includes(session.user.role)) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }

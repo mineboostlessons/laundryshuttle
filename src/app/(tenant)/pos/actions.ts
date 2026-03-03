@@ -219,7 +219,9 @@ export async function createPosOrder(
   const orderNumber = generateOrderNumber("POS", updatedTenant.orderCounter);
 
   // Create order + items in a transaction
-  const order = await prisma.$transaction(async (tx) => {
+  let order;
+  try {
+  order = await prisma.$transaction(async (tx) => {
     const newOrder = await tx.order.create({
       data: {
         orderNumber,
@@ -266,7 +268,7 @@ export async function createPosOrder(
     // Decrement stock for retail products
     for (const item of data.items) {
       if (item.type === "retail_product") {
-        await tx.retailProduct.updateMany({
+        const stockResult = await tx.retailProduct.updateMany({
           where: {
             id: item.id,
             tenantId: tenant.id,
@@ -276,6 +278,9 @@ export async function createPosOrder(
             stockQuantity: { decrement: item.quantity },
           },
         });
+        if (stockResult.count === 0) {
+          throw new Error(`Insufficient stock for product ${item.name ?? item.id}`);
+        }
       }
     }
 
@@ -305,6 +310,13 @@ export async function createPosOrder(
 
     return newOrder;
   });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Transaction failed";
+    if (message.includes("Insufficient stock")) {
+      return { success: false as const, error: message };
+    }
+    throw err;
+  }
 
   // Send payment notification if the order has a customer (fire-and-forget)
   if (order.customerId) {

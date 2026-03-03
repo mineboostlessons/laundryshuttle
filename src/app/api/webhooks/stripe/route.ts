@@ -157,22 +157,25 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
   const walletDeduction = Math.max(0, Math.min(rawWalletDeduction, stripeAmountDollars));
 
   await prisma.$transaction(async (tx) => {
-    const order = await tx.order.findUnique({
-      where: { id: orderId },
-      select: { id: true, customerId: true, tenantId: true, orderNumber: true, paidAt: true, promoCodeId: true, totalAmount: true },
-    });
-
-    if (!order || order.paidAt) return;
-
-    // Mark order as paid
-    await tx.order.update({
-      where: { id: orderId },
+    // Atomically mark as paid only if not already paid (idempotency)
+    const markPaid = await tx.order.updateMany({
+      where: { id: orderId, paidAt: null },
       data: {
         paidAt: new Date(),
         status: "confirmed",
         paymentMethod: "card",
       },
     });
+
+    // Already processed (duplicate webhook) — skip
+    if (markPaid.count === 0) return;
+
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      select: { id: true, customerId: true, tenantId: true, orderNumber: true, promoCodeId: true, totalAmount: true },
+    });
+
+    if (!order) return;
 
     // Add status history
     await tx.orderStatusHistory.create({
@@ -223,6 +226,13 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
 async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
   const orderId = paymentIntent.metadata?.orderId;
   if (!orderId) return;
+
+  // Idempotency: check if we already recorded a payment_failed for this order
+  const alreadyProcessed = await prisma.orderStatusHistory.findFirst({
+    where: { orderId, status: "payment_failed" },
+    select: { id: true },
+  });
+  if (alreadyProcessed) return;
 
   // Decrement promo code usage — it was incremented atomically in the
   // payment-intent route, so we must reverse it on failure.
@@ -294,7 +304,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     active: "active",
     paused: "paused",
     canceled: "cancelled",
-    past_due: "active",
+    past_due: "past_due",
     unpaid: "paused",
   };
 

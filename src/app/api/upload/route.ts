@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   }
 
   const session = await auth();
-  if (!session?.user?.tenantId && session?.user?.role !== "platform_admin") {
+  if (!session?.user?.id || !session.user.role || (!session.user.tenantId && session.user.role !== "platform_admin")) {
     return NextResponse.json(
       { success: false, error: "Unauthorized — no session or tenant" },
       { status: 401 }
