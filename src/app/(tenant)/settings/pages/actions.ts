@@ -46,7 +46,7 @@ const blockSchema = z.discriminatedUnion("type", [
     heading: z.string(),
     subheading: z.string(),
     ctaText: z.string(),
-    ctaLink: z.string(),
+    ctaLink: z.string().refine((v) => !v || v.startsWith("/") || v.startsWith("https://") || v.startsWith("http://"), "Link must be a relative path or HTTP(S) URL"),
     backgroundImage: z.string().url().refine((u) => u.startsWith("https://"), "Must use HTTPS").optional().or(z.literal("")),
     showGradient: z.boolean(),
   }),
@@ -70,7 +70,7 @@ const blockSchema = z.discriminatedUnion("type", [
     heading: z.string(),
     subheading: z.string().optional(),
     buttonText: z.string(),
-    buttonLink: z.string(),
+    buttonLink: z.string().refine((v) => !v || v.startsWith("/") || v.startsWith("https://") || v.startsWith("http://"), "Link must be a relative path or HTTP(S) URL"),
   }),
   z.object({
     type: z.literal("faq"),

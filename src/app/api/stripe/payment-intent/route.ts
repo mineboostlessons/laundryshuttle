@@ -93,28 +93,39 @@ export async function POST(req: NextRequest) {
           (!promo.minOrderAmount || order.subtotal >= promo.minOrderAmount);
 
         if (isValid) {
-          if (promo.discountType === "percentage") {
-            discountAmount = order.subtotal * (promo.discountValue / 100);
-          } else if (promo.discountType === "flat_amount") {
-            discountAmount = promo.discountValue;
-          } else if (promo.discountType === "free_delivery") {
-            discountAmount = order.deliveryFee;
-          }
-
-          discountAmount = Math.min(discountAmount, totalAmount);
-          totalAmount = totalAmount - discountAmount;
-
-          // Update order with promo — usage is incremented in the
-          // payment_intent.succeeded webhook to avoid inflating count
-          // for abandoned checkouts
-          await prisma.order.update({
-            where: { id: orderId },
-            data: {
-              promoCodeId: promo.id,
-              discountAmount,
-              totalAmount,
+          // Atomically claim one use to prevent TOCTOU race condition
+          const claimed = await prisma.promoCode.updateMany({
+            where: {
+              id: promo.id,
+              ...(promo.maxUses ? { currentUses: { lt: promo.maxUses } } : {}),
             },
+            data: { currentUses: { increment: 1 } },
           });
+
+          if (claimed.count === 0) {
+            // Usage limit reached between check and claim — skip discount
+          } else {
+            if (promo.discountType === "percentage") {
+              discountAmount = order.subtotal * (promo.discountValue / 100);
+            } else if (promo.discountType === "flat_amount") {
+              discountAmount = promo.discountValue;
+            } else if (promo.discountType === "free_delivery") {
+              discountAmount = order.deliveryFee;
+            }
+
+            discountAmount = Math.min(discountAmount, totalAmount);
+            totalAmount = totalAmount - discountAmount;
+
+            // Update order with promo — usage already incremented atomically above
+            await prisma.order.update({
+              where: { id: orderId },
+              data: {
+                promoCodeId: promo.id,
+                discountAmount,
+                totalAmount,
+              },
+            });
+          }
         }
       }
     }

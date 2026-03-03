@@ -313,13 +313,17 @@ h1, h2, h3 {
 `;
 
   if (overrides?.customCss) {
-    // Sanitize custom CSS to prevent XSS via </style><script> injection
+    // Sanitize custom CSS to prevent XSS and data exfiltration
     const sanitized = overrides.customCss
       .replace(/<\/style/gi, "")
       .replace(/<script/gi, "")
       .replace(/<\//g, "")
       .replace(/javascript:/gi, "")
-      .replace(/expression\s*\(/gi, "");
+      .replace(/expression\s*\(/gi, "")
+      .replace(/@import/gi, "")
+      .replace(/url\s*\(/gi, "url(/* blocked */")
+      .replace(/behavior\s*:/gi, "")
+      .replace(/-moz-binding\s*:/gi, "");
     css += `\n${sanitized}`;
   }
 

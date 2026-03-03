@@ -172,6 +172,10 @@ export async function processRefund(input: z.infer<typeof refundSchema>) {
 
   const refundAmount = amount ?? order.totalAmount;
 
+  if (refundAmount > order.totalAmount) {
+    return { success: false, error: "Refund amount cannot exceed order total" };
+  }
+
   // Refund to wallet (credit balance instead of Stripe refund)
   if (refundToWallet && order.customerId) {
     const isFullRefund = refundAmount >= order.totalAmount;

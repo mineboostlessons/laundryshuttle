@@ -96,6 +96,7 @@ export async function listPromoCodes() {
   return prisma.promoCode.findMany({
     where: { tenantId: tenant.id },
     orderBy: { createdAt: "desc" },
+    take: 500,
     select: {
       id: true,
       code: true,
