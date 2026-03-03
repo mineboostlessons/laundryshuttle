@@ -45,10 +45,10 @@ export interface CustomerReferralInfo {
 // =============================================================================
 
 export async function generateReferralCode(prefix: string | null, userId: string): Promise<string> {
-  const randomPart = crypto.randomBytes(4).toString("hex").toUpperCase().slice(0, 6);
+  const randomPart = crypto.randomBytes(8).toString("hex").toUpperCase().slice(0, 12);
   const userPart = userId.slice(-4).toUpperCase();
   if (prefix) {
-    return `${prefix}-${userPart}${randomPart}`.slice(0, 16);
+    return `${prefix}-${userPart}${randomPart}`.slice(0, 20);
   }
   return `REF-${userPart}${randomPart}`;
 }

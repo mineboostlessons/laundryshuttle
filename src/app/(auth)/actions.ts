@@ -196,7 +196,11 @@ export async function forgotPasswordAction(
         where: { slug: tenantSlug },
         select: { id: true },
       });
-      tenantId = tenant?.id;
+      if (!tenant) {
+        // Invalid slug — return success to prevent enumeration but don't proceed
+        return { success: true, message: successMessage };
+      }
+      tenantId = tenant.id;
     }
 
     const user = await prisma.user.findFirst({

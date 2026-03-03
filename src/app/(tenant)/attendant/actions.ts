@@ -193,6 +193,29 @@ export async function startProcessingOrder(
     return { success: false, error: "Order not found or not in correct status" };
   }
 
+  // Validate washer number is within range and not already in use
+  if (washerNumber !== undefined) {
+    const laundromat = await prisma.laundromat.findFirst({
+      where: { tenantId: tenant.id, isActive: true },
+      select: { numWashers: true },
+    });
+    if (laundromat && (washerNumber < 1 || washerNumber > laundromat.numWashers)) {
+      return { success: false, error: `Washer number must be between 1 and ${laundromat.numWashers}` };
+    }
+    const conflict = await prisma.order.findFirst({
+      where: {
+        tenantId: tenant.id,
+        status: "processing",
+        washerNumber,
+        id: { not: orderId },
+      },
+      select: { orderNumber: true },
+    });
+    if (conflict) {
+      return { success: false, error: `Washer ${washerNumber} is already in use by order ${conflict.orderNumber}` };
+    }
+  }
+
   await prisma.$transaction([
     prisma.order.update({
       where: { id: orderId },
@@ -254,8 +277,18 @@ export async function updateEquipmentAssignment(
     return { success: false, error: "Order not found or not processing" };
   }
 
-  // Duplicate machine check
+  // Validate machine numbers are within range and not already in use
+  const laundromat = (washerNumber !== undefined || dryerNumber !== undefined)
+    ? await prisma.laundromat.findFirst({
+        where: { tenantId: tenant.id, isActive: true },
+        select: { numWashers: true, numDryers: true },
+      })
+    : null;
+
   if (washerNumber !== undefined) {
+    if (laundromat && (washerNumber < 1 || washerNumber > laundromat.numWashers)) {
+      return { success: false, error: `Washer number must be between 1 and ${laundromat.numWashers}` };
+    }
     const conflict = await prisma.order.findFirst({
       where: {
         tenantId: tenant.id,
@@ -271,6 +304,9 @@ export async function updateEquipmentAssignment(
   }
 
   if (dryerNumber !== undefined) {
+    if (laundromat && (dryerNumber < 1 || dryerNumber > laundromat.numDryers)) {
+      return { success: false, error: `Dryer number must be between 1 and ${laundromat.numDryers}` };
+    }
     const conflict = await prisma.order.findFirst({
       where: {
         tenantId: tenant.id,

@@ -322,12 +322,13 @@ export async function removeRoute(
   routeId: string
 ): Promise<{ success: boolean; error?: string }> {
   const session = await requireRole(UserRole.DRIVER);
-  await requireTenant();
+  const tenant = await requireTenant();
 
   const route = await prisma.driverRoute.findFirst({
     where: {
       id: routeId,
       driverId: session.user.id,
+      laundromat: { tenantId: tenant.id },
     },
     select: { id: true, status: true },
   });
@@ -355,12 +356,13 @@ export async function removeRoute(
 
 export async function getRouteDetail(routeId: string) {
   const session = await requireRole(UserRole.DRIVER);
-  await requireTenant();
+  const tenant = await requireTenant();
 
   const route = await prisma.driverRoute.findFirst({
     where: {
       id: routeId,
       driverId: session.user.id,
+      laundromat: { tenantId: tenant.id },
     },
     include: {
       laundromat: {
@@ -414,14 +416,14 @@ export async function getRouteDetail(routeId: string) {
 
 export async function getDriverRouteHistory(page: number = 1) {
   const session = await requireRole(UserRole.DRIVER);
-  await requireTenant();
+  const tenant = await requireTenant();
   const safePage = Math.max(1, Math.floor(page));
   const limit = 20;
   const skip = (safePage - 1) * limit;
 
   const [routes, total] = await Promise.all([
     prisma.driverRoute.findMany({
-      where: { driverId: session.user.id },
+      where: { driverId: session.user.id, laundromat: { tenantId: tenant.id } },
       orderBy: { date: "desc" },
       skip,
       take: limit,
@@ -433,7 +435,7 @@ export async function getDriverRouteHistory(page: number = 1) {
       },
     }),
     prisma.driverRoute.count({
-      where: { driverId: session.user.id },
+      where: { driverId: session.user.id, laundromat: { tenantId: tenant.id } },
     }),
   ]);
 
@@ -465,7 +467,6 @@ export async function updateStopStatus(
   input: z.infer<typeof updateStopStatusSchema>
 ) {
   const session = await requireRole(UserRole.DRIVER);
-  await requireTenant();
 
   const parsed = updateStopStatusSchema.safeParse(input);
   if (!parsed.success) {
@@ -474,10 +475,12 @@ export async function updateStopStatus(
 
   const { stopId, status } = parsed.data;
 
+  const tenant = await requireTenant();
+
   const stop = await prisma.routeStop.findFirst({
     where: {
       id: stopId,
-      route: { driverId: session.user.id },
+      route: { driverId: session.user.id, laundromat: { tenantId: tenant.id } },
     },
     include: { route: true },
   });
@@ -581,7 +584,6 @@ export async function completeDelivery(
   input: z.infer<typeof completeDeliverySchema>
 ) {
   const session = await requireRole(UserRole.DRIVER);
-  await requireTenant();
 
   const parsed = completeDeliverySchema.safeParse(input);
   if (!parsed.success) {
@@ -605,10 +607,12 @@ export async function completeDelivery(
     }
   }
 
+  const tenant = await requireTenant();
+
   const stop = await prisma.routeStop.findFirst({
     where: {
       id: stopId,
-      route: { driverId: session.user.id },
+      route: { driverId: session.user.id, laundromat: { tenantId: tenant.id } },
       stopType: "delivery",
     },
     include: { route: true },
@@ -685,12 +689,13 @@ export async function completeDelivery(
 
 export async function optimizeDriverRoute(routeId: string) {
   const session = await requireRole(UserRole.DRIVER);
-  await requireTenant();
+  const tenant = await requireTenant();
 
   const route = await prisma.driverRoute.findFirst({
     where: {
       id: routeId,
       driverId: session.user.id,
+      laundromat: { tenantId: tenant.id },
     },
     include: {
       laundromat: { select: { lat: true, lng: true } },
@@ -753,12 +758,13 @@ export async function optimizeDriverRoute(routeId: string) {
 
 export async function startRoute(routeId: string) {
   const session = await requireRole(UserRole.DRIVER);
-  await requireTenant();
+  const tenant = await requireTenant();
 
   const route = await prisma.driverRoute.findFirst({
     where: {
       id: routeId,
       driverId: session.user.id,
+      laundromat: { tenantId: tenant.id },
       status: "planned",
     },
   });

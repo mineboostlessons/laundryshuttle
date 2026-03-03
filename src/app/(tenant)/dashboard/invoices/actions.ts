@@ -14,6 +14,8 @@ import {
 import { triggerWebhook } from "@/lib/webhooks";
 import { z } from "zod";
 
+const invoiceIdSchema = z.string().min(1);
+
 const createInvoiceSchema = z.object({
   commercialAccountId: z.string().min(1),
   lineItems: z.array(
@@ -170,6 +172,7 @@ export async function createInvoice(data: z.infer<typeof createInvoiceSchema>) {
 export async function sendInvoice(invoiceId: string) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
+  invoiceId = invoiceIdSchema.parse(invoiceId);
 
   const invoice = await prisma.invoice.findFirst({
     where: {
@@ -221,6 +224,7 @@ export async function sendInvoice(invoiceId: string) {
 export async function markInvoicePaid(invoiceId: string) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
+  invoiceId = invoiceIdSchema.parse(invoiceId);
 
   const invoice = await prisma.invoice.findFirst({
     where: {
@@ -284,6 +288,7 @@ export async function markInvoicePaid(invoiceId: string) {
 export async function voidInvoice(invoiceId: string) {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
+  invoiceId = invoiceIdSchema.parse(invoiceId);
 
   const invoice = await prisma.invoice.findFirst({
     where: {

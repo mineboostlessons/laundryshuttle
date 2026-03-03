@@ -112,10 +112,31 @@ const KEYWORD_COMMANDS: Record<string, string> = {
   YES: "opt_in",
 };
 
+// In-memory dedup for inbound message IDs (prevents duplicate orderMessages on webhook retry)
+const processedMessageIds = new Map<string, number>();
+const MESSAGE_DEDUP_TTL = 10 * 60 * 1000; // 10 minutes
+
+function isMessageProcessed(messageId: string): boolean {
+  // Evict stale entries
+  const now = Date.now();
+  if (processedMessageIds.size > 5000) {
+    for (const [key, ts] of processedMessageIds) {
+      if (now - ts > MESSAGE_DEDUP_TTL) processedMessageIds.delete(key);
+    }
+  }
+  if (processedMessageIds.has(messageId)) return true;
+  processedMessageIds.set(messageId, now);
+  return false;
+}
+
 async function handleInboundMessage(
   eventData: Record<string, unknown> | undefined
 ) {
   if (!eventData) return;
+
+  // Deduplicate by Telnyx message ID to prevent duplicate orderMessages on webhook retry
+  const messageId = eventData.id as string | undefined;
+  if (messageId && isMessageProcessed(messageId)) return;
 
   const from = (eventData.from as { phone_number?: string })?.phone_number;
   const to = (eventData.to as { phone_number?: string })?.phone_number ?? (eventData.to as string[] | undefined)?.[0];
