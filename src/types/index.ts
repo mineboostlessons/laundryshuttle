@@ -48,6 +48,7 @@ declare module "next-auth" {
     role: UserRole;
     tenantId: string | null;
     tenantSlug?: string | null;
+    sessionVersion?: number;
   }
 }
 
@@ -57,6 +58,9 @@ declare module "@auth/core/jwt" {
     role: UserRole;
     tenantId: string | null;
     tenantSlug: string | null;
+    sessionVersion?: number;
+    sessionCheckedAt?: number;
+    invalidated?: boolean;
   }
 }
 

@@ -32,7 +32,9 @@ const ROLE_ROUTE_MAP: Record<string, string[]> = {
 };
 
 function isProtectedRoute(pathname: string): boolean {
-  return PROTECTED_PATTERNS.some((pattern) => pathname.includes(pattern));
+  return PROTECTED_PATTERNS.some(
+    (pattern) => pathname === pattern || pathname.startsWith(pattern + "/")
+  );
 }
 
 function isPublicRoute(pathname: string): boolean {
@@ -42,7 +44,9 @@ function isPublicRoute(pathname: string): boolean {
 function hasRouteAccess(role: string, pathname: string): boolean {
   const allowedPaths = ROLE_ROUTE_MAP[role];
   if (!allowedPaths) return false;
-  return allowedPaths.some((path) => pathname.includes(path));
+  return allowedPaths.some(
+    (path) => pathname === path || pathname.startsWith(path + "/")
+  );
 }
 
 function getDefaultRedirect(role: string): string {
@@ -129,7 +133,8 @@ export default auth((request) => {
     if (hostname.includes("localhost") || hostname === vercelUrlApi || hostname.endsWith(".vercel.app")) {
       const tenantSlug = url.searchParams.get("tenant");
       const cookieTenant = request.cookies.get("__tenant_slug")?.value;
-      apiHeaders.set("x-tenant-slug", tenantSlug || cookieTenant || "__platform__");
+      const validSlug = (s?: string | null) => s && /^[a-z0-9][a-z0-9-]{0,62}$/.test(s) ? s : null;
+      apiHeaders.set("x-tenant-slug", validSlug(tenantSlug) || validSlug(cookieTenant) || "__platform__");
     } else if (hostname === `admin.${platformDomain}` || hostname === platformDomain) {
       apiHeaders.set("x-tenant-slug", "__platform__");
     } else if (hostname.endsWith(`.${platformDomain}`)) {
@@ -161,7 +166,11 @@ export default auth((request) => {
       // Root "/" without ?tenant= always shows the platform marketing page
       // Auth pages (/login, /register, etc.) without ?tenant= default to platform
       const cookieTenant = request.cookies.get("__tenant_slug")?.value;
-      resolvedTenantSlug = cookieTenant || "__platform__";
+      // Validate cookie format to prevent spoofed tenant slugs
+      resolvedTenantSlug =
+        cookieTenant && /^[a-z0-9][a-z0-9-]{0,62}$/.test(cookieTenant)
+          ? cookieTenant
+          : "__platform__";
     }
     headers.set("x-tenant-slug", resolvedTenantSlug);
   } else if (hostname === `admin.${platformDomain}` || hostname === platformDomain) {

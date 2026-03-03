@@ -92,7 +92,20 @@ export async function POST(req: NextRequest) {
           (!promo.maxUses || promo.currentUses < promo.maxUses) &&
           (!promo.minOrderAmount || order.subtotal >= promo.minOrderAmount);
 
-        if (isValid) {
+        // Enforce per-customer usage limit server-side
+        let perCustomerLimitReached = false;
+        if (isValid && promo.maxUsesPerCustomer) {
+          const customerUses = await prisma.order.count({
+            where: {
+              customerId: session.user.id,
+              promoCodeId: promo.id,
+              paidAt: { not: null },
+            },
+          });
+          perCustomerLimitReached = customerUses >= promo.maxUsesPerCustomer;
+        }
+
+        if (isValid && !perCustomerLimitReached) {
           // Atomically claim one use to prevent TOCTOU race condition
           const claimed = await prisma.promoCode.updateMany({
             where: {

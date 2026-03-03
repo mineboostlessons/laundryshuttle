@@ -2,6 +2,7 @@
 
 import { requireRole } from "@/lib/auth-helpers";
 import { requireTenant } from "@/lib/tenant";
+import { UserRole } from "@/types";
 import prisma from "@/lib/prisma";
 
 export interface LaunchKitData {
@@ -27,7 +28,7 @@ export interface LaunchKitData {
 }
 
 export async function getLaunchKitData(): Promise<LaunchKitData> {
-  await requireRole("owner");
+  await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
 
   const fullTenant = await prisma.tenant.findUnique({

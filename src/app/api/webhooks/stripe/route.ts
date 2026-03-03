@@ -130,12 +130,16 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
   const orderId = paymentIntent.metadata?.orderId;
   if (!orderId) return;
 
-  const walletDeduction = parseFloat(paymentIntent.metadata?.walletDeduction ?? "0");
+  const rawWalletDeduction = parseFloat(paymentIntent.metadata?.walletDeduction ?? "0");
+  // Cap wallet deduction to a sane maximum — the actual Stripe charge amount
+  // prevents deducting more than the order total from a user's wallet.
+  const stripeAmountDollars = paymentIntent.amount / 100;
+  const walletDeduction = Math.max(0, Math.min(rawWalletDeduction, stripeAmountDollars));
 
   await prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({
       where: { id: orderId },
-      select: { id: true, customerId: true, tenantId: true, orderNumber: true, paidAt: true, promoCodeId: true },
+      select: { id: true, customerId: true, tenantId: true, orderNumber: true, paidAt: true, promoCodeId: true, totalAmount: true },
     });
 
     if (!order || order.paidAt) return;
@@ -163,10 +167,12 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
     // to prevent TOCTOU race conditions — do NOT increment again here.
 
     // Deduct wallet if used (atomic decrement to prevent race conditions)
-    if (walletDeduction > 0 && order.customerId) {
+    // Additional safety: cap against the order's DB-recorded total
+    const safeWalletDeduction = Math.min(walletDeduction, order.totalAmount);
+    if (safeWalletDeduction > 0 && order.customerId) {
       const updatedUser = await tx.user.update({
         where: { id: order.customerId },
-        data: { walletBalance: { decrement: walletDeduction } },
+        data: { walletBalance: { decrement: safeWalletDeduction } },
         select: { walletBalance: true },
       });
 
@@ -184,7 +190,7 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
           userId: order.customerId,
           tenantId: order.tenantId,
           type: "order_payment",
-          amount: -walletDeduction,
+          amount: -safeWalletDeduction,
           balanceAfter: finalBalance,
           description: `Payment for order ${order.orderNumber}`,
           orderId: order.id,

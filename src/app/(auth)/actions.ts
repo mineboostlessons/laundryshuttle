@@ -316,13 +316,9 @@ export async function resetPasswordWithToken(
         resetToken: null,
         resetTokenExpiresAt: null,
         forcePasswordChange: false,
+        sessionVersion: { increment: 1 },
       },
     });
-
-    // TODO: Invalidate existing JWT sessions after password change.
-    // Since NextAuth uses stateless JWTs, existing tokens remain valid until expiry.
-    // To fix: add a `sessionVersion` column to User, increment it here,
-    // and compare it in the JWT callback to reject stale sessions.
 
     return { success: true, message: "Password reset successfully. You can now sign in." };
   } catch {

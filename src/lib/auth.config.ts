@@ -42,6 +42,12 @@ export const authConfig = {
     },
 
     async session({ session, token }) {
+      // Reject sessions where the token was invalidated (password reset, deactivation)
+      if (token.invalidated) {
+        session.user.id = "";
+        session.user.role = "" as UserRole;
+        return session;
+      }
       session.user.id = token.id as string;
       session.user.role = token.role as UserRole;
       session.user.tenantId = token.tenantId as string | null;

@@ -62,7 +62,7 @@ function tenantAwarePrismaAdapter(): Adapter {
     async getUserByEmail(email: string) {
       const tenantId = await getOAuthTenantId();
       const user = await prisma.user.findFirst({
-        where: { email, tenantId },
+        where: { email, tenantId, isActive: true },
       });
       if (!user) return null;
       return {
@@ -150,6 +150,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               role: platformAdmin.role as UserRole,
               tenantId: null,
               tenantSlug: null,
+              sessionVersion: platformAdmin.sessionVersion,
             };
           }
         }
@@ -195,6 +196,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           role: user.role as UserRole,
           tenantId: user.tenantId,
           tenantSlug: resolvedSlug,
+          sessionVersion: user.sessionVersion,
         };
       },
     }),
@@ -207,6 +209,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.role = user.role;
         token.tenantId = user.tenantId;
         token.tenantSlug = user.tenantSlug ?? null;
+        token.sessionVersion = (user as unknown as Record<string, unknown>).sessionVersion as number ?? 0;
+        token.sessionCheckedAt = Date.now();
 
         // OAuth users have tenantId but no tenantSlug — resolve it
         if (user.tenantId && !user.tenantSlug) {
@@ -227,16 +231,48 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
 
-      // On session update, re-fetch role/tenant from DB to prevent
-      // client-side privilege escalation via update({ role: "owner" })
+      // Periodically re-validate session against DB (every 5 minutes)
+      // to detect password resets and deactivations
+      const SESSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
+      const lastChecked = (token.sessionCheckedAt as number) ?? 0;
+      const shouldRecheck = Date.now() - lastChecked > SESSION_CHECK_INTERVAL;
+
+      if (shouldRecheck && token.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true, tenantId: true, isActive: true, sessionVersion: true },
+        });
+
+        if (!dbUser || !dbUser.isActive || dbUser.sessionVersion !== (token.sessionVersion ?? 0)) {
+          // Session invalidated — force re-login
+          return { ...token, invalidated: true };
+        }
+
+        token.role = dbUser.role;
+        token.tenantId = dbUser.tenantId;
+        token.sessionCheckedAt = Date.now();
+
+        if (dbUser.tenantId) {
+          const t = await prisma.tenant.findUnique({
+            where: { id: dbUser.tenantId },
+            select: { slug: true },
+          });
+          token.tenantSlug = t?.slug ?? null;
+        } else {
+          token.tenantSlug = null;
+        }
+      }
+
+      // On explicit session update, also re-fetch from DB
       if (trigger === "update") {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { role: true, tenantId: true, isActive: true },
+          select: { role: true, tenantId: true, isActive: true, sessionVersion: true },
         });
         if (dbUser && dbUser.isActive) {
           token.role = dbUser.role;
           token.tenantId = dbUser.tenantId;
+          token.sessionVersion = dbUser.sessionVersion;
           if (dbUser.tenantId) {
             const t = await prisma.tenant.findUnique({
               where: { id: dbUser.tenantId },

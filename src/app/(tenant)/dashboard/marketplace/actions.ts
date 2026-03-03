@@ -41,9 +41,14 @@ export async function getInstalledApps() {
   });
 }
 
+const appConfigSchema = z.record(z.string().max(1000)).refine(
+  (obj) => Object.keys(obj).length <= 50,
+  "Config cannot have more than 50 keys"
+);
+
 const installSchema = z.object({
   appId: z.string().min(1),
-  config: z.record(z.unknown()).optional(),
+  config: appConfigSchema.optional(),
 });
 
 export async function installApp(data: z.infer<typeof installSchema>) {
@@ -103,24 +108,39 @@ export async function updateAppConfig(appId: string, config: Record<string, stri
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
 
+  const parsedConfig = appConfigSchema.safeParse(config);
+  if (!parsedConfig.success) {
+    throw new Error(parsedConfig.error.errors[0].message);
+  }
+
   return prisma.tenantAppInstallation.update({
     where: {
       tenantId_appId: { tenantId: tenant.id, appId },
     },
-    data: { config },
+    data: { config: parsedConfig.data },
     include: { app: true },
   });
 }
+
+const toggleStatusSchema = z.object({
+  appId: z.string().min(1),
+  status: z.enum(["active", "paused"]),
+});
 
 export async function toggleAppStatus(appId: string, status: "active" | "paused") {
   await requireRole(UserRole.OWNER);
   const tenant = await requireTenant();
 
+  const parsed = toggleStatusSchema.safeParse({ appId, status });
+  if (!parsed.success) {
+    throw new Error(parsed.error.errors[0].message);
+  }
+
   return prisma.tenantAppInstallation.update({
     where: {
-      tenantId_appId: { tenantId: tenant.id, appId },
+      tenantId_appId: { tenantId: tenant.id, appId: parsed.data.appId },
     },
-    data: { status },
+    data: { status: parsed.data.status },
     include: { app: true },
   });
 }

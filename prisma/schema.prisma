@@ -84,6 +84,7 @@ model Tenant {
 
   // Permissions
   managerCanCreateStaff Boolean @default(false)
+  autoWinBackEnabled    Boolean @default(false)
 
   // Status
   isActive               Boolean @default(true)
@@ -223,6 +224,9 @@ model User {
   // Password Reset
   resetToken          String?   // Hashed reset token
   resetTokenExpiresAt DateTime? // Token expiry
+
+  // Session invalidation — increment on password change to reject stale JWTs
+  sessionVersion      Int       @default(0)
 
   // Status
   isActive            Boolean   @default(true)
